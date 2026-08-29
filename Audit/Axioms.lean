@@ -4,6 +4,8 @@ import StochLean
 
 #print axioms PMF.ext_pgf
 #print axioms PMF.tendsto_pgf_of_tendsto_mass
+#print axioms PMF.tendsto_mass_of_tendsto_pgf
+#print axioms PMF.tendsto_pgf_iff_tendsto_mass
 #print axioms PMF.pgf_randomSum
 #print axioms ProbabilityTheory.GaltonWatson.pgf_extinctionProbability
 #print axioms ProbabilityTheory.GaltonWatson.extinctionProbability_le_fixed

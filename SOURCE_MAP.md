@@ -11,7 +11,7 @@ project axioms or placeholders; “upstream” means the pinned Mathlib theorem 
 | Reference | Design deliverable | StochLean / Mathlib implementation | Status |
 | --- | --- | --- | --- |
 | Klenke 3.2–3.3 | PGF definition, basic bounds, continuity, analytic interior, uniqueness | `Probability/GeneratingFunction/Basic.lean`; `Analytic.lean` | Implemented |
-| Klenke 3.7 | Discrete coefficient convergence and PGF convergence | `Probability/Convergence/Discrete.lean` | Coefficientwise-to-PGF direction implemented |
+| Klenke 3.7 | Discrete coefficient convergence and PGF convergence | `Probability/Convergence/Discrete.lean` | Both directions and the equivalence theorem implemented |
 | Klenke 3.8 | Poisson approximation | `Probability/LimitTheorems/PoissonApproximation.lean`; Mathlib `PoissonLimitThm` | Binomial point-probability theorem upstream; triangular-array theorem remains |
 | Klenke 3.9 | Random sums and PGF composition | `Probability/GeneratingFunction/RandomSum.lean` | Implemented at law level |
 | Klenke 3.10–3.11 | Galton–Watson recursion and extinction | `Probability/Branching/Basic.lean`; `Extinction.lean` | Generation PGF iteration, finite extinction laws, and least-fixed-point theorem implemented |
