@@ -9,6 +9,7 @@ import StochLean
 #print axioms PMF.pgf_randomSum
 #print axioms ProbabilityTheory.poissonBinomial_tendsto_poissonNat
 #print axioms ProbabilityTheory.poissonBinomial_tendsto_poissonNat_of_max
+#print axioms ProbabilityTheory.iIndepFun.hasLaw_fintype_sum_bernoulli
 #print axioms ProbabilityTheory.GaltonWatson.pgf_extinctionProbability
 #print axioms ProbabilityTheory.GaltonWatson.extinctionProbability_le_fixed
 #print axioms ProbabilityTheory.IsPoissonProcess.hasStationaryIncrements
@@ -18,6 +19,7 @@ import StochLean
 #print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.tendsto_dyadic_multipleJump_error
 #print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.iIndepFun_dyadicSubintervalOccupied
 #print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.hasLaw_dyadicSubintervalOccupied
+#print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.isPoissonProcess
 #print axioms ProbabilityTheory.PoissonProcess.DivergentArrivalSequence.count_eventTime
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_ae
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_rat_ae
@@ -41,3 +43,6 @@ import StochLean
 #print axioms MeasureTheory.unifIntegrable_of_superlinearEnvelope
 #print axioms MeasureTheory.uniformIntegrable_of_superlinearEnvelope
 #print axioms MeasureTheory.TendstoLocallyInMeasure.tendsto_eLpNorm_restrict
+#print axioms MeasureTheory.TendstoLocallyInMeasure.tendsto_eLpNorm
+#print axioms MeasureTheory.uniformIntegrableByEnvelope_of_tendsto_eLpNorm
+#print axioms MeasureTheory.tendstoLocallyInMeasure_and_uniformIntegrableByEnvelope_iff_tendsto_eLpNorm

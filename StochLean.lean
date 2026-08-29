@@ -27,6 +27,7 @@ public import StochLean.Probability.Process.Poisson.Basic
 public import StochLean.Probability.Process.Poisson.Constructions
 public import StochLean.Probability.Process.Poisson.IntervalAxioms
 public import StochLean.Probability.Process.Poisson.IntervalAxiomsConverse
+public import StochLean.Probability.Process.Poisson.IntervalAxiomsConverseLaw
 public import StochLean.Probability.Process.StationaryIncrements
 
 /-!

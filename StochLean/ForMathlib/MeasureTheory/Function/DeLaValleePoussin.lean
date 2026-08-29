@@ -6,6 +6,7 @@ Authors: StochLean contributors
 module
 
 public import Mathlib.MeasureTheory.Function.UniformIntegrable
+public import Mathlib.MeasureTheory.Function.UnifTight
 public import Mathlib.Analysis.Normed.Group.Indicator
 public import Mathlib.MeasureTheory.Integral.Lebesgue.Add
 public import Mathlib.MeasureTheory.Function.LpSeminorm.Basic
@@ -34,6 +35,106 @@ noncomputable section
 
 variable {α ι E : Type*} {mα : MeasurableSpace α} {μ : Measure α}
 variable [NormedAddCommGroup E]
+
+/-- Klenke's sigma-finite uniform-integrability notion, expressed through Mathlib's canonical
+decomposition into uniform absolute continuity and uniform tightness. On finite measure spaces the
+tightness conjunct is automatic, while on infinite spaces it records the spatial envelope control
+that ordinary `UniformIntegrable` does not provide. -/
+def UniformIntegrableByEnvelope (f : ι → α → E) (p : ℝ≥0∞) (μ : Measure α) : Prop :=
+  UniformIntegrable f p μ ∧ UnifTight f p μ
+
+namespace UniformIntegrableByEnvelope
+
+variable {f g : ι → α → E} {p : ℝ≥0∞}
+
+theorem uniformIntegrable (hf : UniformIntegrableByEnvelope f p μ) :
+    UniformIntegrable f p μ := hf.1
+
+theorem unifIntegrable (hf : UniformIntegrableByEnvelope f p μ) :
+    UnifIntegrable f p μ := hf.1.unifIntegrable
+
+theorem unifTight (hf : UniformIntegrableByEnvelope f p μ) :
+    UnifTight f p μ := hf.2
+
+theorem aestronglyMeasurable (hf : UniformIntegrableByEnvelope f p μ) (i : ι) :
+    AEStronglyMeasurable (f i) μ := hf.1.aestronglyMeasurable i
+
+theorem memLp (hf : UniformIntegrableByEnvelope f p μ) (i : ι) :
+    MemLp (f i) p μ := hf.1.memLp i
+
+theorem ae_eq (hf : UniformIntegrableByEnvelope f p μ)
+    (hfg : ∀ i, f i =ᵐ[μ] g i) : UniformIntegrableByEnvelope g p μ :=
+  ⟨hf.1.ae_eq hfg, hf.2.aeeq hfg⟩
+
+/-- Envelope uniform integrability is closed under negation. -/
+theorem neg (hf : UniformIntegrableByEnvelope f p μ) :
+    UniformIntegrableByEnvelope (-f) p μ := by
+  refine ⟨⟨fun i ↦ (hf.aestronglyMeasurable i).neg, hf.1.2.1.neg, ?_⟩, hf.2.neg⟩
+  obtain ⟨C, hC⟩ := hf.1.2.2
+  exact ⟨C, fun i ↦ by simpa using hC i⟩
+
+/-- Envelope uniform integrability is closed under addition. -/
+theorem add (hf : UniformIntegrableByEnvelope f p μ)
+    (hg : UniformIntegrableByEnvelope g p μ) (hp : 1 ≤ p) :
+    UniformIntegrableByEnvelope (f + g) p μ := by
+  obtain ⟨Cf, hCf⟩ := hf.1.2.2
+  obtain ⟨Cg, hCg⟩ := hg.1.2.2
+  refine ⟨⟨fun i ↦ (hf.aestronglyMeasurable i).add (hg.aestronglyMeasurable i),
+      hf.1.2.1.add hg.1.2.1 hp (fun i ↦ hf.aestronglyMeasurable i)
+        (fun i ↦ hg.aestronglyMeasurable i), ⟨Cf + Cg, fun i ↦ ?_⟩⟩,
+    hf.2.add hg.2 (fun i ↦ hf.aestronglyMeasurable i)
+      (fun i ↦ hg.aestronglyMeasurable i)⟩
+  simpa only [Pi.add_apply, ENNReal.coe_add] using
+    (eLpNorm_add_le (hf.aestronglyMeasurable i) (hg.aestronglyMeasurable i) hp).trans
+      (add_le_add (hCf i) (hCg i))
+
+/-- Envelope uniform integrability is closed under subtraction. -/
+theorem sub (hf : UniformIntegrableByEnvelope f p μ)
+    (hg : UniformIntegrableByEnvelope g p μ) (hp : 1 ≤ p) :
+    UniformIntegrableByEnvelope (f - g) p μ := by
+  rw [sub_eq_add_neg]
+  exact hf.add hg.neg hp
+
+/-- A dominated measurable family inherits envelope uniform integrability. -/
+theorem mono_enorm {F : Type*} [NormedAddCommGroup F] {g : ι → α → F}
+    (hf : UniformIntegrableByEnvelope f p μ)
+    (hg : ∀ i, AEStronglyMeasurable (g i) μ)
+    (hgf : ∀ i, ∀ᵐ x ∂μ, ‖g i x‖ₑ ≤ ‖f i x‖ₑ) :
+    UniformIntegrableByEnvelope g p μ := by
+  obtain ⟨C, hC⟩ := hf.1.2.2
+  refine ⟨⟨hg, ?_, ⟨C, fun i ↦ (eLpNorm_mono_enorm_ae (hgf i)).trans (hC i)⟩⟩, ?_⟩
+  · intro ε hε
+    obtain ⟨δ, hδ, hfδ⟩ := hf.1.2.1 hε
+    refine ⟨δ, hδ, fun i s hs hμs ↦ ?_⟩
+    apply (eLpNorm_mono_enorm_ae ?_).trans (hfδ i s hs hμs)
+    filter_upwards [hgf i] with x hx
+    by_cases hxs : x ∈ s <;> simp [hxs, hx]
+  · intro ε hε
+    obtain ⟨s, hμs, hfε⟩ := hf.2 hε
+    refine ⟨s, hμs, fun i ↦ ?_⟩
+    apply (eLpNorm_mono_enorm_ae ?_).trans (hfε i)
+    filter_upwards [hgf i] with x hx
+    by_cases hxs : x ∈ sᶜ <;> simp [hxs, hx]
+
+/-- A finite family of `Lᵖ` functions is envelope uniformly integrable. -/
+theorem finite [Finite ι] (hp : 1 ≤ p) (hp' : p ≠ ∞)
+    (hf : ∀ i, MemLp (f i) p μ) : UniformIntegrableByEnvelope f p μ :=
+  ⟨uniformIntegrable_finite hp hp' hf, unifTight_finite hp' hf⟩
+
+end UniformIntegrableByEnvelope
+
+/-- On a finite measure space, Mathlib's probability-style uniform integrability already includes
+all of Klenke's envelope uniform integrability. -/
+theorem uniformIntegrableByEnvelope_iff_uniformIntegrable [IsFiniteMeasure μ]
+    {f : ι → α → E} {p : ℝ≥0∞} :
+    UniformIntegrableByEnvelope f p μ ↔ UniformIntegrable f p μ := by
+  constructor
+  · exact UniformIntegrableByEnvelope.uniformIntegrable
+  · intro hf
+    refine ⟨hf, ?_⟩
+    intro ε hε
+    refine ⟨Set.univ, measure_ne_top _ _, fun i ↦ ?_⟩
+    simp
 
 /-- A nonnegative envelope is superlinear if `Φ(t) / t` tends to infinity. -/
 def SuperlinearEnvelope (Φ : ℝ≥0 → ℝ≥0) : Prop :=

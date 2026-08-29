@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.SpecificLimits.Basic
 public import Mathlib.MeasureTheory.Measure.Dirac
 public import Mathlib.Probability.Distributions.Bernoulli
+public import StochLean.Probability.LimitTheorems.PoissonApproximation
 public import StochLean.Probability.Process.Poisson.IntervalAxioms
 
 /-!
@@ -23,7 +24,7 @@ variables.
 @[expose] public section
 
 open Filter MeasureTheory Set Topology
-open scoped NNReal Topology
+open scoped NNReal Topology BigOperators
 
 namespace ProbabilityTheory
 
@@ -103,6 +104,11 @@ noncomputable def dyadicOccupancyProbability
     (X : NNReal → Ω → ℕ) (P : Measure Ω) [IsProbabilityMeasure P]
     (t : NNReal) (n : ℕ) : unitInterval :=
   occupationProbability (poissonIntervalCount X 0 (dyadicIntervalLength t n)) P
+
+/-- Number of occupied cells in the level-`n` dyadic partition of `(0, t]`. -/
+noncomputable def dyadicOccupiedSum
+    (X : NNReal → Ω → ℕ) (t : NNReal) (n : ℕ) (ω : Ω) : ℕ :=
+  ∑ i : Fin (2 ^ n), dyadicSubintervalOccupied X t n i ω
 
 /-- The expected count in an interval of length `t`. -/
 noncomputable def intervalMean (_hX : SatisfiesPoissonIntervalAxioms X P)
@@ -384,6 +390,24 @@ theorem hasLaw_dyadicSubintervalOccupied
   have hbase := hasLaw_occupationIndicator (P := P)
     ((hX.aemeasurable (dyadicIntervalLength t n)).sub (hX.aemeasurable 0))
   exact (hX.identDistrib_dyadicSubintervalOccupied t n i).hasLaw hbase
+
+/-- The number of occupied cells in a finite dyadic partition has the corresponding
+Poisson-binomial law. -/
+theorem hasLaw_dyadicOccupiedSum
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n : ℕ) :
+    HasLaw
+      (fun ω ↦ ∑ i : Fin (2 ^ n), dyadicSubintervalOccupied X t n i ω)
+      (PMF.poissonBinomial
+        (List.replicate (2 ^ n) (dyadicOccupancyProbability X P t n))).toMeasure P := by
+  have hIndep : iIndepFun
+      (fun i : Fin (2 ^ n) ↦ dyadicSubintervalOccupied X t n i) P :=
+    iIndepFun.precomp Fin.val_injective (hX.iIndepFun_dyadicSubintervalOccupied t n)
+  have hLaw : ∀ i : Fin (2 ^ n),
+      HasLaw (dyadicSubintervalOccupied X t n i)
+        (bernoulliMeasure (1 : ℕ) 0 (dyadicOccupancyProbability X P t n)) P :=
+    fun i ↦ hX.hasLaw_dyadicSubintervalOccupied t n i
+  simpa only [Fintype.card_fin] using
+    iIndepFun.hasLaw_fintype_sum_bernoulli hIndep hLaw
 
 /-- The total error from intervals containing two or more jumps in the dyadic
 partition of `(0, t]` tends to zero.  This is the P5 estimate used in Klenke's

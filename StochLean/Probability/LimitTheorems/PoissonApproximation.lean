@@ -7,6 +7,8 @@ module
 
 public import Mathlib.Probability.Distributions.Poisson.PoissonLimitThm
 public import Mathlib.Probability.Distributions.Bernoulli
+public import Mathlib.Probability.Independence.Integration
+public import Mathlib.Probability.ProbabilityMassFunction.Integrals
 public import StochLean.Probability.Convergence.Discrete
 public import StochLean.Probability.GeneratingFunction.RandomSum
 
@@ -114,6 +116,67 @@ end PMF
 namespace ProbabilityTheory
 
 noncomputable section
+
+/-- The probability generating function of the law of a natural-valued random variable is the
+expectation of the corresponding random power. -/
+lemma HasLaw.pgf_eq_integral_pow {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    {P : Measure Ω} {Y : Ω → ℕ} {μ : Measure ℕ} [IsProbabilityMeasure μ]
+    (hY : HasLaw Y μ P) (z : unitInterval) :
+    μ.pgf z = ∫ ω, (z : ℝ) ^ Y ω ∂P := by
+  have hf : Integrable (fun n : ℕ ↦ (z : ℝ) ^ n) μ := by
+    refine ⟨(measurable_of_countable fun n : ℕ ↦ (z : ℝ) ^ n).aestronglyMeasurable, ?_⟩
+    exact HasFiniteIntegral.of_bounded (C := 1) <| Eventually.of_forall fun n ↦ by
+      rw [Real.norm_eq_abs, abs_pow, abs_of_nonneg z.2.1]
+      exact pow_le_one₀ z.2.1 z.2.2
+  calc
+    μ.pgf z = ∫ n, (z : ℝ) ^ n ∂μ.toPMF.toMeasure := by
+      have hf' : Integrable (fun n : ℕ ↦ (z : ℝ) ^ n) μ.toPMF.toMeasure := by
+        simpa only [Measure.toPMF_toMeasure] using hf
+      rw [Measure.pgf, PMF.integral_eq_tsum μ.toPMF _ hf']
+      rfl
+    _ = ∫ n, (z : ℝ) ^ n ∂μ := by rw [Measure.toPMF_toMeasure]
+    _ = ∫ ω, (z : ℝ) ^ Y ω ∂P := (hY.integral_comp hf.aestronglyMeasurable).symm
+
+/-- A finite sum of independent identically distributed natural-valued Bernoulli variables has
+the corresponding Poisson-binomial law. -/
+theorem iIndepFun.hasLaw_fintype_sum_bernoulli {Ω ι : Type*}
+    {mΩ : MeasurableSpace Ω} [Fintype ι] {P : Measure Ω} [IsProbabilityMeasure P]
+    {Y : ι → Ω → ℕ} {p : unitInterval}
+    (hIndep : iIndepFun Y P)
+    (hLaw : ∀ i, HasLaw (Y i) (bernoulliMeasure (1 : ℕ) 0 p) P) :
+    HasLaw (fun ω ↦ ∑ i, Y i ω)
+      (PMF.poissonBinomial (List.replicate (Fintype.card ι) p)).toMeasure P := by
+  let S : Ω → ℕ := fun ω ↦ ∑ i, Y i ω
+  have hS : AEMeasurable S P :=
+    Finset.aemeasurable_fun_sum Finset.univ fun i _ ↦ (hLaw i).aemeasurable
+  have hSelf : HasLaw S (P.map S) P := ⟨hS, rfl⟩
+  let _ : IsProbabilityMeasure (P.map S) := hSelf.isProbabilityMeasure_iff.mp inferInstance
+  refine ⟨hS, ?_⟩
+  change P.map S = _
+  rw [← PMF.toPMF_eq_iff_toMeasure_eq]
+  apply PMF.ext_pgf
+  funext z
+  change (P.map S).pgf z = _
+  rw [hSelf.pgf_eq_integral_pow]
+  have hprod := hIndep.integral_fun_prod_comp
+    (fun i ↦ (hLaw i).aemeasurable)
+    (fun i ↦ (measurable_of_countable fun n : ℕ ↦ (z : ℝ) ^ n).aestronglyMeasurable)
+  calc
+    (∫ ω, (z : ℝ) ^ S ω ∂P) = ∫ ω, ∏ i, (z : ℝ) ^ Y i ω ∂P := by
+      apply integral_congr_ae
+      exact Eventually.of_forall fun ω ↦ by
+        simpa [S] using
+          (Finset.prod_pow_eq_pow_sum Finset.univ (fun i ↦ Y i ω) (z : ℝ)).symm
+    _ = ∏ i, ∫ ω, (z : ℝ) ^ Y i ω ∂P := hprod
+    _ = ∏ _i : ι, (PMF.bernoulliNat p).pgf z := by
+      apply Finset.prod_congr rfl
+      intro i _
+      change (∫ ω, (z : ℝ) ^ Y i ω ∂P) =
+        (bernoulliMeasure (1 : ℕ) 0 p).pgf z
+      exact (hLaw i).pgf_eq_integral_pow z |>.symm
+    _ = (PMF.poissonBinomial (List.replicate (Fintype.card ι) p)).pgf z := by
+      rw [PMF.pgf_poissonBinomial]
+      simp
 
 /-- The sum of the Bernoulli parameters in one triangular-array row. -/
 def bernoulliRowSum (ps : List unitInterval) : ℝ :=
