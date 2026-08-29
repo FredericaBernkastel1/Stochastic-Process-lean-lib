@@ -6,14 +6,18 @@ Authors: StochLean contributors
 module
 
 public import Mathlib.Analysis.SpecificLimits.Basic
+public import Mathlib.MeasureTheory.Measure.Dirac
+public import Mathlib.Probability.Distributions.Bernoulli
 public import StochLean.Probability.Process.Poisson.IntervalAxioms
 
 /-!
 # Foundations for the converse Poisson interval characterization
 
-This file develops the analytic part of the converse direction of Klenke, Theorem 5.34.  The
-stationary additive interval mean is shown to be linear, Markov's inequality supplies the missing
-boundedness for P5, and the exact `limsup` axiom is upgraded to a genuine right-hand limit.
+This file develops the analytic and dyadic-approximation foundations for the converse direction
+of Klenke, Theorem 5.34.  The stationary additive interval mean is shown to be linear, Markov's
+inequality supplies the missing boundedness for P5, the exact `limsup` axiom is upgraded to a
+genuine right-hand limit, and dyadic occupation variables are identified as i.i.d. Bernoulli
+variables.
 -/
 
 @[expose] public section
@@ -26,7 +30,79 @@ namespace ProbabilityTheory
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
   {X : NNReal → Ω → ℕ} {P : Measure Ω} [IsProbabilityMeasure P]
 
+/-- Success probability of the indicator that a natural-valued random variable is nonzero. -/
+noncomputable def occupationProbability (Y : Ω → ℕ) (P : Measure Ω)
+    [IsProbabilityMeasure P] : unitInterval :=
+  ⟨P.real {ω | 1 ≤ Y ω}, measureReal_nonneg, measureReal_le_one⟩
+
+/-- The nonzero indicator of a natural-valued random variable has the corresponding Bernoulli
+law.  The statement only needs a.e. measurability. -/
+theorem hasLaw_occupationIndicator {Y : Ω → ℕ} (hY : AEMeasurable Y P) :
+    HasLaw (fun ω ↦ if 1 ≤ Y ω then 1 else 0)
+      (bernoulliMeasure (1 : ℕ) 0 (occupationProbability Y P)) P := by
+  let Z : Ω → ℕ := fun ω ↦ if 1 ≤ Y ω then 1 else 0
+  have hZ : AEMeasurable Z P := by
+    exact (measurable_of_countable fun k : ℕ ↦ if 1 ≤ k then 1 else 0).comp_aemeasurable hY
+  refine ⟨hZ, ?_⟩
+  apply MeasureTheory.Measure.ext_of_measureReal_singleton
+  intro k
+  rw [map_measureReal_apply_of_aemeasurable hZ (MeasurableSet.singleton k)]
+  by_cases hk1 : k = 1
+  · subst k
+    rw [bernoulliMeasure_real_apply_of_mem_of_notMem]
+    · apply congrArg P.real
+      ext ω
+      simp [Z]
+      omega
+    · exact MeasurableSet.singleton 1
+    · simp
+    · simp
+  by_cases hk0 : k = 0
+  · subst k
+    rw [bernoulliMeasure_real_apply_of_notMem_of_mem]
+    · have hA : NullMeasurableSet {ω | 1 ≤ Y ω} P :=
+        hY.nullMeasurableSet_preimage measurableSet_Ici
+      rw [show Z ⁻¹' ({0} : Set ℕ) = ({ω | 1 ≤ Y ω})ᶜ by
+        ext ω
+        simp [Z]]
+      simpa [occupationProbability] using measureReal_compl₀ hA
+    · exact MeasurableSet.singleton 0
+    · simp
+    · simp
+  · rw [bernoulliMeasure_real_apply_of_notMem_of_notMem]
+    · rw [show (fun ω ↦ if 1 ≤ Y ω then 1 else 0) ⁻¹' ({k} : Set ℕ) = ∅ by
+        ext ω
+        simp only [mem_preimage, mem_singleton_iff, mem_empty_iff_false, iff_false]
+        split_ifs
+        · exact fun h ↦ hk1 h.symm
+        · exact fun h ↦ hk0 h.symm]
+      exact measureReal_empty
+    · exact MeasurableSet.singleton k
+    · exact fun h ↦ hk1 h.symm
+    · exact fun h ↦ hk0 h.symm
+
 namespace SatisfiesPoissonIntervalAxioms
+
+/-- Length of one interval in the level-`n` dyadic partition of `(0, t]`. -/
+noncomputable def dyadicIntervalLength (t : NNReal) (n : ℕ) : NNReal :=
+  t / ((2 : NNReal) ^ n)
+
+/-- Count in the `i`-th interval of the level-`n` dyadic partition.  The definition is useful
+for all `i`; the partition of `(0, t]` uses the first `2 ^ n` values. -/
+noncomputable def dyadicSubintervalCount
+    (X : NNReal → Ω → ℕ) (t : NNReal) (n i : ℕ) (ω : Ω) : ℕ :=
+  poissonIntervalCount X (i • dyadicIntervalLength t n) ((i + 1) • dyadicIntervalLength t n) ω
+
+/-- Bernoulli occupation indicator of a dyadic subinterval. -/
+noncomputable def dyadicSubintervalOccupied
+    (X : NNReal → Ω → ℕ) (t : NNReal) (n i : ℕ) (ω : Ω) : ℕ :=
+  if 1 ≤ dyadicSubintervalCount X t n i ω then 1 else 0
+
+/-- Common Bernoulli success parameter of the level-`n` dyadic occupation indicators. -/
+noncomputable def dyadicOccupancyProbability
+    (X : NNReal → Ω → ℕ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (t : NNReal) (n : ℕ) : unitInterval :=
+  occupationProbability (poissonIntervalCount X 0 (dyadicIntervalLength t n)) P
 
 /-- The expected count in an interval of length `t`. -/
 noncomputable def intervalMean (_hX : SatisfiesPoissonIntervalAxioms X P)
@@ -228,6 +304,86 @@ theorem tendsto_rareMultipleJump_ratio
       (𝓝[>] 0) ≤ 0
     rw [hX.rareMultipleJump]
   exact tendsto_of_le_liminf_of_limsup_le hinf hsup hboundedAbove hboundedBelow
+
+/-- Counts in equal dyadic subintervals form an independent family. -/
+theorem iIndepFun_dyadicSubintervalCount
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n : ℕ) :
+    iIndepFun (dyadicSubintervalCount X t n) P := by
+  let Δ := dyadicIntervalLength t n
+  have htime : Monotone (fun i : ℕ ↦ i • Δ) := by
+    intro i j hij
+    exact nsmul_le_nsmul_left Δ.2 hij
+  change iIndepFun (fun i ω ↦
+    X ((i + 1) • dyadicIntervalLength t n) ω -
+      X (i • dyadicIntervalLength t n) ω) P
+  exact hX.indepIncrements.nat htime
+
+theorem aemeasurable_dyadicSubintervalCount
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n i : ℕ) :
+    AEMeasurable (dyadicSubintervalCount X t n i) P := by
+  exact (hX.aemeasurable ((i + 1) • dyadicIntervalLength t n)).sub
+    (hX.aemeasurable (i • dyadicIntervalLength t n))
+
+theorem aemeasurable_dyadicSubintervalOccupied
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n i : ℕ) :
+    AEMeasurable (dyadicSubintervalOccupied X t n i) P := by
+  let occupied : ℕ → ℕ := fun k ↦ if 1 ≤ k then 1 else 0
+  have hm : Measurable occupied := measurable_of_countable occupied
+  change AEMeasurable (fun ω ↦
+    if 1 ≤ dyadicSubintervalCount X t n i ω then 1 else 0) P
+  exact hm.comp_aemeasurable (hX.aemeasurable_dyadicSubintervalCount t n i)
+
+/-- Dyadic occupation indicators inherit independence from the interval counts. -/
+theorem iIndepFun_dyadicSubintervalOccupied
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n : ℕ) :
+    iIndepFun (dyadicSubintervalOccupied X t n) P := by
+  let occupied : ℕ → ℕ := fun k ↦ if 1 ≤ k then 1 else 0
+  have hi := (hX.iIndepFun_dyadicSubintervalCount t n).comp
+    (fun _ ↦ occupied) (fun _ ↦ measurable_of_countable occupied)
+  change iIndepFun (fun i ω ↦
+    if 1 ≤ dyadicSubintervalCount X t n i ω then 1 else 0) P
+  exact hi
+
+/-- Every dyadic subinterval count has the law of the count on the first subinterval. -/
+theorem identDistrib_dyadicSubintervalCount
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n i : ℕ) :
+    IdentDistrib (poissonIntervalCount X 0 (dyadicIntervalLength t n))
+      (dyadicSubintervalCount X t n i) P P := by
+  apply hX.stationaryIntervalLaw 0 (dyadicIntervalLength t n)
+    (i • dyadicIntervalLength t n) ((i + 1) • dyadicIntervalLength t n)
+  · exact bot_le
+  · exact nsmul_le_nsmul_left (dyadicIntervalLength t n).2 (Nat.le_succ i)
+  · have hle : i • dyadicIntervalLength t n ≤
+        (i + 1) • dyadicIntervalLength t n :=
+      nsmul_le_nsmul_left (dyadicIntervalLength t n).2 (Nat.le_succ i)
+    rw [tsub_zero]
+    change dyadicIntervalLength t n =
+      (i + 1) • dyadicIntervalLength t n - i • dyadicIntervalLength t n
+    rw [eq_tsub_iff_add_eq_of_le hle, succ_nsmul]
+    ac_rfl
+
+/-- The occupation indicators of all dyadic subintervals are identically distributed. -/
+theorem identDistrib_dyadicSubintervalOccupied
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n i : ℕ) :
+    IdentDistrib
+      (fun ω ↦ if 1 ≤ poissonIntervalCount X 0 (dyadicIntervalLength t n) ω then 1 else 0)
+      (dyadicSubintervalOccupied X t n i) P P := by
+  let occupied : ℕ → ℕ := fun k ↦ if 1 ≤ k then 1 else 0
+  have h := (hX.identDistrib_dyadicSubintervalCount t n i).comp
+    (measurable_of_countable occupied)
+  change IdentDistrib
+    (fun ω ↦ if 1 ≤ poissonIntervalCount X 0 (dyadicIntervalLength t n) ω then 1 else 0)
+    (fun ω ↦ if 1 ≤ dyadicSubintervalCount X t n i ω then 1 else 0) P P
+  exact h
+
+/-- Each dyadic occupation indicator has the common Bernoulli law. -/
+theorem hasLaw_dyadicSubintervalOccupied
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) (n i : ℕ) :
+    HasLaw (dyadicSubintervalOccupied X t n i)
+      (bernoulliMeasure (1 : ℕ) 0 (dyadicOccupancyProbability X P t n)) P := by
+  have hbase := hasLaw_occupationIndicator (P := P)
+    ((hX.aemeasurable (dyadicIntervalLength t n)).sub (hX.aemeasurable 0))
+  exact (hX.identDistrib_dyadicSubintervalOccupied t n i).hasLaw hbase
 
 /-- The total error from intervals containing two or more jumps in the dyadic
 partition of `(0, t]` tends to zero.  This is the P5 estimate used in Klenke's
