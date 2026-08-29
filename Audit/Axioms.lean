@@ -12,6 +12,7 @@ import StochLean
 #print axioms ProbabilityTheory.GaltonWatson.pgf_extinctionProbability
 #print axioms ProbabilityTheory.GaltonWatson.extinctionProbability_le_fixed
 #print axioms ProbabilityTheory.IsPoissonProcess.hasStationaryIncrements
+#print axioms ProbabilityTheory.IsPoissonProcess.satisfiesPoissonIntervalAxioms
 #print axioms ProbabilityTheory.PoissonProcess.DivergentArrivalSequence.count_eventTime
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_ae
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_rat_ae

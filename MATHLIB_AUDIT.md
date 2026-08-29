@@ -18,7 +18,7 @@ the relevant duplicate decisions.
 | de la Vallée-Poussin envelope criterion | No superlinear-envelope bridge to Mathlib UI predicates found | Add the generic sufficient direction in `ForMathlib`; leave the converse envelope construction explicit |
 | `empiricalCDF`, `GlivenkoCantelli` | No matching empirical-CDF or GC declaration found | Add strict/non-strict finite-sample APIs; derive common-event threshold strong laws from Mathlib `strong_law_ae`; use right values and strict left limits to prove full uniform GC for arbitrary real laws |
 | `GaltonWatson`, `branching`, `extinctionProbability` | No matching law recursion or extinction fixed-point API found | Add StochLean law-level definitions and proofs |
-| `PoissonProcess` | Poisson distributions and independent increments exist, but no matching counting-process package | Add a function-based predicate and deterministic construction cores |
+| `PoissonProcess`, interval-count characterization | Poisson distributions and independent increments exist, but no matching counting-process or P1–P5 characterization package | Add a function-based predicate, exact interval-axiom API, proved forward characterization, and deterministic construction cores |
 
 ## Public-domain checks
 
