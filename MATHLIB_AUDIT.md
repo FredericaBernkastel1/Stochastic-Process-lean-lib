@@ -13,7 +13,7 @@ the relevant duplicate decisions.
 | `PMF.bind`, `PMF.map` | Canonical law-level mixture and mapping operations exist | Define convolution and random sums using these operations |
 | `HasIndepIncrements` | Canonical process predicate exists | Reuse it inside `IsPoissonProcess` |
 | `TendstoInMeasure` | Only the global measure notion is canonical | Add the finite-restriction local predicate in `ForMathlib` |
-| local fast convergence, local Cauchy criterion | No sigma-finite local Borel--Cantelli convergence package found | Add the summable-bad-set and complete-target fast-Cauchy theorems over finite restrictions |
+| local fast convergence, local Cauchy criterion | No sigma-finite local Borel--Cantelli convergence or Cauchy-completeness package found | Add summable-bad-set and fast-Cauchy theorems, then prove the complete-target local Cauchy equivalence |
 | `UnifIntegrable`, `tendsto_Lp_finite_of_tendstoInMeasure` | Canonical finite-measure Vitali theorem exists | Define only the local restriction bridge |
 | `UnifTight`, `tendstoInMeasure_iff_tendsto_Lp` | Canonical non-finite-measure Vitali theorem exists | Reuse upstream for global convergence; avoid a duplicate theorem |
 | de la Vallée-Poussin envelope criterion | No superlinear-envelope bridge to Mathlib UI predicates found | Add the generic sufficient direction in `ForMathlib`; leave the converse envelope construction explicit |

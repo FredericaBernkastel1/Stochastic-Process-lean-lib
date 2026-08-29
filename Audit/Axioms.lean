@@ -23,6 +23,8 @@ import StochLean
 #print axioms MeasureTheory.tendstoLocallyInMeasure_of_tendsto_ae
 #print axioms MeasureTheory.tendsto_ae_of_summable_measure_edist_local
 #print axioms MeasureTheory.exists_stronglyMeasurable_tendsto_ae_of_fast_cauchy_local
+#print axioms MeasureTheory.CauchyLocallyInMeasure.exists_tendsto
+#print axioms MeasureTheory.cauchyLocallyInMeasure_iff_exists_tendsto
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae_restrict
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae
 #print axioms MeasureTheory.exists_seq_tendstoLocallyInMeasure_atTop_iff

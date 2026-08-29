@@ -120,4 +120,49 @@ theorem exists_stronglyMeasurable_tendsto_ae_of_fast_cauchy_local
       exact le_rfl
   exact hcauchy.tendsto_limUnder
 
+/-- Diagonal version of the fast-Cauchy criterion.  It is enough to control the `n`-th adjacent
+increment on the `n`-th canonical sigma-finite spanning set.  This is the form used to prove
+completeness of local convergence in measure. -/
+theorem exists_stronglyMeasurable_tendsto_ae_of_fast_cauchy_spanning
+    {F : Type*} [MetricSpace F] [CompleteSpace F] [Nonempty F]
+    {f : ℕ → α → F} {ε : ℕ → ℝ}
+    (hf : ∀ n, StronglyMeasurable (f n)) (hε : Summable ε)
+    (hsum : (∑' n, (μ.restrict (spanningSets μ n))
+      {x | ε n < dist (f n x) (f (n + 1) x)}) ≠ ∞) :
+    ∃ g : α → F, StronglyMeasurable g ∧
+      ∀ᵐ x ∂μ, Tendsto (fun n ↦ f n x) atTop (𝓝 (g x)) := by
+  let bad (n : ℕ) : Set α := {x | ε n < dist (f n x) (f (n + 1) x)}
+  have hnull : μ (limsup (fun n ↦ bad n ∩ spanningSets μ n) atTop) = 0 := by
+    apply measure_limsup_atTop_eq_zero
+    simpa only [bad, Measure.restrict_apply' (measurableSet_spanningSets μ _)] using hsum
+  have hgood : ∀ᵐ x ∂μ, x ∉ limsup (fun n ↦ bad n ∩ spanningSets μ n) atTop := by
+    rw [ae_iff]
+    rw [show {x | ¬x ∉ limsup (fun n ↦ bad n ∩ spanningSets μ n) atTop} =
+      limsup (fun n ↦ bad n ∩ spanningSets μ n) atTop by ext x; simp]
+    exact hnull
+  let g : α → F := fun x ↦ limUnder atTop (fun n ↦ f n x)
+  refine ⟨g, StronglyMeasurable.limUnder hf, ?_⟩
+  filter_upwards [hgood] with x hx
+  rw [mem_limsup_iff_frequently_mem, not_frequently] at hx
+  obtain ⟨N₁, hN₁⟩ := eventually_atTop.1 hx
+  obtain ⟨N₂, hN₂⟩ := eventually_atTop.1 (eventually_mem_spanningSets μ x)
+  let N := max N₁ N₂
+  have hdist (n : ℕ) (hn : N ≤ n) : dist (f n x) (f (n + 1) x) ≤ ε n := by
+    have hnot := hN₁ n ((le_max_left _ _).trans hn)
+    have hxspan := hN₂ n ((le_max_right _ _).trans hn)
+    exact not_lt.mp (fun hlt ↦ hnot ⟨hlt, hxspan⟩)
+  let d : ℕ → ℝ := fun n ↦ if N ≤ n then ε n else dist (f n x) (f (n + 1) x)
+  have hd : Summable d := by
+    apply hε.congr_atTop
+    filter_upwards [eventually_ge_atTop N] with n hn
+    simp only [d, if_pos hn]
+  have hcauchy : CauchySeq (fun n ↦ f n x) := by
+    apply cauchySeq_of_dist_le_of_summable d _ hd
+    intro n
+    by_cases hn : N ≤ n
+    · simpa only [d, if_pos hn] using hdist n hn
+    · simp only [d, if_neg hn, Nat.succ_eq_add_one]
+      exact le_rfl
+  exact hcauchy.tendsto_limUnder
+
 end MeasureTheory
