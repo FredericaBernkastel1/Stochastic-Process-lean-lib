@@ -69,6 +69,20 @@ theorem tendsto_extinctionApprox (offspring : PMF ℕ) :
     Tendsto (extinctionApprox offspring) atTop (𝓝 (extinctionProbability offspring)) :=
   tendsto_atTop_iSup (monotone_extinctionApprox offspring)
 
+/-- The finite extinction approximation is the corresponding iterate of the offspring PGF. -/
+theorem extinctionApprox_eq_iterate (offspring : PMF ℕ) (n : ℕ) :
+    extinctionApprox offspring n = (offspringPGF offspring)^[n] 0 := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      rw [Function.iterate_succ_apply', ← ih]
+      rfl
+
+/-- The probability that generation `n` is empty is the finite extinction approximation. -/
+theorem pgf_generationLaw_zero (offspring : PMF ℕ) (n : ℕ) :
+    (generationLaw offspring n).pgf 0 = (extinctionApprox offspring n : ℝ) := by
+  rw [pgf_generationLaw_iterate, extinctionApprox_eq_iterate]
+
 /-- The extinction probability is a fixed point of the offspring PGF. -/
 theorem pgf_extinctionProbability (offspring : PMF ℕ) :
     offspring.pgf (extinctionProbability offspring) = extinctionProbability offspring := by

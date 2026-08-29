@@ -19,6 +19,7 @@ constructions. Their probabilistic laws can then be proved without changing repr
 @[expose] public section
 
 open Filter Finset
+open scoped Topology
 
 namespace ProbabilityTheory.PoissonProcess
 
@@ -97,6 +98,19 @@ lemma monotone_count (a : DivergentArrivalSequence) : Monotone a.count := by
   intro s t hst
   apply Nat.find_min' (a.exists_eventTime_gt s)
   exact hst.trans_lt (a.lt_eventTime_count t)
+
+/-- A nonexplosive positive-interarrival counting path is right-continuous. -/
+theorem isRightContinuousPath_count (a : DivergentArrivalSequence) :
+    IsRightContinuousPath a.count := by
+  intro t
+  have heq : a.count =ᶠ[𝓝[Set.Ici t] t] fun _ ↦ a.count t := by
+    filter_upwards [eventually_nhdsWithin_of_eventually_nhds
+      (Iio_mem_nhds (a.lt_eventTime_count t)), self_mem_nhdsWithin] with u hu htu
+    apply le_antisymm
+    · apply Nat.find_min' (a.exists_eventTime_gt u)
+      exact hu
+    · exact a.monotone_count htu
+  exact continuousWithinAt_const.congr_of_eventuallyEq heq rfl
 
 end DivergentArrivalSequence
 

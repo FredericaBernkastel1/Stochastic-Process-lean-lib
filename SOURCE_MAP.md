@@ -14,7 +14,7 @@ project axioms or placeholders; “upstream” means the pinned Mathlib theorem 
 | Klenke 3.7 | Discrete coefficient convergence and PGF convergence | `Probability/Convergence/Discrete.lean` | Coefficientwise-to-PGF direction implemented |
 | Klenke 3.8 | Poisson approximation | `Probability/LimitTheorems/PoissonApproximation.lean`; Mathlib `PoissonLimitThm` | Binomial point-probability theorem upstream; triangular-array theorem remains |
 | Klenke 3.9 | Random sums and PGF composition | `Probability/GeneratingFunction/RandomSum.lean` | Implemented at law level |
-| Klenke 3.10–3.11 | Galton–Watson recursion and extinction | `Probability/Branching/Basic.lean`; `Extinction.lean` | Generation recursion and least-fixed-point theorem implemented |
+| Klenke 3.10–3.11 | Galton–Watson recursion and extinction | `Probability/Branching/Basic.lean`; `Extinction.lean` | Generation PGF iteration, finite extinction laws, and least-fixed-point theorem implemented |
 | Klenke 5.34 | Empirical CDF and Glivenko–Cantelli | `Probability/EmpiricalProcess/CDF.lean` | Finite-sample and process API implemented; uniform a.s. theorem remains |
 | Klenke 5.35–5.36 | Poisson-process characterizations and constructions | `Probability/Process/Poisson/Basic.lean`; `Constructions.lean` | P1–P5 API, marginal/stationary laws, and deterministic construction cores implemented; construction laws remain |
 | Klenke 6.2 | Local convergence in measure | `ForMathlib/MeasureTheory/Function/ConvergenceInMeasureLocal.lean` | Implemented |
