@@ -9,7 +9,7 @@ the relevant duplicate decisions.
 | Topic / search terms | Pinned Mathlib result | Decision |
 | --- | --- | --- |
 | `pgf`, `probability generating function` | No canonical PGF for `PMF ℕ` | Add `PMF.pgf` and law bridge in StochLean |
-| `poissonMeasure`, `PoissonLimitThm` | Canonical Poisson measure and binomial point-probability limit exist | Re-export the upstream limit theorem; do not duplicate it |
+| `poissonMeasure`, `PoissonLimitThm` | Canonical Poisson measure and i.i.d. binomial point-probability limit exist | Re-export the upstream result; add only the non-i.i.d. Bernoulli triangular-array theorem and its PGF bridge |
 | `PMF.bind`, `PMF.map` | Canonical law-level mixture and mapping operations exist | Define convolution and random sums using these operations |
 | `HasIndepIncrements` | Canonical process predicate exists | Reuse it inside `IsPoissonProcess` |
 | `TendstoInMeasure` | Only the global measure notion is canonical | Add the finite-restriction local predicate in `ForMathlib` |

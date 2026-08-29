@@ -12,7 +12,7 @@ project axioms or placeholders; “upstream” means the pinned Mathlib theorem 
 | --- | --- | --- | --- |
 | Klenke 3.2–3.3 | PGF definition, basic bounds, continuity, analytic interior, uniqueness | `Probability/GeneratingFunction/Basic.lean`; `Analytic.lean` | Implemented |
 | Klenke 3.7 | Discrete coefficient convergence and PGF convergence | `Probability/Convergence/Discrete.lean` | Both directions and the equivalence theorem implemented |
-| Klenke 3.8 | Poisson approximation | `Probability/LimitTheorems/PoissonApproximation.lean`; Mathlib `PoissonLimitThm` | Binomial point-probability theorem upstream; triangular-array theorem remains |
+| Klenke 3.8 | Poisson approximation | `Probability/LimitTheorems/PoissonApproximation.lean`; Mathlib `PoissonLimitThm` | Binomial theorem upstream; non-identically distributed Bernoulli triangular-array theorem implemented in both square-smallness and maximum-smallness forms |
 | Klenke 3.9 | Random sums and PGF composition | `Probability/GeneratingFunction/RandomSum.lean` | Implemented at law level |
 | Klenke 3.10–3.11 | Galton–Watson recursion and extinction | `Probability/Branching/Basic.lean`; `Extinction.lean` | Generation PGF iteration, finite extinction laws, and least-fixed-point theorem implemented |
 | Klenke 5.34 | Empirical CDF and Glivenko–Cantelli | `Probability/EmpiricalProcess/CDF.lean`; `StrongLaw.lean` | Finite-sample API and pointwise a.s. convergence on one common event for all rational thresholds implemented; uniform a.s. theorem remains |
