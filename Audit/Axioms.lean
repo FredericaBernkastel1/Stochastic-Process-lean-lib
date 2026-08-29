@@ -15,6 +15,7 @@ import StochLean
 #print axioms ProbabilityTheory.PoissonProcess.DivergentArrivalSequence.count_eventTime
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_ae
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_rat_ae
+#print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_all_ae
 #print axioms MeasureTheory.tendstoLocallyInMeasure_of_tendsto_ae
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae_restrict
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae
