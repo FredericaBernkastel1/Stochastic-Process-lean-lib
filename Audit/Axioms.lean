@@ -16,6 +16,8 @@ import StochLean
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_ae
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_rat_ae
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_all_ae
+#print axioms ProbabilityTheory.tendsto_empiricalCDFSequenceLt_all_ae
+#print axioms ProbabilityTheory.tendstoUniformly_empiricalCDFSequence_ae
 #print axioms ProbabilityTheory.tendstoUniformly_empiricalCDFSequence_ae_of_continuous_cdf
 #print axioms MeasureTheory.tendstoLocallyInMeasure_of_tendsto_ae
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae_restrict

@@ -142,6 +142,43 @@ theorem tendsto_empiricalCDFSequence_all_ae {Ω : Type*} [MeasurableSpace Ω]
     constructor <;> linarith
   · exact hωdisc ⟨t, ht⟩
 
+/-- The strict empirical CDF converges at every real threshold on one common full-measure event.
+
+Reflection turns strict lower half-lines into complements of non-strict lower half-lines, so this
+is an exact consequence of the all-threshold theorem for `empiricalCDFSequence`. -/
+theorem tendsto_empiricalCDFSequenceLt_all_ae {Ω : Type*} [MeasurableSpace Ω]
+    (P : Measure Ω) [IsProbabilityMeasure P] (X : ℕ → Ω → ℝ)
+    (hX : ∀ i, Measurable (X i))
+    (hindep : Pairwise (fun i j ↦ IndepFun (X i) (X j) P))
+    (hident : ∀ i, IdentDistrib (X i) (X 0) P P) :
+    ∀ᵐ ω ∂P, ∀ t : ℝ,
+      Tendsto (fun n ↦ empiricalCDFSequenceLt X n ω t) atTop
+        (nhds (P.real ((X 0) ⁻¹' Set.Iio t))) := by
+  let Y : ℕ → Ω → ℝ := fun i ω ↦ -X i ω
+  have hY : ∀ i, Measurable (Y i) := fun i ↦ measurable_neg.comp (hX i)
+  have hYindep : Pairwise (fun i j ↦ IndepFun (Y i) (Y j) P) := fun i j hij ↦
+    IndepFun.comp (hindep hij) measurable_neg measurable_neg
+  have hYident : ∀ i, IdentDistrib (Y i) (Y 0) P P := fun i ↦
+    (hident i).comp measurable_neg
+  filter_upwards [tendsto_empiricalCDFSequence_all_ae P Y hY hYindep hYident] with ω hω
+  intro t
+  have hset : (X 0) ⁻¹' Set.Iio t = ((Y 0) ⁻¹' Set.Iic (-t))ᶜ := by
+    ext x
+    simp only [Set.mem_preimage, Set.mem_Iio, Set.mem_compl_iff, Set.mem_Iic, Y,
+      not_le, neg_lt_neg_iff]
+  have hprob : P.real ((X 0) ⁻¹' Set.Iio t) =
+      1 - P.real ((Y 0) ⁻¹' Set.Iic (-t)) := by
+    rw [hset, measureReal_compl]
+    · simp only [probReal_univ]
+    · exact measurableSet_Iic.preimage (hY 0)
+  have htend : Tendsto (fun n ↦ 1 - empiricalCDFSequence Y n ω (-t)) atTop
+      (nhds (1 - P.real ((Y 0) ⁻¹' Set.Iic (-t)))) :=
+    tendsto_const_nhds.sub (hω (-t))
+  rw [← hprob] at htend
+  apply Tendsto.congr' _ htend
+  filter_upwards [] with n
+  simpa only [Y] using (empiricalCDFSequenceLt_eq_one_sub_reflect X n ω t).symm
+
 end
 
 end ProbabilityTheory
