@@ -1,0 +1,125 @@
+/-
+Copyright (c) 2026 StochLean contributors. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: StochLean contributors
+-/
+module
+
+public import StochLean.Probability.GeneratingFunction.Analytic
+
+/-!
+# Convolution powers and random sums
+
+The constructions in this file are law-level objects. `convolutionPow q n` is the law of the sum
+of `n` independent variables with law `q`, and `randomSum p q` mixes these laws with count law `p`.
+Using `PMF.bind` keeps the independence/product construction canonical and avoids introducing a
+second random-variable representation.
+-/
+
+@[expose] public section
+
+namespace PMF
+
+noncomputable section
+
+/-- Additive convolution of two natural-number-valued probability laws. -/
+def convolution (p q : PMF ℕ) : PMF ℕ :=
+  p.bind fun m ↦ q.map fun n ↦ m + n
+
+/-- The law of the sum of `n` independent variables with common law `p`. -/
+def convolutionPow (p : PMF ℕ) : ℕ → PMF ℕ
+  | 0 => PMF.pure 0
+  | n + 1 => convolution (convolutionPow p n) p
+
+/-- The law of a random sum with count law `p` and summand law `q`. -/
+def randomSum (p q : PMF ℕ) : PMF ℕ :=
+  p.bind (convolutionPow q)
+
+@[simp]
+lemma convolutionPow_zero (p : PMF ℕ) : convolutionPow p 0 = PMF.pure 0 :=
+  rfl
+
+@[simp]
+lemma convolutionPow_succ (p : PMF ℕ) (n : ℕ) :
+    convolutionPow p (n + 1) = convolution (convolutionPow p n) p :=
+  rfl
+
+@[simp]
+lemma convolution_pure_pure (m n : ℕ) :
+    convolution (PMF.pure m) (PMF.pure n) = PMF.pure (m + n) := by
+  simp [convolution, PMF.pure_map]
+
+@[simp]
+lemma convolutionPow_pure (a n : ℕ) :
+    convolutionPow (PMF.pure a) n = PMF.pure (n * a) := by
+  induction n with
+  | zero => simp
+  | succ n ih => simp [convolutionPow, ih, Nat.succ_mul]
+
+@[simp]
+lemma randomSum_pure_count (n : ℕ) (q : PMF ℕ) :
+    randomSum (PMF.pure n) q = convolutionPow q n := by
+  simp [randomSum]
+
+@[simp]
+lemma randomSum_pure_summand (p : PMF ℕ) (a : ℕ) :
+    randomSum p (PMF.pure a) = p.map fun n ↦ n * a := by
+  rw [randomSum]
+  have h : convolutionPow (PMF.pure a) = fun n ↦ PMF.pure (n * a) :=
+    funext fun n ↦ convolutionPow_pure a n
+  rw [h]
+  change p.bind (PMF.pure ∘ fun n ↦ n * a) = _
+  exact p.bind_pure_comp (fun n ↦ n * a)
+
+@[simp]
+lemma randomSum_pure_zero (p : PMF ℕ) :
+    randomSum p (PMF.pure 0) = PMF.pure 0 := by
+  rw [randomSum_pure_summand]
+  have h : (fun n : ℕ ↦ n * 0) = Function.const ℕ 0 := by
+    funext n
+    simp
+  rw [h]
+  exact p.map_const (b := (0 : ℕ))
+
+lemma pgf_map_add (p : PMF ℕ) (m : ℕ) (z : unitInterval) :
+    (p.map fun n ↦ m + n).pgf z = (z : ℝ) ^ m * p.pgf z := by
+  rw [pgf_map, pgf, ← p.summable_pgf z |>.tsum_mul_left ((z : ℝ) ^ m)]
+  apply tsum_congr
+  intro n
+  rw [pow_add]
+  ring
+
+/-- The PGF transforms additive convolution into multiplication. -/
+lemma pgf_convolution (p q : PMF ℕ) (z : unitInterval) :
+    (convolution p q).pgf z = p.pgf z * q.pgf z := by
+  rw [convolution, pgf_bind]
+  simp_rw [pgf_map_add]
+  calc
+    ∑' n, p.massReal n * ((z : ℝ) ^ n * q.pgf z) =
+        ∑' n, (p.massReal n * (z : ℝ) ^ n) * q.pgf z := by
+          apply tsum_congr
+          intro n
+          ring
+    _ = p.pgf z * q.pgf z := by
+      rw [p.summable_pgf z |>.tsum_mul_right]
+      rfl
+
+/-- The PGF of an `n`-fold convolution is the `n`th power of the original PGF. -/
+lemma pgf_convolutionPow (p : PMF ℕ) (n : ℕ) (z : unitInterval) :
+    (convolutionPow p n).pgf z = (p.pgf z) ^ n := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [convolutionPow_succ, pgf_convolution, ih, pow_succ]
+
+/-- The random-sum composition formula for probability generating functions. -/
+theorem pgf_randomSum (p q : PMF ℕ) (z : unitInterval) :
+    (randomSum p q).pgf z =
+      p.pgf ⟨q.pgf z, q.pgf_mem_unitInterval z⟩ := by
+  rw [randomSum, pgf_bind]
+  simp_rw [pgf_convolutionPow]
+  rfl
+
+end
+
+end PMF

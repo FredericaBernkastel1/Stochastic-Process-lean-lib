@@ -1,0 +1,6 @@
+/.lake/
+/build/
+/.vscode/
+/lake-packages.local.json
+*.olean
+*.ilean
