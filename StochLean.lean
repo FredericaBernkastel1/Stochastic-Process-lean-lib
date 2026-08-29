@@ -6,6 +6,7 @@ Authors: StochLean contributors
 module
 
 public import StochLean.ForMathlib.MeasureTheory.Function.ConvergenceInMeasureLocal
+public import StochLean.ForMathlib.MeasureTheory.Function.DeLaValleePoussin
 public import StochLean.Probability.Branching.Basic
 public import StochLean.Probability.Branching.Extinction
 public import StochLean.Probability.Convergence.Discrete

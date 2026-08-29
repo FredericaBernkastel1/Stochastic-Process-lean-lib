@@ -17,4 +17,6 @@ import StochLean
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae_restrict
 #print axioms MeasureTheory.TendstoLocallyInMeasure.exists_seq_tendsto_ae
 #print axioms MeasureTheory.exists_seq_tendstoLocallyInMeasure_atTop_iff
+#print axioms MeasureTheory.unifIntegrable_of_superlinearEnvelope
+#print axioms MeasureTheory.uniformIntegrable_of_superlinearEnvelope
 #print axioms MeasureTheory.TendstoLocallyInMeasure.tendsto_eLpNorm_restrict

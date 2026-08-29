@@ -20,7 +20,7 @@ project axioms or placeholders; “upstream” means the pinned Mathlib theorem 
 | Klenke 6.2 | Local convergence in measure | `ForMathlib/MeasureTheory/Function/ConvergenceInMeasureLocal.lean` | Implemented |
 | Klenke 6.25 | Vitali convergence on finite restrictions | `Probability/Convergence/LocalVitali.lean` plus Mathlib `UniformIntegrable` | Implemented local bridge |
 | Klenke Ch. 6 | Local pseudometric, subsequence and completeness package | `ForMathlib/MeasureTheory/Function/ConvergenceInMeasureLocal.lean` | Finite-restriction/global sigma-finite a.e. subsequences and the every-subsequence characterization implemented; pseudometric and completeness remain |
-| Klenke 7.3 | de la Vallée-Poussin criterion and envelope UI bridge | Mathlib `UniformIntegrable` audit in `MATHLIB_AUDIT.md` | Remaining bridge/API work |
+| Klenke 7.3 | de la Vallée-Poussin criterion and envelope UI bridge | `ForMathlib/MeasureTheory/Function/DeLaValleePoussin.lean` | Superlinear-envelope tail bound and sufficient criteria for both Mathlib UI notions implemented; converse envelope construction remains |
 | Design path semantics | Common full-measure event; right-continuity; indistinguishability | `Probability/Process/Path/Monotone.lean`; `RightContinuous.lean` | Implemented |
 | Design increment semantics | Stationary increments without assuming `X 0 = 0` | `Probability/Process/StationaryIncrements.lean` | Implemented |
 
