@@ -328,6 +328,21 @@ theorem tendstoUniformly_empiricalCDFSequence_ae_of_continuous_cdf
   change Tendsto (fun n => empiricalCDFSequence X n ω t) atTop (𝓝 (cdf μ t))
   simpa only [hF] using hω t
 
+/-- Discrete-jump regression test: the full theorem specializes to a constant sample, whose law
+is a Dirac mass and whose CDF has a jump at `c`.  This theorem deliberately does not pass through
+the continuous-CDF specialization. -/
+theorem tendstoUniformly_empiricalCDFSequence_const_ae
+    {Ω : Type*} [MeasurableSpace Ω] (P : Measure Ω) [IsProbabilityMeasure P] (c : ℝ) :
+    ∀ᵐ ω ∂P, TendstoUniformly
+      (fun n t ↦ empiricalCDFSequence (fun _ _ ↦ c) n ω t)
+      (cdf (Measure.map (fun _ : Ω ↦ c) P)) atTop := by
+  apply tendstoUniformly_empiricalCDFSequence_ae P (fun _ _ ↦ c)
+  · exact fun _ ↦ measurable_const
+  · intro i j _hij
+    exact indepFun_const_left c (fun _ : Ω ↦ c)
+  · intro i
+    exact IdentDistrib.refl measurable_const.aemeasurable
+
 end
 
 end ProbabilityTheory

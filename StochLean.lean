@@ -7,6 +7,9 @@ module
 
 public import StochLean.ForMathlib.MeasureTheory.Function.ConvergenceInMeasureLocal
 public import StochLean.ForMathlib.MeasureTheory.Function.LocalConvergenceMetric
+public import StochLean.ForMathlib.MeasureTheory.Function.LpLocalConvergence
+public import StochLean.ForMathlib.MeasureTheory.Function.UniformIntegrableEnvelope
+public import StochLean.ForMathlib.MeasureTheory.Function.UniformIntegrableEnvelopeCompatibility
 public import StochLean.ForMathlib.MeasureTheory.Function.CauchyInMeasureLocal
 public import StochLean.ForMathlib.MeasureTheory.Function.DeLaValleePoussin
 public import StochLean.ForMathlib.MeasureTheory.Function.FastConvergenceLocal
@@ -14,20 +17,32 @@ public import StochLean.Probability.Branching.Basic
 public import StochLean.Probability.Branching.Extinction
 public import StochLean.Probability.Convergence.Discrete
 public import StochLean.Probability.Convergence.LocalVitali
+public import StochLean.Probability.Convergence.SemanticRegression
+public import StochLean.Probability.Conditional.SemanticGuard
+public import StochLean.Probability.Distributions.Multinomial
+public import StochLean.Probability.Distributions.Poissonization
 public import StochLean.Probability.EmpiricalProcess.CDF
 public import StochLean.Probability.EmpiricalProcess.StrongLaw
 public import StochLean.Probability.EmpiricalProcess.GlivenkoCantelli
 public import StochLean.Probability.GeneratingFunction.Basic
 public import StochLean.Probability.GeneratingFunction.Analytic
 public import StochLean.Probability.GeneratingFunction.RandomSum
+public import StochLean.Probability.GeneratingFunction.SemanticRegression
 public import StochLean.Probability.LimitTheorems.PoissonApproximation
+public import StochLean.Probability.MaximalInequality.Kolmogorov
+public import StochLean.Probability.MaximalInequality.StrongLawRate
+public import StochLean.Probability.Moments.PaleyZygmund
+public import StochLean.Probability.Moments.RandomSum
 public import StochLean.Probability.Process.Path.Monotone
 public import StochLean.Probability.Process.Path.RightContinuous
 public import StochLean.Probability.Process.Poisson.Basic
+public import StochLean.Probability.Process.Poisson.ArrivalTimes
 public import StochLean.Probability.Process.Poisson.Constructions
 public import StochLean.Probability.Process.Poisson.IntervalAxioms
 public import StochLean.Probability.Process.Poisson.IntervalAxiomsConverse
 public import StochLean.Probability.Process.Poisson.IntervalAxiomsConverseLaw
+public import StochLean.Probability.Process.Poisson.FiniteIncrementLaw
+public import StochLean.Probability.Process.Poisson.UniformPoint
 public import StochLean.Probability.Process.StationaryIncrements
 
 /-!

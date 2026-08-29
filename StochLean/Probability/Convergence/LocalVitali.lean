@@ -8,6 +8,7 @@ module
 public import StochLean.ForMathlib.MeasureTheory.Function.ConvergenceInMeasureLocal
 public import StochLean.ForMathlib.MeasureTheory.Function.DeLaValleePoussin
 public import Mathlib.MeasureTheory.Function.UniformIntegrable
+public import Mathlib.MeasureTheory.Function.LpSpace.Complete
 
 /-!
 # Local Vitali convergence
@@ -179,5 +180,43 @@ theorem tendstoLocallyInMeasure_and_uniformIntegrableByEnvelope_iff_tendsto_eLpN
     exact (tendstoInMeasure_of_tendsto_eLpNorm
       (lt_of_lt_of_le zero_lt_one hp).ne' (fun n ↦ (hf n).aestronglyMeasurable)
         hg.aestronglyMeasurable hLp).locally
+
+/-- Canonical `Lp`-Cauchy form of the completeness clause in Klenke's Vitali theorem. -/
+theorem exists_memLp_tendsto_eLpNorm_iff_cauchySeq_toLp [CompleteSpace E]
+    {p : ENNReal} [hp : Fact (1 ≤ p)] {f : ℕ → α → E} (hf : ∀ n, MemLp (f n) p μ) :
+    (∃ g : α → E, MemLp g p μ ∧
+      Tendsto (fun n ↦ eLpNorm (f n - g) p μ) atTop (𝓝 0)) ↔
+      CauchySeq (fun n ↦ (hf n).toLp (f n)) := by
+  constructor
+  · rintro ⟨g, hg, hfg⟩
+    exact ((Lp.tendsto_Lp_iff_tendsto_eLpNorm'' f hf g hg).mpr hfg).cauchySeq
+  · intro hCauchy
+    obtain ⟨G, hG⟩ := cauchySeq_tendsto_of_complete hCauchy
+    refine ⟨G, Lp.memLp G, ?_⟩
+    have hG' := (Lp.tendsto_Lp_iff_tendsto_eLpNorm'
+      (fun n ↦ (hf n).toLp (f n)) G).mp hG
+    apply hG'.congr'
+    exact Eventually.of_forall fun n ↦
+      eLpNorm_congr_ae ((hf n).coeFn_toLp.sub EventuallyEq.rfl)
+
+/-- Three-way sigma-finite Vitali package: `Lp` convergence, canonical `Lp`-Cauchy convergence,
+and local convergence in measure plus envelope uniform integrability are equivalent. -/
+theorem cauchySeq_toLp_iff_exists_local_uniformIntegrableByEnvelope [CompleteSpace E]
+    {p : ENNReal} [hp : Fact (1 ≤ p)] {f : ℕ → α → E} (hp' : p ≠ ∞)
+    (hf : ∀ n, MemLp (f n) p μ) :
+    CauchySeq (fun n ↦ (hf n).toLp (f n)) ↔
+      ∃ g : α → E, MemLp g p μ ∧ TendstoLocallyInMeasure μ f atTop g ∧
+        UniformIntegrableByEnvelope f p μ := by
+  rw [← exists_memLp_tendsto_eLpNorm_iff_cauchySeq_toLp hf]
+  constructor
+  · rintro ⟨g, hg, hLp⟩
+    have hVitali :=
+      (tendstoLocallyInMeasure_and_uniformIntegrableByEnvelope_iff_tendsto_eLpNorm
+        hp.out hp' hf hg).mpr hLp
+    exact ⟨g, hg, hVitali.1, hVitali.2⟩
+  · rintro ⟨g, hg, hlocal, hui⟩
+    exact ⟨g, hg,
+      (tendstoLocallyInMeasure_and_uniformIntegrableByEnvelope_iff_tendsto_eLpNorm
+        hp.out hp' hf hg).mp ⟨hlocal, hui⟩⟩
 
 end MeasureTheory

@@ -350,6 +350,22 @@ theorem localConvergencePseudodist_comm [SigmaFinite μ]
   funext k
   rw [localConvergenceComponent_comm]
 
+/-- The raw exhaustion pseudodistance identifies almost-everywhere equal maps. -/
+theorem localConvergencePseudodist_eq_zero_of_ae_eq [SigmaFinite μ]
+    (f g : StronglyMeasurableMap α F) (hfg : (f : α → F) =ᵐ[μ] g) :
+    localConvergencePseudodist (μ := μ) f g = 0 := by
+  unfold localConvergencePseudodist
+  have hcomponent (k : ℕ) : localConvergenceComponent (μ := μ) f g k = 0 := by
+    unfold localConvergenceComponent
+    have htrunc : truncatedDist f g =ᵐ[μ.restrict (spanningSets μ k)] (fun _ ↦ 0) :=
+      ae_restrict_of_ae (hfg.mono fun x hx ↦ by simp [truncatedDist, hx])
+    rw [show (∫ x in spanningSets μ k, truncatedDist f g x ∂μ) = 0 by
+      calc
+        _ = ∫ _x in spanningSets μ k, (0 : ℝ) ∂μ := integral_congr_ae htrunc
+        _ = 0 := by simp]
+    exact zero_div _
+  simp only [hcomponent, mul_zero, tsum_zero]
+
 theorem localConvergencePseudodist_triangle [SigmaFinite μ]
     (f g h : StronglyMeasurableMap α F) :
     localConvergencePseudodist (μ := μ) f h ≤

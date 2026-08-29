@@ -22,64 +22,65 @@ namespace PMF
 
 noncomputable section
 
-/-- Additive convolution of two natural-number-valued probability laws. -/
-def convolution (p q : PMF ℕ) : PMF ℕ :=
+/-- Additive convolution of two probability laws on an additive type. -/
+def convolution {A : Type*} [Add A] (p q : PMF A) : PMF A :=
   p.bind fun m ↦ q.map fun n ↦ m + n
 
 /-- The law of the sum of `n` independent variables with common law `p`. -/
-def convolutionPow (p : PMF ℕ) : ℕ → PMF ℕ
+def convolutionPow {A : Type*} [AddMonoid A] (p : PMF A) : ℕ → PMF A
   | 0 => PMF.pure 0
   | n + 1 => convolution (convolutionPow p n) p
 
 /-- The law of a random sum with count law `p` and summand law `q`. -/
-def randomSum (p q : PMF ℕ) : PMF ℕ :=
+def randomSum {A : Type*} [AddMonoid A] (p : PMF ℕ) (q : PMF A) : PMF A :=
   p.bind (convolutionPow q)
 
 @[simp]
-lemma convolutionPow_zero (p : PMF ℕ) : convolutionPow p 0 = PMF.pure 0 :=
+lemma convolutionPow_zero {A : Type*} [AddMonoid A] (p : PMF A) :
+    convolutionPow p 0 = PMF.pure 0 :=
   rfl
 
 @[simp]
-lemma convolutionPow_succ (p : PMF ℕ) (n : ℕ) :
+lemma convolutionPow_succ {A : Type*} [AddMonoid A] (p : PMF A) (n : ℕ) :
     convolutionPow p (n + 1) = convolution (convolutionPow p n) p :=
   rfl
 
 @[simp]
-lemma convolution_pure_pure (m n : ℕ) :
+lemma convolution_pure_pure {A : Type*} [Add A] (m n : A) :
     convolution (PMF.pure m) (PMF.pure n) = PMF.pure (m + n) := by
   simp [convolution, PMF.pure_map]
 
 @[simp]
-lemma convolutionPow_pure (a n : ℕ) :
-    convolutionPow (PMF.pure a) n = PMF.pure (n * a) := by
+lemma convolutionPow_pure {A : Type*} [AddMonoid A] (a : A) (n : ℕ) :
+    convolutionPow (PMF.pure a) n = PMF.pure (n • a) := by
   induction n with
   | zero => simp
-  | succ n ih => simp [convolutionPow, ih, Nat.succ_mul]
+  | succ n ih => simp [convolutionPow, ih, succ_nsmul]
 
 @[simp]
-lemma randomSum_pure_count (n : ℕ) (q : PMF ℕ) :
+lemma randomSum_pure_count {A : Type*} [AddMonoid A] (n : ℕ) (q : PMF A) :
     randomSum (PMF.pure n) q = convolutionPow q n := by
   simp [randomSum]
 
 @[simp]
-lemma randomSum_pure_summand (p : PMF ℕ) (a : ℕ) :
-    randomSum p (PMF.pure a) = p.map fun n ↦ n * a := by
+lemma randomSum_pure_summand {A : Type*} [AddMonoid A] (p : PMF ℕ) (a : A) :
+    randomSum p (PMF.pure a) = p.map fun n ↦ n • a := by
   rw [randomSum]
-  have h : convolutionPow (PMF.pure a) = fun n ↦ PMF.pure (n * a) :=
+  have h : convolutionPow (PMF.pure a) = fun n ↦ PMF.pure (n • a) :=
     funext fun n ↦ convolutionPow_pure a n
   rw [h]
-  change p.bind (PMF.pure ∘ fun n ↦ n * a) = _
-  exact p.bind_pure_comp (fun n ↦ n * a)
+  change p.bind (PMF.pure ∘ fun n ↦ n • a) = _
+  exact p.bind_pure_comp (fun n ↦ n • a)
 
 @[simp]
-lemma randomSum_pure_zero (p : PMF ℕ) :
-    randomSum p (PMF.pure 0) = PMF.pure 0 := by
+lemma randomSum_pure_zero {A : Type*} [AddMonoid A] (p : PMF ℕ) :
+    randomSum p (PMF.pure (0 : A)) = PMF.pure 0 := by
   rw [randomSum_pure_summand]
-  have h : (fun n : ℕ ↦ n * 0) = Function.const ℕ 0 := by
+  have h : (fun n : ℕ ↦ n • (0 : A)) = Function.const ℕ 0 := by
     funext n
     simp
   rw [h]
-  exact p.map_const (b := (0 : ℕ))
+  exact p.map_const (b := (0 : A))
 
 lemma pgf_map_add (p : PMF ℕ) (m : ℕ) (z : unitInterval) :
     (p.map fun n ↦ m + n).pgf z = (z : ℝ) ^ m * p.pgf z := by
