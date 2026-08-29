@@ -229,6 +229,51 @@ theorem tendsto_rareMultipleJump_ratio
     rw [hX.rareMultipleJump]
   exact tendsto_of_le_liminf_of_limsup_le hinf hsup hboundedAbove hboundedBelow
 
+/-- The total error from intervals containing two or more jumps in the dyadic
+partition of `(0, t]` tends to zero.  This is the P5 estimate used in Klenke's
+binomial approximation argument. -/
+theorem tendsto_dyadic_multipleJump_error
+    (hX : SatisfiesPoissonIntervalAxioms X P) (t : NNReal) :
+    Tendsto (fun n : ℕ ↦
+      ((2 : ℝ) ^ n) *
+        P.real {ω | 2 ≤ poissonIntervalCount X 0 (t / ((2 : NNReal) ^ n)) ω})
+      atTop (𝓝 0) := by
+  by_cases ht : t = 0
+  · subst t
+    simp [poissonIntervalCount]
+  have htpos : 0 < (t : ℝ) := NNReal.coe_pos.mpr (lt_of_le_of_ne t.2 (Ne.symm ht))
+  let ε : ℕ → ℝ := fun n ↦ (t : ℝ) / (2 : ℝ) ^ n
+  have hpow : Tendsto (fun n : ℕ ↦ ((2 : ℝ)⁻¹) ^ n) atTop (𝓝 0) :=
+    tendsto_pow_atTop_nhds_zero_of_lt_one (by positivity) (by norm_num)
+  have hεzero : Tendsto ε atTop (𝓝 0) := by
+    have h := hpow.const_mul (t : ℝ)
+    simpa only [ε, div_eq_mul_inv, inv_pow, mul_zero] using h
+  have hεpos : ∀ n, 0 < ε n := fun n ↦ div_pos htpos (pow_pos (by norm_num) n)
+  have hεright : Tendsto ε atTop (𝓝[>] 0) :=
+    tendsto_nhdsWithin_iff.mpr
+      ⟨hεzero, Eventually.of_forall fun n ↦ hεpos n⟩
+  have hratio := hX.tendsto_rareMultipleJump_ratio.comp hεright
+  change Tendsto (fun n : ℕ ↦
+    P.real {ω | 2 ≤ poissonIntervalCount X 0 (Real.toNNReal (ε n)) ω} / ε n)
+    atTop (𝓝 0) at hratio
+  have hscaled : Tendsto (fun n : ℕ ↦ (t : ℝ) *
+      (P.real {ω | 2 ≤ poissonIntervalCount X 0 (Real.toNNReal (ε n)) ω} / ε n))
+      atTop (𝓝 0) := by
+    simpa only [mul_zero] using tendsto_const_nhds.mul hratio
+  apply hscaled.congr'
+  exact Eventually.of_forall fun n ↦ by
+    have hεnn : Real.toNNReal (ε n) = t / ((2 : NNReal) ^ n) := by
+      apply NNReal.coe_injective
+      rw [Real.coe_toNNReal _ (hεpos n).le]
+      simp only [ε, NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat]
+    change (t : ℝ) *
+      (P.real {ω | 2 ≤ poissonIntervalCount X 0 (Real.toNNReal (ε n)) ω} / ε n) =
+        ((2 : ℝ) ^ n) *
+          P.real {ω | 2 ≤ poissonIntervalCount X 0 (t / ((2 : NNReal) ^ n)) ω}
+    rw [hεnn]
+    dsimp only [ε]
+    field_simp
+
 end SatisfiesPoissonIntervalAxioms
 
 end ProbabilityTheory

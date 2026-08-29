@@ -15,6 +15,7 @@ import StochLean
 #print axioms ProbabilityTheory.IsPoissonProcess.satisfiesPoissonIntervalAxioms
 #print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.intervalMean_linear
 #print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.tendsto_rareMultipleJump_ratio
+#print axioms ProbabilityTheory.SatisfiesPoissonIntervalAxioms.tendsto_dyadic_multipleJump_error
 #print axioms ProbabilityTheory.PoissonProcess.DivergentArrivalSequence.count_eventTime
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_ae
 #print axioms ProbabilityTheory.tendsto_empiricalCDFSequence_rat_ae
