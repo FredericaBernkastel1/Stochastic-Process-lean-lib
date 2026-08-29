@@ -8,6 +8,7 @@ module
 public import Mathlib.Data.Real.Basic
 public import Mathlib.Data.Finset.Card
 public import Mathlib.Data.Fintype.Card
+public import Mathlib.Algebra.BigOperators.Ring.Finset
 
 /-!
 # Empirical cumulative distribution functions
@@ -27,6 +28,16 @@ noncomputable section
 /-- The empirical CDF of a nonempty finite real sample. -/
 def empiricalCDF {n : ℕ} (x : Fin (n + 1) → ℝ) (t : ℝ) : ℝ :=
   ((univ.filter fun i ↦ x i ≤ t).card : ℝ) / ((n + 1 : ℕ) : ℝ)
+
+/-- An empirical CDF is the average of the corresponding lower-half-line indicators. -/
+lemma empiricalCDF_eq_average_indicator {n : ℕ} (x : Fin (n + 1) → ℝ) (t : ℝ) :
+    empiricalCDF x t =
+      ((n + 1 : ℕ) : ℝ)⁻¹ * ∑ i, Set.indicator (Set.Iic t) (fun _ ↦ (1 : ℝ)) (x i) := by
+  rw [empiricalCDF, div_eq_inv_mul]
+  congr 1
+  simpa only [Set.indicator_apply, Set.mem_Iic, Finset.sum_ite_irrel,
+    Finset.sum_const_zero, add_zero] using
+    (Finset.natCast_card_filter (R := ℝ) (fun i : Fin (n + 1) ↦ x i ≤ t) Finset.univ)
 
 lemma empiricalCDF_nonneg {n : ℕ} (x : Fin (n + 1) → ℝ) (t : ℝ) :
     0 ≤ empiricalCDF x t := by

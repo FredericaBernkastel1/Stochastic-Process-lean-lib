@@ -71,6 +71,12 @@ namespace DivergentArrivalSequence
 def eventTime (a : DivergentArrivalSequence) (n : ℕ) : NNReal :=
   arrivalTime a.interarrival (n + 1)
 
+/-- Strictly positive interarrivals give strictly increasing event times. -/
+lemma strictMono_eventTime (a : DivergentArrivalSequence) : StrictMono a.eventTime := by
+  refine strictMono_nat_of_lt_succ fun n ↦ ?_
+  simp only [eventTime, arrivalTime, Nat.reduceAdd, sum_range_succ, Nat.add_assoc]
+  exact lt_add_of_pos_right _ (a.positive (n + 1))
+
 lemma exists_eventTime_gt (a : DivergentArrivalSequence) (t : NNReal) :
     ∃ n, t < a.eventTime n := by
   have ht : Tendsto (a.eventTime) atTop atTop :=
@@ -92,6 +98,36 @@ lemma eventTime_le_of_lt_count (a : DivergentArrivalSequence) (t : NNReal) {n : 
   apply le_of_not_gt
   intro hnt
   exact (not_le_of_gt hn) (Nat.find_min' (a.exists_eventTime_gt t) hnt)
+
+/-- The count is at most `n` exactly before the event with zero-based index `n`. -/
+lemma count_le_iff (a : DivergentArrivalSequence) (t : NNReal) (n : ℕ) :
+    a.count t ≤ n ↔ t < a.eventTime n := by
+  constructor
+  · intro h
+    exact (a.lt_eventTime_count t).trans_le (a.strictMono_eventTime.monotone h)
+  · intro h
+    exact Nat.find_min' (a.exists_eventTime_gt t) h
+
+/-- The event with index `n` has occurred exactly when the count exceeds `n`. -/
+lemma lt_count_iff (a : DivergentArrivalSequence) (t : NNReal) (n : ℕ) :
+    n < a.count t ↔ a.eventTime n ≤ t := by
+  constructor
+  · exact a.eventTime_le_of_lt_count t
+  · intro h
+    by_contra hn
+    have hcount : a.count t ≤ n := Nat.le_of_not_gt hn
+    have hstrict : t < a.eventTime n :=
+      (a.lt_eventTime_count t).trans_le (a.strictMono_eventTime.monotone hcount)
+    exact (not_lt_of_ge h) hstrict
+
+/-- At the time of the event with zero-based index `n`, exactly `n + 1` events have occurred. -/
+@[simp]
+lemma count_eventTime (a : DivergentArrivalSequence) (n : ℕ) :
+    a.count (a.eventTime n) = n + 1 := by
+  apply Nat.le_antisymm
+  · exact (a.count_le_iff (a.eventTime n) (n + 1)).mpr
+      (a.strictMono_eventTime (Nat.lt_succ_self n))
+  · exact Nat.succ_le_iff.mpr ((a.lt_count_iff (a.eventTime n) n).mpr le_rfl)
 
 /-- Arrival counts are monotone in time. -/
 lemma monotone_count (a : DivergentArrivalSequence) : Monotone a.count := by

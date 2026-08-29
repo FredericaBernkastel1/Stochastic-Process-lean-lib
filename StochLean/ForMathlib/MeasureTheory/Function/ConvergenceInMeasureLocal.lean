@@ -95,6 +95,120 @@ section AlmostEverywhere
 
 variable {f : ℕ → α → E} {g : α → E} [PseudoEMetricSpace E]
 
+/-- On each measurable finite-measure restriction, local convergence supplies an almost-everywhere
+convergent subsequence. A single subsequence valid on an entire sigma-finite exhaustion requires a
+separate diagonal argument. -/
+theorem TendstoLocallyInMeasure.exists_seq_tendsto_ae_restrict
+    (h : TendstoLocallyInMeasure μ f atTop g) (s : Set α) (hs : MeasurableSet s)
+    (hμs : μ s ≠ ∞) :
+    ∃ ns : ℕ → ℕ, StrictMono ns ∧
+      ∀ᵐ x ∂(μ.restrict s), Tendsto (fun i ↦ f (ns i) x) atTop (nhds (g x)) :=
+  (h s hs hμs).exists_seq_tendsto_ae
+
+/-- On a sigma-finite measure space, a sequence converging locally in measure has a single
+subsequence converging almost everywhere on the whole space.
+
+The construction chooses the `n`-th term so that its bad set is small on Mathlib's `n`-th
+sigma-finite spanning set. The first Borel–Cantelli lemma and the fact that the spanning sets
+eventually contain every point then give global almost-everywhere convergence.
+-/
+theorem TendstoLocallyInMeasure.exists_seq_tendsto_ae [SigmaFinite μ]
+    (hfg : TendstoLocallyInMeasure μ f atTop g) :
+    ∃ ns : ℕ → ℕ, StrictMono ns ∧
+      ∀ᵐ x ∂μ, Tendsto (fun i ↦ f (ns i) x) atTop (nhds (g x)) := by
+  have h_lt_ε_real (ε : ℝ≥0∞) (hε : 0 < ε) : ∃ k : ℕ, 2 * (2 : ℝ≥0∞)⁻¹ ^ k < ε := by
+    obtain ⟨k, h_k⟩ : ∃ k : ℕ, (2 : ℝ≥0∞)⁻¹ ^ k < ε := ENNReal.exists_inv_two_pow_lt hε.ne'
+    refine ⟨k + 1, lt_of_eq_of_lt ?_ h_k⟩
+    rw [pow_succ', ← mul_assoc, ENNReal.mul_inv_cancel, one_mul]
+    · positivity
+    · simp
+  let hres (n : ℕ) : TendstoInMeasure (μ.restrict (spanningSets μ n)) f atTop g :=
+    hfg (spanningSets μ n) (measurableSet_spanningSets μ n)
+      (measure_spanningSets_lt_top μ n).ne
+  let N (n : ℕ) : ℕ := Classical.choose
+    (ExistsSeqTendstoAe.exists_nat_measure_lt_two_inv (hres n) n)
+  have hN (n m : ℕ) (hnm : N n ≤ m) :
+      (μ.restrict (spanningSets μ n))
+          {x | (2 : ℝ≥0∞)⁻¹ ^ n ≤ edist (f m x) (g x)} ≤ (2 : ℝ≥0∞)⁻¹ ^ n :=
+    Classical.choose_spec
+      (ExistsSeqTendstoAe.exists_nat_measure_lt_two_inv (hres n) n) m hnm
+  let ns : ℕ → ℕ := fun n ↦
+    Nat.rec (N 0) (fun n previous ↦ max (N (n + 1)) (previous + 1)) n
+  have hns_succ (n : ℕ) : ns (n + 1) = max (N (n + 1)) (ns n + 1) := by
+    simp [ns]
+  have hns_mono : StrictMono ns := by
+    refine strictMono_nat_of_lt_succ fun n ↦ ?_
+    rw [hns_succ]
+    exact lt_of_lt_of_le (lt_add_one (ns n)) (le_max_right _ _)
+  have hNns (n : ℕ) : N n ≤ ns n := by
+    cases n with
+    | zero => simp [ns]
+    | succ n => rw [hns_succ]; exact le_max_left _ _
+  refine ⟨ns, hns_mono, ?_⟩
+  let S := fun k ↦
+    {x | (2 : ℝ≥0∞)⁻¹ ^ k ≤ edist (f (ns k) x) (g x)} ∩ spanningSets μ k
+  have hμS_le : ∀ k, μ (S k) ≤ (2 : ℝ≥0∞)⁻¹ ^ k := by
+    intro k
+    change μ ({x | (2 : ℝ≥0∞)⁻¹ ^ k ≤ edist (f (ns k) x) (g x)} ∩
+      spanningSets μ k) ≤ _
+    rw [← Measure.restrict_apply' (measurableSet_spanningSets μ k)]
+    exact hN k (ns k) (hNns k)
+  set s := Filter.atTop.limsup S with hs
+  have hμs : μ s = 0 := by
+    refine measure_limsup_atTop_eq_zero (ne_top_of_le_ne_top ?_ (ENNReal.tsum_le_tsum hμS_le))
+    simpa only [ENNReal.tsum_geometric, ENNReal.one_sub_inv_two, inv_inv] using
+      ENNReal.ofNat_ne_top
+  have h_tendsto : ∀ x ∈ sᶜ, Tendsto (fun i ↦ f (ns i) x) atTop (nhds (g x)) := by
+    intro x hx
+    refine EMetric.tendsto_atTop.mpr fun ε hε ↦ ?_
+    rw [hs, limsup_eq_iInf_iSup_of_nat] at hx
+    simp only [S, Set.iSup_eq_iUnion, Set.iInf_eq_iInter, Set.compl_iInter,
+      Set.compl_iUnion, Set.mem_iUnion, Set.mem_iInter, Set.mem_compl_iff,
+      Set.mem_inter_iff, Set.mem_ofPred_eq, not_and_or] at hx
+    obtain ⟨N₀, hN₀x⟩ := hx
+    obtain ⟨N₁, hN₁x⟩ := (eventually_atTop.1 (eventually_mem_spanningSets μ x))
+    obtain ⟨k, hk_lt_ε⟩ := h_lt_ε_real ε hε
+    refine ⟨max (max N₀ N₁) (k - 1), fun n hn_ge ↦ ?_⟩
+    have hnN₀ : N₀ ≤ n := (le_max_left _ _).trans (le_max_left _ _ |>.trans hn_ge)
+    have hnN₁ : N₁ ≤ n := (le_max_right N₀ N₁).trans (le_max_left _ _ |>.trans hn_ge)
+    have hnot := hN₀x n hnN₀
+    have hmem := hN₁x n hnN₁
+    have hdist : edist (f (ns n) x) (g x) < (2 : ℝ≥0∞)⁻¹ ^ n := by
+      rcases hnot with hnot | hnot
+      · exact lt_of_not_ge hnot
+      · exact False.elim (hnot hmem)
+    have h_inv_n_le_k : (2 : ℝ≥0∞)⁻¹ ^ n ≤ 2 * (2 : ℝ≥0∞)⁻¹ ^ k := by
+      nth_rw 2 [← pow_one (2 : ℝ≥0∞)]
+      rw [mul_comm, ← ENNReal.inv_pow, ← ENNReal.inv_pow, ENNReal.inv_le_iff_le_mul,
+        ← mul_assoc, mul_comm (_ ^ n), mul_assoc, ← ENNReal.inv_le_iff_le_mul,
+        inv_inv, ← pow_add]
+      · gcongr
+        · simp
+        · omega
+      all_goals simp
+    exact (lt_of_lt_of_le hdist h_inv_n_le_k).trans hk_lt_ε
+  rw [ae_iff]
+  exact measure_mono_null (fun x ↦ by
+    rw [Set.mem_ofPred_eq, ← @Classical.not_not (x ∈ s), not_imp_not]
+    exact h_tendsto x) hμs
+
+/-- On a sigma-finite space, local convergence in measure is equivalent to the subsequence
+principle: every subsequence has a further subsequence converging almost everywhere. -/
+theorem exists_seq_tendstoLocallyInMeasure_atTop_iff [SigmaFinite μ]
+    (hf : ∀ n, AEStronglyMeasurable (f n) μ) :
+    TendstoLocallyInMeasure μ f atTop g ↔
+      ∀ ns : ℕ → ℕ, StrictMono ns → ∃ ns' : ℕ → ℕ, StrictMono ns' ∧
+        ∀ᵐ x ∂μ, Tendsto (fun i ↦ f (ns (ns' i)) x) atTop (nhds (g x)) := by
+  constructor
+  · intro h ns hns
+    exact (h.comp hns.tendsto_atTop).exists_seq_tendsto_ae
+  · intro h s hs hμs
+    let _ : IsFiniteMeasure (μ.restrict s) := isFiniteMeasure_restrict.mpr hμs
+    rw [exists_seq_tendstoInMeasure_atTop_iff (fun n ↦ (hf n).restrict)]
+    intro ns hns
+    obtain ⟨ns', hns', hlim⟩ := h ns hns
+    exact ⟨ns', hns', ae_restrict_of_ae hlim⟩
+
 /-- Almost-everywhere convergence implies local convergence in measure, without assuming that the
 ambient measure is finite. -/
 theorem tendstoLocallyInMeasure_of_tendsto_ae

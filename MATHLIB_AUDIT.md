@@ -15,7 +15,7 @@ the relevant duplicate decisions.
 | `TendstoInMeasure` | Only the global measure notion is canonical | Add the finite-restriction local predicate in `ForMathlib` |
 | `UnifIntegrable`, `tendsto_Lp_finite_of_tendstoInMeasure` | Canonical finite-measure Vitali theorem exists | Define only the local restriction bridge |
 | `UnifTight`, `tendstoInMeasure_iff_tendsto_Lp` | Canonical non-finite-measure Vitali theorem exists | Reuse upstream for global convergence; avoid a duplicate theorem |
-| `empiricalCDF`, `GlivenkoCantelli` | No matching empirical-CDF or GC declaration found | Add finite-sample API; GC proof remains scheduled |
+| `empiricalCDF`, `GlivenkoCantelli` | No matching empirical-CDF or GC declaration found | Add finite-sample API and derive fixed/rational-threshold strong laws from Mathlib `strong_law_ae`; uniform GC proof remains scheduled |
 | `GaltonWatson`, `branching`, `extinctionProbability` | No matching law recursion or extinction fixed-point API found | Add StochLean law-level definitions and proofs |
 | `PoissonProcess` | Poisson distributions and independent increments exist, but no matching counting-process package | Add a function-based predicate and deterministic construction cores |
 

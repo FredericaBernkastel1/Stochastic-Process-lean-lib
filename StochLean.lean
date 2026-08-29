@@ -11,6 +11,7 @@ public import StochLean.Probability.Branching.Extinction
 public import StochLean.Probability.Convergence.Discrete
 public import StochLean.Probability.Convergence.LocalVitali
 public import StochLean.Probability.EmpiricalProcess.CDF
+public import StochLean.Probability.EmpiricalProcess.StrongLaw
 public import StochLean.Probability.GeneratingFunction.Basic
 public import StochLean.Probability.GeneratingFunction.Analytic
 public import StochLean.Probability.GeneratingFunction.RandomSum
