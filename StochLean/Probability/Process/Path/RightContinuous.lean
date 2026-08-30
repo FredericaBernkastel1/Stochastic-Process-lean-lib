@@ -6,6 +6,8 @@ Authors: StochLean contributors
 module
 
 public import Mathlib.Topology.Order.LeftRight
+public import Mathlib.Topology.Bases
+public import Mathlib.Topology.Order.IsLUB
 public import StochLean.Probability.Process.Path.Monotone
 
 /-!
@@ -15,8 +17,11 @@ public import StochLean.Probability.Process.Path.Monotone
 @[expose] public section
 
 open MeasureTheory Filter Set
+open scoped Topology
 
 namespace ProbabilityTheory
+
+section PathDefinitions
 
 variable {T Ω E : Type*} {mΩ : MeasurableSpace Ω}
   [Preorder T] [TopologicalSpace T] [TopologicalSpace E]
@@ -42,5 +47,48 @@ theorem congr (hXY : Indistinguishable X Y P) (hX : HasRightContinuousPaths X P)
   simpa only [IsRightContinuousPath, hω] using hcont
 
 end HasRightContinuousPaths
+
+end PathDefinitions
+
+namespace IsModification
+
+variable {T Ω E : Type*} {mΩ : MeasurableSpace Ω}
+  [LinearOrder T] [TopologicalSpace T] [OrderTopology T] [DenselyOrdered T] [NoMaxOrder T]
+  [FirstCountableTopology T] [TopologicalSpace.SeparableSpace T] [Nonempty T]
+  [TopologicalSpace E] [T2Space E] {X Y : T → Ω → E} {P : Measure Ω}
+
+/-- On a densely ordered interval without a terminal time, two right-continuous modifications are
+indistinguishable. The proof obtains common equality on a countable dense set and then approaches
+every time from the right. -/
+theorem indistinguishable_of_rightContinuous
+    (hmod : IsModification X Y P)
+    (hX : HasRightContinuousPaths X P)
+    (hY : HasRightContinuousPaths Y P) :
+    Indistinguishable X Y P := by
+  have hdense : ∀ᵐ ω ∂P, ∀ n, X (TopologicalSpace.denseSeq T n) ω =
+      Y (TopologicalSpace.denseSeq T n) ω := by
+    rw [ae_all_iff]
+    exact fun n ↦ hmod (TopologicalSpace.denseSeq T n)
+  filter_upwards [hdense, hX, hY] with ω hω hXω hYω
+  intro t
+  have hD : Dense (Set.range (TopologicalSpace.denseSeq T)) :=
+    TopologicalSpace.denseRange_denseSeq T
+  obtain ⟨u, _huanti, hu, hlim⟩ := hD.exists_seq_strictAnti_tendsto t
+  have hwithin : Tendsto u atTop (nhdsWithin t (Ici t)) :=
+    tendsto_nhdsWithin_iff.mpr
+      ⟨hlim, Eventually.of_forall fun n ↦ Set.mem_Ici.mpr (hu n).1.le⟩
+  have hXt : Tendsto (fun n ↦ X (u n) ω) atTop (𝓝 (X t ω)) :=
+    (hXω t).tendsto.comp hwithin
+  have hYt : Tendsto (fun n ↦ Y (u n) ω) atTop (𝓝 (Y t ω)) :=
+    (hYω t).tendsto.comp hwithin
+  have hseq : ∀ n, X (u n) ω = Y (u n) ω := by
+    intro n
+    obtain ⟨k, hk⟩ := (hu n).2
+    rw [← hk]
+    exact hω k
+  exact tendsto_nhds_unique hXt
+    (hYt.congr' (Eventually.of_forall fun n ↦ (hseq n).symm))
+
+end IsModification
 
 end ProbabilityTheory

@@ -61,8 +61,9 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-30**. The **Klenke Chapters 01-08** milestone is complete; the
-active milestone is **Process Core and Information Flow**.
+Status last updated: **2026-08-30**. The **Klenke Chapters 01-08** and **Process Core and
+Information Flow** milestones are complete. The active milestone is **Discrete Martingale
+Calculus and Exchangeability**.
 
 ### Implemented and verified
 
@@ -89,27 +90,38 @@ active milestone is **Process Core and Information Flow**.
 - Complete reuse/defer disposition for Chapters 1, 2, 4, 7, and 8, plus regression tests for PGF
   domain, local-vs-global convergence, null modification, jump CDFs, path semantics, four Poisson
   increments, and conditional-law version semantics.
+- Process modification and indistinguishability, their countable/right-continuous collapse
+  theorems, full process-law stationarity, and formal counterexamples separating marginal laws,
+  coordinate-product laws, and pathwise equality.
+- Common-event continuous, left/right-continuous, and cadlag trajectory predicates; natural
+  filtration minimality; precise usual conditions; and a mathematically correct usual
+  augmentation on Mathlib's completed ambient measurable space.
+- Product measurability and ceiling/floor-grid proofs that strongly adapted right- or
+  left-continuous processes are progressive, including explicit progressive modifications for
+  almost-sure regular paths under the usual conditions.
+- The right-continuous information-flow chain through Mathlib stopping times and stopped values,
+  plus regressions for predictable processes, incomplete right-continuous filtrations, and an
+  always-infinite `WithTop` stopping time.
 
 All project declarations build without placeholders. Audited milestone declarations depend only on
 Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
 
-### Active work: Process Core and Information Flow
+### Active work: Discrete Martingale Calculus and Exchangeability
 
-- Audit and implement the surviving gaps in process modification/indistinguishability,
-  finite-dimensional and path-space laws, stationarity, common-a.s. path predicates, filtrations,
-  joint/progressive measurability, and random-time evaluation.
-- Keep Process Core consumers on the canonical function representation `X : T -> Omega -> E` and
-  Mathlib's existing filtration, adaptedness, stopping-time, and measurability APIs.
+- Audit the pinned Mathlib martingale, conditional-expectation, stopping, predictable, and
+  exchangeability infrastructure before adding any declaration.
+- Implement the confirmed gaps in discrete stochastic integration, pathwise quadratic variation,
+  predictable brackets, optional sampling, inequalities, and convergence.
+- Then build the exchangeability/reverse-martingale/de Finetti layer specified by the same handoff,
+  consuming Process Core APIs without redefining them.
 
 ### Planned subsequent milestones
 
-1. **Discrete Martingale Calculus - Part I:** audit and implement the discrete stochastic integral,
-   pathwise quadratic variation and predictable bracket, optional-sampling gaps, inequalities,
-   and bracket convergence only where Mathlib lacks canonical versions.
-2. **Exchangeability and de Finetti - Part II:** build f.d.d.-correct exchangeability,
-   symmetrization, exchangeability sigma-fields, a thin reverse-martingale adapter, empirical
-   probability measures, conditional-iid vocabulary, Hewitt-Savage, and structural/directing
-   measure de Finetti theorems using the completed Part I engine.
+1. **Discrete Martingale Calculus - Part I:** complete the active stochastic-integral, bracket,
+   optional-sampling, inequality, and convergence work.
+2. **Exchangeability and de Finetti - Part II:** complete f.d.d.-correct exchangeability,
+   symmetrization, exchangeability sigma-fields, reverse martingales, empirical probability
+   measures, conditional-iid vocabulary, Hewitt-Savage, and de Finetti theory.
 
 The detailed, theorem-level status is maintained in [SOURCE_MAP.md](SOURCE_MAP.md), while duplicate
 decisions and exact Mathlib reuse are recorded in [MATHLIB_AUDIT.md](MATHLIB_AUDIT.md). README and
@@ -125,7 +137,8 @@ StochLean/
   Probability/EmpiricalProcess/       empirical CDF and Glivenko-Cantelli
   Probability/GeneratingFunction/     PGF and law-level random sums
   Probability/LimitTheorems/          Poisson approximation
-  Probability/Process/                process paths, increments, and Poisson processes
+  Probability/Process/                process laws, paths, filtrations, measurability, stopping,
+                                      increments, and Poisson processes
 Audit/Axioms.lean                      kernel dependency checks
 docs/                                  normative handoff specifications
 ```

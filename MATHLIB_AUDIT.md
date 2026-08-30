@@ -57,3 +57,48 @@ local tree, and the approved-external ledger before each public gap was added.
 - Conditional-event APIs require positive mass, and conditional-kernel uniqueness is law-a.e.
 - No project theorem relies on a conclusion-shaped premise, `sorry`, `admit`, or a
   project-defined axiom.
+
+## Process Core duplicate audit
+
+The Process Core audit used the same pinned commit and searched the full current local tree before
+adding declarations.
+
+| Topic / design row | Pinned result | Decision |
+| --- | --- | --- |
+| Process laws and finite-dimensional laws | `IdentDistrib`; `Measure.map`; `map_restrict_eq_of_forall_ae_eq`; `map_eq_of_forall_ae_eq` in `Mathlib.Probability.Process.FiniteDimensionalLaws` | Reuse. Local bridges only name the distinct modification semantics and explicitly avoid path-space-law claims. |
+| Independent increments | `ProbabilityTheory.HasIndepIncrements` | Reuse the canonical predicate. |
+| Gaussian process | `ProbabilityTheory.IsGaussianProcess` in `Mathlib.Probability.Distributions.Gaussian.IsGaussianProcess.{Def,Basic,Independence}` | Reuse; no local predicate. |
+| Modification / indistinguishability | No matching process predicates found | Add `IsModification` and `Indistinguishable`, relation operations, countable collapse, and the dense right-continuous collapse. |
+| Stationarity | No generic full-shift process-law predicate found | Add `IsStationary` by coordinate-product law, not marginal equality. |
+| Natural filtration | `Filtration.natural` and `Filtration.stronglyAdapted_natural` exist; no direct order-minimality theorem found | Add only `Filtration.natural_le_of_stronglyAdapted`. |
+| Predictable processes | `Filtration.predictable`; `IsStronglyPredictable.isStronglyProgressive`; `.stronglyAdapted`; `.measurable_add_one`; `.iff_measurable_add_one` | Reuse completely. |
+| Right-continuous filtration | `Filtration.rightCont`, `le_rightCont`, `rightCont_self`, and `Filtration.IsRightContinuous` | Reuse. |
+| Usual conditions | No combined right-continuity plus initial-completeness property found | Add `Filtration.IsUsual` with completeness relative to all ambient null sets. |
+| Completed right continuation | `MeasureTheory.NullMeasurableSpace`, `Measure.completion`, and `Filtration.rightCont` exist separately; no filtration augmentation combining them was found | Add `nullSets`, `withNullSets`, and `usualAugmentation` on the genuinely completed ambient type. |
+| Product/joint measurability | No process-level predicate found; ordinary `Measurable (Function.uncurry X)` is canonical | Add the thin name `IsProductMeasurable` and direct coordinate/path/process consequences. |
+| Progressive measurability | Mathlib `IsProgressive` and `IsStronglyProgressive` | Reuse; no second predicate. |
+| Continuous adapted process is progressive | `StronglyAdapted.isStronglyProgressive_of_continuous` | Reuse for continuous paths. |
+| Right/left-continuous adapted process is progressive | No exact theorem found in pinned Mathlib | Add ceiling/floor-grid theorems for `ℝ≥0`; also add joint measurability for right-continuous paths. |
+| A.s. regular paths give a progressive version | No exact theorem found | Add explicit modification constructions under usual completeness, changing the process only on the one common null event. |
+| Adapted plus product measurable gives progressive modification | No approved Mathlib/local/external implementation found; Klenke attributes the result externally | Explicitly defer; no hidden dependency or unsupported theorem. |
+| Stopping times and stopped sigma-algebras | `IsStoppingTime`, `.measurableSet_eq`, `isStoppingTime_of_measurableSet_eq`, `.min`, `.max`, `.add_const`, `.add`, `.measurableSpace`, and `.measurableSpace_mono` | Reuse. |
+| Stopped process/value | `stoppedProcess`, `stoppedValue`, `IsStronglyProgressive.stoppedProcess`, and `measurable_stoppedValue` | Reuse; add one right-continuous adapted evaluation bridge. The theorem does not interpret Mathlib's total fallback at `τ = ∞`. |
+| Hitting times | `hittingBtwn`, `hittingAfter`, `Adapted.isStoppingTime_hittingBtwn`, and `Adapted.isStoppingTime_hittingAfter` | Reuse with exact order/path hypotheses. |
+| Cadlag path predicate | No generic common-a.s. predicate found | Add trajectory predicates only; defer Skorokhod topology. |
+| Doob regularization and path-space topology | No Process Core implementation authorized | Explicitly defer to their designated later packages. |
+
+## Process Core semantic checks
+
+- The diagonal spike on the unit interval is a modification of zero but is not indistinguishable;
+  its coordinate-product map law still agrees with zero.
+- A Boolean Rademacher process has equal one-time marginals at all times but fails full
+  stationarity because its first pair and shifted pair have different equality laws.
+- A constant trivial filtration is right-continuous but is not usual for a Dirac probability on a
+  nontrivial ambient measurable space.
+- `usualAugmentation` changes to `NullMeasurableSpace Ω P` and `P.completion`, contains the original
+  information, and is proved usual; no same-ambient completion is asserted.
+- Right- and left-continuous adapted paths imply progressive measurability by countable-range
+  approximations. Under usual conditions the a.s. variants produce explicit modifications.
+- Predictable-to-progressive-to-adapted and the discrete `F n` measurability of `X (n+1)` use exact
+  Mathlib declarations.
+- The always-infinite stopping time retains `WithTop` infinity on a probability-one event.

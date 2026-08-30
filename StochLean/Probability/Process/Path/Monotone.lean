@@ -5,7 +5,7 @@ Authors: StochLean contributors
 -/
 module
 
-public import Mathlib.MeasureTheory.Measure.MeasureSpace
+public import StochLean.Probability.Process.Equivalence
 
 /-!
 # Almost-sure monotone paths
@@ -21,11 +21,6 @@ open MeasureTheory Filter
 namespace ProbabilityTheory
 
 variable {T Ω E : Type*} {mΩ : MeasurableSpace Ω}
-
-/-- Two processes are indistinguishable when their complete trajectories agree on one common
-almost-sure event. This is stronger than pointwise almost-sure equality at each time. -/
-def Indistinguishable (X Y : T → Ω → E) (P : Measure Ω := by volume_tac) : Prop :=
-  ∀ᵐ ω ∂P, ∀ t, X t ω = Y t ω
 
 /-- A process has almost-sure monotone paths when one common full-measure event supports a
 monotone trajectory at every time. -/
@@ -45,27 +40,5 @@ theorem congr (hXY : Indistinguishable X Y P) (hX : HasMonotonePaths X P) :
   simpa only [hω] using hmono hst
 
 end HasMonotonePaths
-
-namespace Indistinguishable
-
-variable {X Y Z : T → Ω → E} {P : Measure Ω}
-
-protected theorem refl (X : T → Ω → E) : Indistinguishable X X P :=
-  Filter.Eventually.of_forall fun _ _ ↦ rfl
-
-protected theorem symm (h : Indistinguishable X Y P) : Indistinguishable Y X P := by
-  filter_upwards [h] with ω hω t
-  exact (hω t).symm
-
-protected theorem trans (hXY : Indistinguishable X Y P) (hYZ : Indistinguishable Y Z P) :
-    Indistinguishable X Z P := by
-  filter_upwards [hXY, hYZ] with ω hXYω hYZω t
-  exact (hXYω t).trans (hYZω t)
-
-/-- Indistinguishability implies pointwise almost-sure equality at every fixed time. -/
-theorem ae_eq (h : Indistinguishable X Y P) (t : T) : X t =ᵐ[P] Y t :=
-  h.mono fun _ hω ↦ hω t
-
-end Indistinguishable
 
 end ProbabilityTheory

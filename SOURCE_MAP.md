@@ -83,3 +83,62 @@ Mandatory regressions compile in `Probability/GeneratingFunction/SemanticRegress
 `FiniteIncrementLaw.lean`, and `ArrivalTimes.lean`. In particular, the exponential-arrival
 construction has the explicit four-increment application
 `fourIncrementLaw_arrivalCountProcess_of_iid_exp`.
+
+# Process Core and Information Flow
+
+This ledger is the complete disposition of the Process Core handoff. The package continues to use
+functions `X : T → Ω → E`; it introduces no parallel process structure.
+
+## Process laws, equivalence, and stationarity
+
+| Source / function | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Klenke 9.6 process law | Upstream | `Measure.map`, `IdentDistrib`, and `Mathlib.Probability.Process.FiniteDimensionalLaws`; no local law structure. |
+| Klenke 9.7(ii)-(iv) | Upstream | `HasIndepIncrements`, Mathlib Gaussian-process modules, and coordinatewise `Integrable`/`MemLp`; no wrapper predicates. |
+| Klenke 9.7(v) stationary process | Implemented | `Probability/Process/Stationarity.lean`: `IsStationary` is equality of the full coordinate-product law under every shift, with coordinate and finite-coordinate consequences. |
+| Klenke 9.7(vi) stationary increments | Inherited | `Probability/Process/StationaryIncrements.lean`, completed in the Ch01-08 milestone. |
+| Klenke 21.1 modification / indistinguishability | Implemented | `Probability/Process/Equivalence.lean`: distinct quantifier orders, relation API, finite-coordinate law and coordinate-product law bridges. |
+| Klenke 21.5(i) countable collapse | Implemented | `IsModification.indistinguishable_of_countable`, using Mathlib's `ae_all_iff`. |
+| Klenke 21.5(ii) right-continuous collapse | Implemented | `IsModification.indistinguishable_of_rightContinuous`, using one countable dense sequence and right limits. |
+
+## Paths, filtrations, and information flow
+
+| Source / function | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Continuous/right/left path predicates | Implemented / inherited | `Path/Continuous.lean`, `Path/RightContinuous.lean`, and `Path/Cadlag.lean`; every a.s. property uses one common full-measure trajectory event. |
+| Klenke 21.21 cadlag | Implemented | `IsCadlagPath` and `HasCadlagPaths`: right continuity plus an existential finite strict-left limit at every `t ≠ ⊥`; no totalized left-limit value. |
+| Full Skorokhod topology | Deferred | Assigned to Functional Weak Convergence and Path-Space Limits; no topology is implied by the cadlag predicate. |
+| Klenke 9.9-9.10 filtration/adaptedness | Upstream | `MeasureTheory.Filtration`, `Adapted`, and `StronglyAdapted`. |
+| Klenke 9.11 natural filtration | Upstream / thin bridge | Mathlib `Filtration.natural` and `Filtration.stronglyAdapted_natural`; local `natural_le_of_stronglyAdapted` records exact minimality. |
+| Klenke 9.12 / 25.5 predictable | Upstream | `Filtration.predictable`, `IsStronglyPredictable.isStronglyProgressive`, `.stronglyAdapted`, and `.iff_measurable_add_one`. |
+| Klenke 21.22 right continuation | Upstream | `Filtration.rightCont`, `le_rightCont`, and `Filtration.IsRightContinuous`. |
+| Klenke 21.22 usual conditions | Implemented | `Filtration.IsUsual`: right continuity plus containment of every ambient null set in the initial sigma-algebra. |
+| Klenke 21.23 usual augmentation | Implemented | `Filtration/Augmentation.lean`: adjoin all null sets, move to `NullMeasurableSpace Ω P` with `P.completion`, then apply `rightCont`; `usualAugmentation_isUsual` proves both conditions. |
+| Klenke 25.5(i) product measurable | Implemented | `IsProductMeasurable` is exactly measurability of `Function.uncurry X`, with coordinate/path/process bridges. |
+| Klenke 25.5(ii) progressive | Upstream | Mathlib `IsProgressive` and `IsStronglyProgressive`. |
+| Klenke 25.5(iii), Thm. 25.8 predictable chain | Upstream | Mathlib's predictable-to-progressive and predictable-to-adapted theorems; compile-time regression checks both and the discrete `n+1`/`n` characterization. |
+| Klenke Remark 25.7 | Deferred external after audit | No approved theorem for adapted plus product-measurable implying a progressive modification was found. Klenke cites an external source; no unsupported converse is claimed. |
+| Klenke Thm. 25.8 regular paths | Implemented bridge | `StronglyAdapted.isStronglyProgressive_of_rightContinuous` and `_of_leftContinuous`, proved by countable-range ceiling/floor grids. The right-continuous theorem also supplies global joint measurability. |
+| Klenke Thm. 25.8 a.s. regular paths | Implemented | Under `Filtration.IsUsual`, the two `exists_isStronglyProgressive_modification_of_has...Paths` theorems replace the process by zero on the one common null event of bad trajectories. |
+
+## Random times and stopping
+
+| Source / function | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Klenke 9.15 stopping time | Upstream | Mathlib `IsStoppingTime` with codomain `WithTop T`; infinity is never represented by a finite sentinel. |
+| Klenke 9.16 countable characterization | Upstream | `IsStoppingTime.measurableSet_eq` and `isStoppingTime_of_measurableSet_eq`. |
+| Klenke 9.18 closure operations | Upstream | `IsStoppingTime.min`, `.max`, `.add_const`, and `.add` with their exact order/countability hypotheses. |
+| Klenke 9.19 / 9.21 stopped information | Upstream | `IsStoppingTime.measurableSpace`, `measurableSpace_mono`, and related bound theorems. |
+| Klenke 9.22-9.23 stopped value/process | Upstream / thin bridge | Mathlib `stoppedValue`, `stoppedProcess`, and `measurable_stoppedValue`; local `measurable_stoppedValue_of_rightContinuous` exposes the regular-path information-flow chain. |
+| Hitting times | Upstream | `Mathlib.Probability.Process.HittingTime`: `hittingBtwn`, `hittingAfter`, and the adaptedness-to-stopping-time theorems with their required discrete/order assumptions. |
+| Doob regularization | Deferred | Assigned to the later martingale/path-regularity package, as required by the handoff. |
+
+## Process Core semantic regression gate
+
+`Probability/Process/SemanticRegression.lean` formally checks the diagonal-spike modification that
+is not indistinguishable, equality of its coordinate-product law with zero, the Boolean
+Rademacher counterexample with equal one-time marginals but nonstationary pair law, natural
+filtration minimality, predictable/progressive/adapted chains, a right-continuous filtration that
+is not usual, an always-infinite stopping time on a probability-one event, and common-event cadlag
+semantics. The right/left grid theorems, stopping-value bridge, and completed usual augmentation
+provide the remaining positive acceptance chains.
