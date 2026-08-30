@@ -252,3 +252,92 @@ Likewise, projective families and limits use only Mathlib's `IsProjectiveMeasure
 The mandatory cases compile in `Probability/MeasureConvergence/SemanticRegression.lean` and
 `MeasureTheory/Constructions/SemanticRegression.lean`. All new milestone declarations are also
 listed in `Audit/Axioms.lean`.
+
+# Markov Processes, Kernels, Semigroups, and Convergence
+
+This section is the complete joint disposition of the two Markov handoffs. Public APIs use raw
+process functions and Mathlib kernels. No bundled Markov-chain/process type, duplicate kernel,
+duplicate irreducibility predicate, or duplicate projective-limit construction is introduced.
+
+## Information, transitions, and canonical laws
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Future information | Implemented | `Process/Filtration/Future.lean`: `futureMeasurableSpace`, antitonicity, the discrete `tailFromMeasurableSpace` bridge, and the infimum identity for the canonical tail sigma-field. |
+| Forward transition systems | Implemented | `Markov/TransitionSystem.lean`: proof-indexed kernels exist only for `r <= s`; diagonal identity and `K r t = K s t comp K r s` use Mathlib's chronological composition order. |
+| Homogeneous semigroups | Implemented | `Markov/Semigroup.lean`: `IsMarkovSemigroup`, commuting/opposite-order laws, kernel powers, and the natural-time transition-system bridge. |
+| Kernel-free Markov property | Implemented | `Markov/Transition.lean`: event conditional expectations are primary; integrable future functions, bounded state tests, finite cylinders, and conditional-independence bridges are derived. |
+| Transition representation | Implemented | `HasTransitionSystem` remains separate from `HasMarkovProperty`; it implies the kernel-free property and supports the exact countable-time strong-Markov event theorem. |
+| Discrete canonical path law | Implemented / upstream | `Chain/PathLaw.lean` is a thin homogeneous specialization of Mathlib `Kernel.traj`; finite histories, one-time kernel-power marginals, adjacent-coordinate laws, and measurable state-map functoriality are proved. |
+| General canonical coordinate law | Reused | Arbitrary-index Standard-Borel existence and uniqueness are the previous milestone's `projectiveLimitOfStandardBorel` and `existsUnique_isProjectiveLimit_of_standardBorel`; the process is the raw coordinate map. No Markov-private KET wrapper is added. |
+
+## Countable chains, recurrence, invariance, and periodicity
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Reachability | Implemented bridge | Mathlib `Kernel.IsIrreducible Measure.count` remains canonical; `CanReach` is bridged to positive kernel powers without confusing its zero-time diagonal case with positive return. |
+| Hitting and return times | Implemented | `Countable/Hitting.lean` uses `hittingAfter ... 1`, preserves `WithTop` infinity, and defines extended mean return time. |
+| Recurrence / transience | Implemented | `Countable/Recurrence.lean` defines statewise recurrence, transience, positive and null recurrence and proves communication propagation. |
+| Green kernel | Implemented | `Countable/Green.lean`: the ENNReal occupation series, path-law occupation identity, and recurrence criteria. |
+| Renewal and hitting probabilities | Implemented | `Renewal.lean`, `HittingProbability.lean`, and `SetHitting.lean` prove first-return renewal equations, killed/safe kernel recursions, and almost-sure hitting under irreducibility plus an invariant probability. |
+| Excursion occupation | Implemented | `Excursion.lean` and `Invariant.lean` construct the occupation measure, prove its singleton/mass formulas and invariance, and normalize it in the positive recurrent case. |
+| Invariant probability and Kac | Implemented | Invariant probability implies positive recurrence, is unique under irreducibility, satisfies Kac's formula, and exists exactly in the irreducible positive recurrent case. |
+| Periodicity | Implemented | `Periodicity.lean`: return-time gcd, communication invariance of period, eventual positivity on admissible residue classes, and the global aperiodicity interface. |
+
+## Coupling and Klenke 18.11--18.13
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Generic coupling | Implemented | `Probability/Coupling/Basic.lean` defines only the marginal relation and event/full-TV bounds. |
+| TV normalization correction | Implemented | `Coupling/TotalVariation.lean` uses the full signed-measure convention and proves the factor-2 mismatch bound; mutually singular Boolean Dirac laws regress to distance `2`. |
+| Path coupling | Implemented | Couplings are measures on pairs of canonical path laws; successful coupling is the tail-mismatch condition and is equivalent to a.s. eventual equality. |
+| Independent coalescent | Implemented semantically | `Coalescent.lean` uses the product kernel away from the diagonal and an absorbing diagonal, avoiding the corrupted OCR case split. |
+| Klenke 18.11 | Implemented | `Klenke.lean` proves diagonal hitting for the independent product and semantic coalescent chains from irreducibility, aperiodicity, and an invariant probability. |
+| Klenke 18.12 | Implemented | `Convergence.lean` turns successful coalescence into full-TV convergence between arbitrary rows, with the corrected factor `2`. |
+| Klenke 18.13 | Implemented | `Equilibrium.lean` proves the full equivalence among aperiodicity, convergence from every state, convergence from some state, and convergence from every initial probability. |
+
+## Bounded Q-matrices and Feller semigroups
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Q-matrix | Implemented | `Generator/QMatrix.lean` uses off-diagonal nonnegativity and summability, diagonal row balance, `exitRate`, and singleton right derivatives in `HasQMatrix`. |
+| Uniformization | Implemented | `Generator/Uniformization.lean` constructs the one-step kernel and Poisson-mixture semigroup, including the mandatory safe `Lambda = 0` identity branch, semigroup law, and generator recovery. |
+| Rate independence / canonical uniqueness | Implemented | `Generator/Uniqueness.lean` proves the exact lazy-kernel relation, Poisson Cauchy convolution, independence from any two valid dominating rates, and unique existence of `IsCanonicalBoundedQSemigroup`. This is law-level uniqueness of the canonical bounded-Q construction, not raw equality of processes on unrelated sample spaces. |
+| Poisson acceptance | Implemented | `Generator/Poisson.lean` proves the pure-birth Q-matrix, recovers `poissonMeasure (rate * t)` from zero at positive rate, checks the zero-rate law, and recovers the generator. |
+| Klenke Feller predicate | Implemented | `Feller.lean` uses Mathlib `ZeroAtInftyContinuousMap`, includes the Markov semigroup laws, pointwise continuity at zero, C0 preservation, contraction operators, and correct operator composition order. |
+| Weak/stochastic continuity | Implemented | The Feller interface reuses the measure-convergence layer for vague transition measures, weak probability laws on compact spaces, state-variable weak continuity, and convergence to `dirac x` at time zero. |
+| Feller pointwise-to-sup-norm equivalence | Deferred by source protocol | Klenke 21.26 points outward; Revuz--Yor, Chapter III, Proposition 2.4 is the locator to audit. The proof text was not available in the local source set, so no original substitute is attempted. |
+| Klenke 21.27 RCLL strong-Markov realization | Deferred by source protocol | Klenke points to Rogers--Williams Vol. 1, Chapter III.7ff/8ff and Revuz--Yor Chapter III, Theorem 2.7. Those proof texts were not locally accessible, so realization is not claimed. |
+
+## Markov source corrections and semantic regressions
+
+- Kernel orientation is pinned by an explicit noncommuting deterministic-kernel regression:
+  `eta comp kappa` means first `kappa`, then `eta`.
+- `CanReach x x` uses time zero, while positive return and recurrence use `hittingAfter ... 1`.
+- The coalescent kernel is defined by product/absorbing semantics, not the OCR piecewise formula.
+- Full TV has diameter `2`; coupling mismatch bounds therefore carry a factor `2`.
+- The Poisson Q-matrix regression has a positive successor entry and a negative diagonal entry,
+  pinning the OCR-sensitive `x != y` condition.
+- Zero-rate domination forces the zero Q-matrix and gives the identity semigroup; no division by
+  zero is used.
+- Two distinct valid domination rates give definitionally different construction inputs but the
+  same semigroup by `uniformizedSemigroup_rate_independent`.
+- `IsFellerSemigroup` remains Klenke's pointwise-at-zero predicate; no second strong-continuity
+  definition is introduced.
+
+## Blocker and deferred-dependency ledger
+
+| ID | Status | Owner, reason, unlock condition, and downstream impact |
+| --- | --- | --- |
+| MK-B01 | RESOLVED | Process Core supplied natural/usual filtrations, common-event path predicates, progressive measurability, and stopping-time APIs consumed by the Markov layer. |
+| MK-B02 | RESOLVED | Measure Convergence and Projective Construction supplied weak/vague convergence, Ionescu--Tulcea, and the Standard-Borel projective-limit facade. |
+| MK-B03 | RESOLVED | Bounded-Q construction and canonical semigroup uniqueness are proved by uniformization and rate independence, including `Lambda = 0`; Poisson is the cross-package acceptance case. |
+| MK-B04 | DEFERRED | Future Feller/functional-analysis owner. Revuz--Yor III, Proposition 2.4 must be concretely retrieved and audited before the pointwise-to-sup-norm theorem is added. Current C0 preservation, contraction, operator, weak, and stochastic-continuity APIs are unaffected. |
+| MK-B05 | DEFERRED | Future path-regularization owner. Retrieve/audit Rogers--Williams III.7ff/8ff or Revuz--Yor III, Theorem 2.7 before adding the RCLL strong-Markov realization. No current theorem claims every realization is RCLL. |
+| MK-D01 | DEFERRED | Semimartingales and stochastic integration belong to the later package planned in this repository. |
+| MK-D02 | DEFERRED | Stochastic differentials and SDEs belong to the separate package stated in `README.md`. |
+| MK-D03 | DEFERRED | MCMC applications and spectral rates belong to a future application/finite-state layer and do not block the foundation. |
+
+All implemented Markov declarations are included in the full build and representative
+load-bearing results are inspected in `Audit/Axioms.lean`. The authorized external rows are the
+only deferred items; neither is replaced by a placeholder declaration.

@@ -59,6 +59,16 @@ import StochLean.Probability.Exchangeability.SemanticRegression
 import StochLean.Probability.MeasureConvergence.Mapping
 import StochLean.Probability.MeasureConvergence.Empirical
 import StochLean.Probability.MeasureConvergence.SemanticRegression
+import StochLean.Probability.Markov.Chain.PathLaw
+import StochLean.Probability.Markov.Countable.Convergence
+import StochLean.Probability.Markov.Countable.Equilibrium
+import StochLean.Probability.Markov.Countable.Invariant
+import StochLean.Probability.Markov.Countable.Periodicity
+import StochLean.Probability.Markov.Feller
+import StochLean.Probability.Markov.Generator.Poisson
+import StochLean.Probability.Markov.Generator.Uniformization
+import StochLean.Probability.Markov.Generator.Uniqueness
+import StochLean.Probability.Markov.SemanticRegression
 import StochLean.Probability.Process.Path.Monotone
 import StochLean.Probability.Process.Path.RightContinuous
 import StochLean.Probability.Process.Path.Continuous

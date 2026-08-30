@@ -162,3 +162,33 @@ in `Audit/Axioms.lean`.
   import; public signatures contain only Mathlib/StochLean types and namespaces.
 
 The complete fourth-milestone semantic gate is recorded as 23 numbered cases in `SOURCE_MAP.md`.
+
+## Markov-process duplicate and source audit
+
+| Topic / design row | Pinned Mathlib or approved project result | Decision |
+| --- | --- | --- |
+| Kernels and composition | Mathlib `ProbabilityTheory.Kernel`, `Kernel.comp`, powers, sums, maps/comaps, `compProd`, and deterministic kernels | Reuse completely; local declarations are relations or specialized constructions over the canonical kernel. |
+| Transition systems / semigroups | No pinned forward-pair transition-system or homogeneous kernel-semigroup predicate with the required orientation was found | Add raw-function predicates `TransitionSystem`, `IsMarkovTransitionSystem`, and `IsMarkovSemigroup`; pin `K r t = K s t comp K r s`. |
+| Future sigma-field | Mathlib tail sigma-field exists for sequences, but no generic time-indexed future sigma-field | Add `futureMeasurableSpace`; prove the discrete bridge to Mathlib's tail construction. |
+| Markov property | No exact kernel-free event conditional-expectation predicate and transition-representation split was found | Add `HasMarkovProperty` and `HasTransitionSystem`; reuse Mathlib `condExp`, `CondIndep`, filtrations, and kernels in all bridges. |
+| Discrete path law | Mathlib `Kernel.traj`, `partialTraj`, projective-limit correctness, and conditional-trajectory theorems | Add only the homogeneous specialization `markovChainPathKernel`/`markovChainLaw` and its kernel-power marginal interface. |
+| General canonical path law | StochLean's audited Standard-Borel Kolmogorov facade and Mathlib `IsProjectiveLimit` | Reuse; add no Markov-private product-measure or projective-limit object. |
+| Irreducibility | Mathlib `Kernel.IsIrreducible Measure.count` and `Kernel.CanReach` | Reuse as the only irreducibility/reachability notions; add strict-positive-return bridges where Klenke differs on the diagonal. |
+| Hitting times | Mathlib `hittingAfter` and `WithTop` random-time APIs | Reuse; define only Markov-specific return/hitting events and extended means. |
+| Recurrence / Green / excursion | No exact countable-chain statewise package found | Add the Klenke-level predicates and occupation constructions, using canonical path laws and ENNReal sums. |
+| Invariant / reversible measures | Mathlib `Kernel.Invariant` and `Kernel.IsReversible` | Reuse unchanged; add normalization, uniqueness, positive-recurrence, and Kac bridges. |
+| Periodicity | No countable-kernel return-time gcd interface found | Add `transitionTimes`, `period`, communication propagation, and aperiodicity without a second irreducibility notion. |
+| Generic couplings | No exact measure marginal relation plus the required full-TV convention was found | Add the thin coupling relation and event/full-TV bounds; retain Mathlib signed-measure variation as the normalization source. |
+| Coalescent chain | No semantic independent-coalescent kernel found | Add product-off-diagonal/absorbing-diagonal construction; do not copy the corrupted Klenke OCR formula. |
+| Klenke 18.11--18.13 | No matching countable-chain coupling-to-full-TV equivalence package found | Build from canonical irreducibility, invariant measures, periods, path couplings, and total variation. |
+| Q-matrix | No conservative countable-state Q-matrix predicate or kernel-semigroup right-derivative relation found | Add `IsQMatrix`, `exitRate`, and `HasQMatrix`; off-diagonal nonnegativity explicitly requires unequal states. |
+| Uniformization | Poisson measures and kernel powers exist; no bounded-Q Poisson-mixture semigroup or safe zero-rate construction | Add the mixture, semigroup/generator proofs, rate-independence theorem, and canonical uniqueness predicate. |
+| Feller functions | Mathlib `ZeroAtInftyContinuousMap` | Reuse exactly; define no local C0 type. |
+| Feller semigroup | No exact Klenke 21.26 predicate was found | Add the pointwise-at-zero/C0-preserving predicate and induced contraction operator. Do not redefine it by sup-norm continuity. |
+| Feller strong-continuity equivalence | Klenke cites external literature; exact Revuz--Yor III, Proposition 2.4 proof text unavailable locally | DEFERRED under the mandatory external-proof policy; no independent replacement proof. |
+| Feller RCLL strong-Markov realization | Klenke cites Rogers--Williams III.7ff/8ff and Revuz--Yor III, Theorem 2.7; proof text unavailable locally | DEFERRED under the mandatory external-proof policy; no realization theorem is declared. |
+
+The Markov source scan found no alternative approved implementation of the new predicates or
+theorems at the pinned revision. The two external Feller rows are recorded as deferred rather than
+treated as permission to invent a proof. All other decisions and source corrections are mirrored
+in the final Markov section of `SOURCE_MAP.md`.

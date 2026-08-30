@@ -1,9 +1,11 @@
 # StochLean
 
-StochLean is a Lean 4 library for probability theory and stochastic processes. Its purpose is to
-provide a reusable, kernel-checked layer between Mathlib's measure/probability foundations and
-larger developments in martingales, Markov processes, Brownian motion, Levy processes, stochastic
-integration, and probabilistic applications.
+StochLean is a Lean 4 library for probability theory and stochastic processes. Its goal is to give
+people and software agents working with stochastic processes a directly reusable Lean library,
+reducing the time required to formalize and verify related mathematics. It provides a
+kernel-checked layer between Mathlib's measure/probability foundations and larger developments in
+martingales, Markov processes, Brownian motion, Levy processes, stochastic integration, and
+probabilistic applications.
 
 The mathematical coverage baseline is Achim Klenke's *Probability Theory: A Comprehensive Course*,
 third edition. Klenke is a coverage and statement source, not a code dependency: canonical Mathlib
@@ -23,6 +25,12 @@ Development follows these reviewed handoff specifications:
 4. [Measure Convergence and Projective Construction](docs/StochLean_MeasureConvergence_ProjectiveConstruction_Design_v0.1.pdf) -
    weak/vague convergence infrastructure, tightness and Prokhorov reuse, kernels and
    Ionescu-Tulcea, and Kolmogorov projective construction.
+5. [Markov Processes](docs/StochLean_MarkovProcesses_Design_v0.1.pdf) - future information,
+   transition systems, Markov semantics, countable-chain recurrence, coupling, generators, and
+   Feller interfaces.
+6. [Markov Processes, Kernels, Semigroups, and Convergence](docs/StochLean_MarkovProcesses_Kernels_Semigroups_Design_v0.1.pdf) -
+   the consolidated kernel/semigroup specification, source corrections, acceptance suite, and
+   dependency ledger for the Markov layer.
 
 This order is mandatory. A later package consumes earlier canonical APIs and must not introduce
 temporary duplicates merely to compile.
@@ -64,78 +72,79 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-30**. All four reviewed handoff milestones are complete: **Klenke
-Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale Calculus and
-Exchangeability**, and **Measure Convergence and Projective Construction**.
+Status last updated: **2026-08-31**. All six reviewed handoff milestones are implemented and
+audited: **Klenke Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale
+Calculus and Exchangeability**, **Measure Convergence and Projective Construction**, and the two
+consolidated **Markov Processes** specifications. The two externally sourced Feller results remain
+explicitly deferred because their cited proof texts were not locally available; this is the
+disposition required by the specifications rather than an unchecked local substitute.
 
-### Implemented and verified
+### Formalized mathematical definitions
 
-- Safe-domain probability generating functions, analytic uniqueness, arbitrary-order derivative
-  series, extended-value factorial-moment boundary limits, atomwise/setwise/PGF convergence,
-  triangular-array Poisson approximation, and law/random-variable random-sum bridges.
-- Galton-Watson PGF recursion, finite extinction laws, and the least-fixed-point extinction theorem.
-- Generic multinomial laws, Poissonized multinomial splitting, Paley-Zygmund, Wald's identity,
-  Blackwell-Girshick's variance identity, Kolmogorov's maximal inequality, and the Klenke strong-law
-  rate consequence.
-- Empirical CDF APIs and the full Glivenko-Cantelli theorem for arbitrary real laws, including
-  discontinuous distributions.
-- Common-a.s. monotone and right-continuous path predicates, stationary increments, the corrected
-  Poisson-process definition, exact P1-P5 interval axioms, and both directions of Klenke 5.34.
-- Klenke 5.35 at joint-law level through generic multinomial/Poissonization, and Klenke 5.36 for
-  every finite ordered partition through simplex volume, cumulative-coordinate, exponential-gap,
-  arrival/count inversion, boundary-nullity, and finite-increment-law theorems.
-- Sigma-finite local convergence in measure, finite-restriction compatibility, exhaustion
-  pseudometric on raw functions, genuine metric on a.e. classes, fast-convergence and
-  Borel-Cantelli criteria, subsequence principles, and completeness for complete targets.
-- Literal sigma-finite envelope/tail uniform integrability, closure and compatibility theorems,
-  both directions of de la Vallee-Poussin on finite spaces, exact sigma-finite Vitali, and the
-  Klenke 7.3 local-convergence characterization of `Lp` convergence.
-- Complete reuse/defer disposition for Chapters 1, 2, 4, 7, and 8, plus regression tests for PGF
-  domain, local-vs-global convergence, null modification, jump CDFs, path semantics, four Poisson
-  increments, and conditional-law version semantics.
-- Process modification and indistinguishability, their countable/right-continuous collapse
-  theorems, full process-law stationarity, and formal counterexamples separating marginal laws,
-  coordinate-product laws, and pathwise equality.
-- Common-event continuous, left/right-continuous, and cadlag trajectory predicates; natural
-  filtration minimality; precise usual conditions; and a mathematically correct usual
-  augmentation on Mathlib's completed ambient measurable space.
-- Product measurability and ceiling/floor-grid proofs that strongly adapted right- or
-  left-continuous processes are progressive, including explicit progressive modifications for
-  almost-sure regular paths under the usual conditions.
-- The right-continuous information-flow chain through Mathlib stopping times and stopped values,
-  plus regressions for predictable processes, incomplete right-continuous filtrations, and an
-  always-infinite `WithTop` stopping time.
-- Discrete stochastic integration with exact recursion and martingale preservation; pathwise and
-  predictable quadratic variation; stopped-bracket compatibility; bounded and a.s.-finite
-  optional sampling; sharp Doob `L^p`; binary martingale representation; reverse-martingale
-  convergence; and Klenke 11.14 via predictable bracket localization.
-- Finite-dimensional exchangeability, finite symmetrization, prefix-invariant and tail
-  sigma-fields, exchangeable sample means and symmetrized LLNs, empirical probability measures,
-  and set-theoretic factorization of symmetric statistics through the empirical measure.
-- Structural standard-Borel de Finetti representation at exact audited external commit
-  `e0532e59ceff23edab44dda9ab0655debbc9cc22`, its Bernoulli specialization, equality modulo an
-  exchangeable law of the invariant and tail sigma-fields, and the Hewitt-Savage zero-one law.
-- Canonical weak convergence through Mathlib `ProbabilityMeasure`, Portmanteau/tightness/Prokhorov,
-  convergence in distribution, continuous mapping and Slutsky reuse; a new a.e.-continuous mapping
-  bridge; and a distinct locally finite vague-convergence API with compact-space weak equivalence.
-- Almost-sure weak convergence of empirical probability measures to the common real law, consuming
-  the earlier empirical-measure and strict/non-strict empirical-CDF interfaces.
-- Product-coordinate and cylinder reuse, arbitrary probability products, kernel and Ionescu--Tulcea
-  reuse, and an arbitrary-index standard-Borel Kolmogorov extension facade with finite-dimensional
-  recovery, uniqueness, probability preservation, and empty-index support.
-- The Kolmogorov facade is pinned to the independently audited Apache-2.0 external commit
-  `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; compatible Polish topology upgrades do not occur in
-  the public API.
+- Probability generating functions, factorial moments, random sums, multinomial laws,
+  Poissonization, and Galton-Watson extinction probabilities.
+- Empirical distribution functions and empirical probability measures.
+- Global and sigma-finite local convergence in measure, fast local convergence, exhaustion
+  pseudometrics and a.e.-class metrics, and sigma-finite uniform integrability.
+- Process modification and indistinguishability; finite-dimensional, coordinate-product, and
+  path-space laws; stationarity and stationary increments.
+- Common-event continuous, left-continuous, right-continuous, cadlag, and monotone path properties.
+- Natural filtrations, usual conditions and usual augmentation, adaptedness, progressive
+  measurability, random times, and stopped processes.
+- Poisson processes, arrival times, finite increment laws, and uniform-point representations.
+- Discrete stochastic integrals, pathwise and predictable quadratic variation, stopped brackets,
+  reverse martingales, and binary predictable representations.
+- Finite-dimensional exchangeability, symmetrization, invariant and tail sigma-fields,
+  conditional i.i.d. representations, and empirical-measure factorization.
+- Weak and vague convergence of measures, tightness interfaces, convergence in distribution, and
+  almost-sure weak convergence of empirical measures.
+- Product-coordinate and cylinder sigma-fields, Ionescu-Tulcea trajectory measures, and
+  arbitrary-index standard-Borel projective constructions.
+- Future sigma-fields; forward-time transition systems; homogeneous Markov semigroups; kernel-free
+  event-form Markov properties; transition representations; and canonical discrete chain path
+  kernels and laws.
+- Strictly positive hitting and return times, reachability and communication, recurrence and
+  transience, Green kernels, excursion occupation measures, invariant probabilities, periods,
+  aperiodicity, and positive/null recurrence.
+- Probability couplings, event and full total-variation distances, path couplings, successful
+  couplings, semantic independent-coalescent kernels, and convergence-to-equilibrium predicates.
+- Q-matrices, exit rates, explicit uniformization rates, safe zero-rate kernels, Poisson-mixture
+  semigroups, generator recovery, canonical bounded-Q semigroups, and rate-independent
+  uniformization.
+- Feller semigroups on Mathlib's `ZeroAtInftyContinuousMap`, their contraction operators, operator
+  semigroup laws, vague/weak transition-law continuity, and stochastic continuity at zero.
+
+### Formalized named theorems
+
+- Paley-Zygmund inequality.
+- Wald's identity and the Blackwell-Girshick variance identity.
+- Kolmogorov maximal inequality.
+- Glivenko-Cantelli theorem.
+- Borel-Cantelli fast-convergence criterion.
+- de la Vallee-Poussin criterion and Vitali convergence theorem.
+- Doob maximal inequality.
+- de Finetti representation theorem and the Hewitt-Savage zero-one law.
+- Prokhorov and Slutsky theorems through canonical Mathlib reuse and StochLean bridges.
+- Ionescu-Tulcea and Kolmogorov extension theorems through audited canonical dependencies and
+  StochLean facades.
+- Chapman-Kolmogorov equations and Kac's formula for irreducible positive recurrent chains.
+
+The structural de Finetti implementation is pinned to audited commit
+`e0532e59ceff23edab44dda9ab0655debbc9cc22`. The Kolmogorov extension facade is pinned to audited
+Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; neither dependency leaks a
+non-canonical public representation into StochLean.
 
 All project declarations build without placeholders. Audited milestone declarations depend only on
 Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
 
-### Planned subsequent milestones
+### Project plan
 
-No fifth handoff is active. The completed foundation is ready for reviewed follow-on specifications
-covering Markov processes and semigroups, Brownian and Levy processes, path-space/Skorokhod weak
-convergence, continuous-time martingales, and stochastic integration. Those topics are not inferred
-from the present product-measure construction and will retain the same audit-first milestone gate.
+The planned scope of this repository includes stochastic-process foundations, Markov processes and
+semigroups, Brownian and Levy processes, path-space and Skorokhod weak convergence,
+continuous-time martingales, semimartingales, and stochastic integration. Stochastic differential
+calculus and stochastic differential equations (SDEs) will be developed in a separate package so
+that this library can remain a focused and reusable stochastic-process foundation. Every new area
+will retain the same audit-first milestone gate.
 
 The detailed, theorem-level status is maintained in [SOURCE_MAP.md](SOURCE_MAP.md), while duplicate
 decisions and exact Mathlib reuse are recorded in [MATHLIB_AUDIT.md](MATHLIB_AUDIT.md). README and
@@ -155,6 +164,9 @@ StochLean/
   Probability/Martingale/             discrete calculus, stopping, inequalities, convergence
   Probability/Exchangeability/        symmetry, reverse limits, empirical laws, de Finetti
   Probability/MeasureConvergence/      weak-convergence bridges and empirical weak limits
+  Probability/Coupling/                generic couplings and total-variation bounds
+  Probability/Markov/                  transition systems, chains, recurrence, coupling,
+                                      generators, convergence, and Feller semigroups
   MeasureTheory/Constructions/         projective constructions and extension facades
   Probability/Process/                process laws, paths, filtrations, measurability, stopping,
                                       increments, and Poisson processes
@@ -196,3 +208,9 @@ for memory-constrained or highly contended hosts.
 StochLean is released under the [Apache License 2.0](LICENSE). Klenke's book is used only as a
 mathematical reference and is not distributed in this repository. The included design handoffs
 contain the approved coverage and source-correction ledger, not copyrighted textbook content.
+
+## Project notice
+
+The project has undergone an initial review, but omissions and errors may still remain. If you find
+an issue, please notify the author so that the library and its documentation can be corrected and
+completed.
