@@ -3,9 +3,8 @@ Copyright (c) 2026 StochLean contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: StochLean contributors
 -/
-module
-
-public import Mathlib.Probability.Martingale.Convergence
+import Mathlib.Probability.Martingale.Convergence
+import Exchangeability.Probability.Martingale.Convergence
 
 /-!
 # Reverse martingale adapter
@@ -15,11 +14,12 @@ intentionally thin: all martingale definitions and conditional-expectation algeb
 ordinary Mathlib ones.
 -/
 
-@[expose] public section
-
 namespace MeasureTheory
 
-variable {Ω E : Type*} {mΩ : MeasurableSpace Ω}
+open Filter
+open scoped Topology ENNReal
+
+variable {Ω E : Type*} [mΩ : MeasurableSpace Ω]
 
 /-- Turn a decreasing family of sub-sigma-fields into a filtration indexed by `OrderDual ℕ`. -/
 @[instance_reducible]
@@ -52,5 +52,32 @@ theorem reverseMartingale_condExp [NormedAddCommGroup E] [NormedSpace ℝ E] [Co
     (fun n : OrderDual ℕ => μ[g | (antitoneFiltration G hG hG_le) n])
       (antitoneFiltration G hG hG_le) μ
   exact martingale_condExp g (antitoneFiltration G hG hG_le) μ
+
+/-- Lévy's downward theorem for real conditional expectations.  This is the StochLean-facing
+adapter: the implementation is supplied by the audited exchangeability dependency, while the
+statement uses only Mathlib objects. -/
+theorem tendsto_ae_condExp_iInf {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {G : ℕ → MeasurableSpace Ω} (hG : Antitone G)
+    (hG_le : ∀ n, G n ≤ (inferInstance : MeasurableSpace Ω))
+    (f : Ω → ℝ) (hf : Integrable f μ) :
+    ∀ᵐ ω ∂μ, Tendsto (fun n => μ[f | G n] ω) atTop
+      (𝓝 (μ[f | ⨅ n, G n] ω)) :=
+  Exchangeability.Probability.condExp_tendsto_iInf (μ := μ) hG hG_le f hf
+
+/-- The `L¹` form of Lévy's downward theorem.  It follows from the almost-sure theorem and
+uniform integrability of conditional expectations, rather than introducing a second convergence
+mechanism. -/
+theorem Integrable.tendsto_eLpNorm_condExp_iInf {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {f : Ω → ℝ}
+    {G : ℕ → MeasurableSpace Ω} (hf : Integrable f μ) (hG : Antitone G)
+    (hG_le : ∀ n, G n ≤ (inferInstance : MeasurableSpace Ω)) :
+    Tendsto (fun n => eLpNorm (μ[f | G n] - μ[f | ⨅ n, G n]) 1 μ)
+      atTop (𝓝 0) := by
+  apply tendsto_Lp_finite_of_tendsto_ae (hp := le_refl 1) (hp' := ENNReal.one_ne_top)
+  · intro n
+    exact integrable_condExp.aestronglyMeasurable
+  · exact memLp_one_iff_integrable.2 integrable_condExp
+  · exact (hf.uniformIntegrable_condExp hG_le).unifIntegrable
+  · exact tendsto_ae_condExp_iInf hG hG_le f hf
 
 end MeasureTheory

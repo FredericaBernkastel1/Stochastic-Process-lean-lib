@@ -20,6 +20,9 @@ Development follows these reviewed handoff specifications:
 3. [Discrete Martingale Calculus and Exchangeability](docs/StochLean_DiscreteMartingaleCalculus_Design_v0.1.pdf) -
    discrete martingale calculus first, followed by exchangeability, reverse martingales, and de
    Finetti theory.
+4. [Measure Convergence and Projective Construction](docs/StochLean_MeasureConvergence_ProjectiveConstruction_Design_v0.1.pdf) -
+   weak/vague convergence infrastructure, tightness and Prokhorov reuse, kernels and
+   Ionescu-Tulcea, and Kolmogorov projective construction.
 
 This order is mandatory. A later package consumes earlier canonical APIs and must not introduce
 temporary duplicates merely to compile.
@@ -61,9 +64,9 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-30**. The **Klenke Chapters 01-08** and **Process Core and
-Information Flow** milestones are complete. The active milestone is **Discrete Martingale
-Calculus and Exchangeability**.
+Status last updated: **2026-08-30**. The **Klenke Chapters 01-08**, **Process Core and Information
+Flow**, and **Discrete Martingale Calculus and Exchangeability** milestones are complete. The
+active milestone is **Measure Convergence and Projective Construction**.
 
 ### Implemented and verified
 
@@ -102,26 +105,39 @@ Calculus and Exchangeability**.
 - The right-continuous information-flow chain through Mathlib stopping times and stopped values,
   plus regressions for predictable processes, incomplete right-continuous filtrations, and an
   always-infinite `WithTop` stopping time.
+- Discrete stochastic integration with exact recursion and martingale preservation; pathwise and
+  predictable quadratic variation; stopped-bracket compatibility; bounded and a.s.-finite
+  optional sampling; sharp Doob `L^p`; binary martingale representation; reverse-martingale
+  convergence; and Klenke 11.14 via predictable bracket localization.
+- Finite-dimensional exchangeability, finite symmetrization, prefix-invariant and tail
+  sigma-fields, exchangeable sample means and symmetrized LLNs, empirical probability measures,
+  and set-theoretic factorization of symmetric statistics through the empirical measure.
+- Structural standard-Borel de Finetti representation at exact audited external commit
+  `e0532e59ceff23edab44dda9ab0655debbc9cc22`, its Bernoulli specialization, equality modulo an
+  exchangeable law of the invariant and tail sigma-fields, and the Hewitt-Savage zero-one law.
 
 All project declarations build without placeholders. Audited milestone declarations depend only on
 Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
 
-### Active work: Discrete Martingale Calculus and Exchangeability
+### Active work: Measure Convergence and Projective Construction
 
-- Audit the pinned Mathlib martingale, conditional-expectation, stopping, predictable, and
-  exchangeability infrastructure before adding any declaration.
-- Implement the confirmed gaps in discrete stochastic integration, pathwise quadratic variation,
-  predictable brackets, optional sampling, inequalities, and convergence.
-- Then build the exchangeability/reverse-martingale/de Finetti layer specified by the same handoff,
-  consuming Process Core APIs without redefining them.
+- Audit and expose pinned Mathlib's canonical weak-convergence, distribution-convergence,
+  tightness, Prokhorov, product-measure, kernel, and Ionescu-Tulcea APIs without introducing a
+  parallel `Weak` predicate.
+- Implement only the confirmed convergence bridges and projective-family interfaces absent from
+  Mathlib, then provide the standard-Borel Kolmogorov extension facade over the approved pinned
+  external implementation.
+- Add semantic regressions, exact source/duplicate ledgers, and axiom checks for every public
+  milestone declaration.
 
 ### Planned subsequent milestones
 
-1. **Discrete Martingale Calculus - Part I:** complete the active stochastic-integral, bracket,
-   optional-sampling, inequality, and convergence work.
-2. **Exchangeability and de Finetti - Part II:** complete f.d.d.-correct exchangeability,
-   symmetrization, exchangeability sigma-fields, reverse martingales, empirical probability
-   measures, conditional-iid vocabulary, Hewitt-Savage, and de Finetti theory.
+1. **Measure convergence:** canonical weak convergence and convergence-in-distribution bridges,
+   mapping/Slutsky/Portmanteau coverage, tightness and Prokhorov reuse, and the exact disposition
+   of vague convergence and empirical-measure consumers.
+2. **Projective construction:** product and kernel consistency, Ionescu-Tulcea reuse, finite
+   projective families and limits, and an arbitrary-index standard-Borel Kolmogorov extension
+   facade with uniqueness and probability preservation.
 
 The detailed, theorem-level status is maintained in [SOURCE_MAP.md](SOURCE_MAP.md), while duplicate
 decisions and exact Mathlib reuse are recorded in [MATHLIB_AUDIT.md](MATHLIB_AUDIT.md). README and
@@ -137,6 +153,9 @@ StochLean/
   Probability/EmpiricalProcess/       empirical CDF and Glivenko-Cantelli
   Probability/GeneratingFunction/     PGF and law-level random sums
   Probability/LimitTheorems/          Poisson approximation
+  Probability/Martingale/             discrete calculus, stopping, inequalities, convergence
+  Probability/Exchangeability/        symmetry, reverse limits, empirical laws, de Finetti
+  MeasureTheory/Constructions/         projective constructions and extension facades
   Probability/Process/                process laws, paths, filtrations, measurability, stopping,
                                       increments, and Poisson processes
 Audit/Axioms.lean                      kernel dependency checks
@@ -153,6 +172,12 @@ lake env lean Audit/Axioms.lean
 
 The repository additionally scans project sources for `sorry`, `admit`, and project-defined
 `axiom` declarations and records source coverage before a milestone is considered complete.
+
+The checked-in Lean resource defaults are `--memory=24000` and `--threads=3`, corresponding to a
+24 GB memory ceiling for each Lean compiler process and three Lean worker threads. These are
+operational defaults, not mathematical or API requirements: developers may lower or raise them in
+`lakefile.toml` to match the available machine. The earlier 20 GB / one-thread settings remain the
+documented conservative fallback defaults for memory-constrained or highly contended hosts.
 
 ## Commit and push policy
 

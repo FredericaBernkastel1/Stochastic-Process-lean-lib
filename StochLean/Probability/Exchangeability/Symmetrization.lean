@@ -6,6 +6,7 @@ Authors: StochLean contributors
 module
 
 public import StochLean.Probability.Exchangeability.Basic
+public import StochLean.Probability.Exchangeability.EmpiricalMeasure
 public import Mathlib.Data.Fintype.Perm
 
 /-!
@@ -81,6 +82,34 @@ theorem finiteSymmetrization_eq_self {n : ℕ} {f : (Fin n → E) → ℝ}
 theorem finiteSymmetrization_idem {n : ℕ} (f : (Fin n → E) → ℝ) :
     finiteSymmetrization (finiteSymmetrization f) = finiteSymmetrization f :=
   finiteSymmetrization_eq_self (finiteSymmetrization_isPermutationInvariant f)
+
+/-- A choice of a statistic on measures which agrees with `f` whenever the measure is the
+empirical measure of a tuple.  Its value away from empirical measures is immaterial. -/
+noncomputable def empiricalMeasureFactor [MeasurableSpace E] {n : ℕ}
+    (f : (Fin (n + 1) → E) → ℝ) (ν : Measure E) : ℝ := by
+  classical
+  exact if h : ∃ x, empiricalProbabilityMeasureOfTuple x = ν then f (Classical.choose h) else 0
+
+/-- Every symmetric real statistic of a nonempty finite sample factors set-theoretically through
+its empirical probability measure.  This is deliberately the plain factorization theorem:
+measurability of a chosen factor is a separate Doob--Dynkin issue. -/
+theorem IsPermutationInvariant.exists_factorThrough_empiricalProbabilityMeasure
+    [MeasurableSpace E] [MeasurableSingletonClass E] {n : ℕ}
+    {f : (Fin (n + 1) → E) → ℝ} (hf : IsPermutationInvariant f) :
+    ∃ g : Measure E → ℝ, f = g ∘ empiricalProbabilityMeasureOfTuple := by
+  refine ⟨empiricalMeasureFactor f, ?_⟩
+  funext x
+  have hex : ∃ y, empiricalProbabilityMeasureOfTuple y =
+      empiricalProbabilityMeasureOfTuple x := ⟨x, rfl⟩
+  let y := Classical.choose hex
+  have hy : empiricalProbabilityMeasureOfTuple y =
+      empiricalProbabilityMeasureOfTuple x := Classical.choose_spec hex
+  have huy : unorderedTuple y = unorderedTuple x :=
+    unorderedTuple_eq_of_empiricalProbabilityMeasureOfTuple_eq hy
+  obtain ⟨σ, hσ⟩ := exists_perm_of_unorderedTuple_eq huy
+  have hfun : (fun i ↦ y (σ i)) = x := funext hσ
+  have hfx : f x = f y := by simpa only [hfun] using hf σ y
+  simpa only [Function.comp_apply, empiricalMeasureFactor, dif_pos hex] using hfx
 
 /-- Integrability is preserved by finite symmetrization when every permuted summand is
 integrable. -/

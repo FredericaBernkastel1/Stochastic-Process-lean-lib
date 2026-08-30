@@ -3,12 +3,12 @@ Copyright (c) 2026 StochLean contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: StochLean contributors
 -/
-module
-
-public import Mathlib.Probability.Independence.Conditional
-public import Mathlib.Probability.IdentDistrib
-public import Mathlib.Probability.Kernel.CondDistrib
-public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
+import Mathlib.Probability.Independence.Conditional
+import Mathlib.Probability.IdentDistrib
+import Mathlib.Probability.Kernel.CondDistrib
+import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
+import StochLean.Probability.Exchangeability.Basic
+import Exchangeability.DeFinetti.TheoremViaMartingale
 
 /-!
 # Conditional iid and directing-measure vocabulary
@@ -16,8 +16,6 @@ public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 Conditional laws are stated almost everywhere after evaluating `condDistrib` at the conditioning
 random variable. This avoids asserting equality of arbitrary kernel versions at every point.
 -/
-
-@[expose] public section
 
 open MeasureTheory
 
@@ -84,11 +82,18 @@ structure IsDirectingMeasure (X : ℕ → Ω → E) (Θ : Ω → ProbabilityMeas
   condDistrib_eq : ∀ n,
     condDistrib (X n) Θ μ =ᵐ[μ.map Θ] fun θ => (θ : Measure E)
 
-/-- The single public structural de Finetti representation API. Future consumers should use this
-predicate rather than introducing a second representation notion. -/
+/-- The public structural de Finetti representation.  The final conjunct states the actual
+mixture identity for every ordered tuple of distinct coordinates; it is intentionally stronger
+than a name-only conditional-iid predicate and is directly usable by finite-dimensional-law
+clients. -/
 def HasDeFinettiRepresentation (X : ℕ → Ω → E) (μ : Measure Ω)
     [IsFiniteMeasure μ] : Prop :=
-  ∃ Θ : Ω → ProbabilityMeasure E, IsDirectingMeasure X Θ μ
+  ∃ Θ : Ω → ProbabilityMeasure E,
+    Measurable Θ ∧
+    (∀ n, Measurable (X n)) ∧
+    ∀ (n : ℕ) (i : Fin n ↪ ℕ),
+      μ.map (fun ω k => X (i k) ω) =
+        μ.bind (fun ω => Measure.pi fun _ : Fin n => (Θ ω : Measure E))
 
 theorem IsDirectingMeasure.isConditionallyIIDGiven
     {X : ℕ → Ω → E} {Θ : Ω → ProbabilityMeasure E}
@@ -99,5 +104,59 @@ theorem IsDirectingMeasure.isConditionallyIIDGiven
   condDistrib_eq_zero := by
     intro n
     exact (h.condDistrib_eq n).trans (h.condDistrib_eq 0).symm
+
+omit [StandardBorelSpace Ω] [StandardBorelSpace E] [Nonempty E] [IsFiniteMeasure μ] in
+/-- StochLean's finite-dimensional formulation implies the permutation formulation consumed by
+the audited de Finetti proof. -/
+private theorem IsExchangeable.toExternal
+    {X : ℕ → Ω → E} (hX : IsExchangeable X μ) :
+    Exchangeability.Exchangeable μ X := by
+  intro n σ
+  let i : Fin n ↪ ℕ := ⟨fun k => k.val, Fin.val_injective⟩
+  exact (hX.finitePermutation n i σ).map_eq
+
+/-- The structural de Finetti theorem for standard Borel state spaces.  The returned director is
+a measurable probability-measure-valued random variable and its product-mixture identity covers
+arbitrary ordered finite tuples of distinct indices. -/
+theorem IsExchangeable.hasDeFinettiRepresentation [IsProbabilityMeasure μ]
+    {X : ℕ → Ω → E} (hX : IsExchangeable X μ)
+    (hXm : ∀ n, Measurable (X n)) : HasDeFinettiRepresentation X μ := by
+  obtain ⟨ν, hνprob, hνmeas, hνlaw⟩ :=
+    Exchangeability.DeFinetti.deFinetti X hXm hX.toExternal
+  let Θ : Ω → ProbabilityMeasure E := fun ω => ⟨ν ω, hνprob ω⟩
+  have hΘmeas : Measurable Θ := by
+    apply Measurable.subtype_mk
+    exact Measure.measurable_of_measurable_coe ν hνmeas
+  refine ⟨Θ, hΘmeas, hXm, ?_⟩
+  intro n i
+  let j : Fin n ↪ ℕ := ⟨fun k => k.val, Fin.val_injective⟩
+  calc
+    μ.map (fun ω k => X (i k) ω) = μ.map (fun ω k => X (j k) ω) :=
+      (hX n i j).map_eq
+    _ = μ.bind (fun ω => Measure.pi fun _ : Fin n => ν ω) :=
+      hνlaw n (fun k => k.val) Fin.val_strictMono
+    _ = μ.bind (fun ω => Measure.pi fun _ : Fin n => (Θ ω : Measure E)) := by rfl
+
+omit [StandardBorelSpace Ω] [StandardBorelSpace E] [Nonempty E] in
+/-- Any structural product-mixture representation is exchangeable. -/
+theorem HasDeFinettiRepresentation.isExchangeable
+    {X : ℕ → Ω → E} (h : HasDeFinettiRepresentation X μ) : IsExchangeable X μ := by
+  obtain ⟨Θ, hΘm, hXm, hlaw⟩ := h
+  intro n i j
+  refine ⟨?_, ?_, (hlaw n i).trans (hlaw n j).symm⟩
+  · apply Measurable.aemeasurable
+    rw [measurable_pi_iff]
+    exact fun k => hXm (i k)
+  · apply Measurable.aemeasurable
+    rw [measurable_pi_iff]
+    exact fun k => hXm (j k)
+
+/-- Standard-Borel de Finetti equivalence in the StochLean API. -/
+theorem isExchangeable_iff_hasDeFinettiRepresentation [IsProbabilityMeasure μ]
+    {X : ℕ → Ω → E} (hXm : ∀ n, Measurable (X n)) :
+    IsExchangeable X μ ↔ HasDeFinettiRepresentation X μ := by
+  constructor
+  · exact fun h => h.hasDeFinettiRepresentation hXm
+  · exact HasDeFinettiRepresentation.isExchangeable
 
 end ProbabilityTheory

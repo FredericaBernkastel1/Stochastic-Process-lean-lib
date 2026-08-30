@@ -102,3 +102,24 @@ adding declarations.
 - Predictable-to-progressive-to-adapted and the discrete `F n` measurability of `X (n+1)` use exact
   Mathlib declarations.
 - The always-infinite stopping time retains `WithTop` infinity on a probability-one event.
+
+## Discrete martingale and exchangeability duplicate audit
+
+| Topic / design row | Pinned result or approved source | Decision |
+| --- | --- | --- |
+| Martingale predicates and conditional expectation | Mathlib `Martingale`, `Submartingale`, `condExp`, stopped processes, and filtration APIs | Reuse; local adapters do not define a second martingale notion. |
+| Discrete stochastic integral | No named exact Klenke-indexed transform API found | Add `discreteStochasticIntegral` and prove its algebraic/probabilistic interface. |
+| Quadratic variation / bracket | Mathlib has square-integrability and conditional expectation primitives but no matching discrete predictable-bracket package | Add pathwise and predictable processes with exact stopped compatibility. |
+| Optional sampling | Bounded stopping theorems exist upstream | Reuse them; add only UI and a.s.-finite limit bridges. |
+| Doob `L^p` | General upstream maximal inequality exists | Reuse and expose the exact sharp real-valued specialization; preserve `1 < p`. |
+| Finite-bracket convergence | No exact predictable-bracket criterion found | Add predictable localization and derive Klenke 11.14 from ordinary martingale convergence. |
+| Exchangeability | No pinned Mathlib finite-dimensional exchangeability predicate | Add the f.d.d.-correct local predicate; do not use equality of marginals as a surrogate. |
+| Reverse conditional expectation | Upstream conditional expectation and martingale convergence exist | Add the antitone-filtration interface and exact infimum-field convergence. |
+| de Finetti | Approved `cameronfreer/exchangeability` at `e0532e59ceff23edab44dda9ab0655debbc9cc22` | Audited locally, minimally compatibility-patched outside the project tree, pinned exactly, and wrapped by a structural StochLean facade. |
+| Empirical measure and symmetric factorization | No exact finite-tuple empirical-measure recovery/factorization API found | Add nonempty empirical measures, multiplicity recovery, permutation reconstruction, and plain factorization. |
+| Invariant vs tail sigma-field | Raw `T ≤ E` is deterministic; no exact modulo-law equality found upstream or in the approved dependency | Add the `L¹` finite-block relocation proof and explicit `MeasurableSpace.EqModulo`. |
+| Hewitt-Savage | Mathlib has Kolmogorov zero-one, not Hewitt-Savage | Derive Hewitt-Savage through the modulo-tail theorem; no duplicate Kolmogorov proof. |
+
+The external exchangeability checkout was audited for its exact revision, license, dependency
+closure, and placeholder scan. Project-facing milestone declarations are rechecked independently
+in `Audit/Axioms.lean`.

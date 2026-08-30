@@ -142,3 +142,43 @@ filtration minimality, predictable/progressive/adapted chains, a right-continuou
 is not usual, an always-infinite stopping time on a probability-one event, and common-event cadlag
 semantics. The right/left grid theorems, stopping-value bridge, and completed usual augmentation
 provide the remaining positive acceptance chains.
+
+# Discrete Martingale Calculus and Exchangeability
+
+This is the complete disposition of the third handoff. All `BUILD` rows are kernel-checked; no
+item is represented by a conclusion-shaped premise or a weakened surrogate statement.
+
+## Part I: discrete martingale calculus
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Martingale/submartingale adapters | Implemented / upstream | `Martingale/Adapters.lean` retains Mathlib's canonical predicates and supplies only exact conversion bridges. |
+| Discrete stochastic integral | Implemented | `Martingale/DiscreteIntegral.lean`: named transform, zero/successor/sum formulas, predictability interface, integrability, and martingale preservation. |
+| Pathwise quadratic variation and predictable bracket | Implemented | `Martingale/QuadraticVariation.lean`: square increments, conditional bracket increments, square-minus-bracket martingale, and stopped-process compatibility. |
+| Optional sampling | Implemented / upstream | Canonical bounded optional sampling is reused; `OptionalSampling/UniformIntegrable.lean` proves UI stopped values and the a.s.-finite conditional-expectation identity. |
+| Doob inequalities | Implemented / upstream | Mathlib maximal inequality is reused; `Inequalities/DoobLp.lean` exposes the sharp `p/(p-1)` real-valued norm form with `1 < p`. |
+| Martingale representation | Implemented with structural domain | `Representation/Binary.lean` proves representation from explicit binary splitting data; no unrestricted false representation theorem is claimed. |
+| Reverse martingales | Implemented | `Martingale/Reverse.lean`: reverse conditional expectations and a.e./`L¹` convergence to the infimum sigma-field. |
+| Klenke 11.14 | Implemented | `Convergence/QuadraticVariation.lean`: predictable cutoff localization proves a.s. convergence on the event of finite predictable quadratic variation. |
+
+## Part II: exchangeability and de Finetti
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Exchangeability | Implemented | `Exchangeability/Basic.lean`: equality of every ordered finite-dimensional law at distinct indices, plus finite-permutation and reindexing bridges. |
+| Finite symmetrization | Implemented | `Symmetrization.lean`: linear idempotent averaging projection and exact permutation invariance. |
+| Exchangeable and tail sigma-fields | Implemented | `SigmaFields.lean`: decreasing prefix-invariant fields, their infimum, tail fields, and the raw inclusion `T ≤ E`. |
+| Conditional expectation and means | Implemented | `ConditionalExpectation.lean` and `Means.lean`: symmetric conditional expectations, reverse-martingale sample means, a.e./`L¹` limits, prefix symmetrization, and exchangeable LLNs. |
+| Empirical probability measure | Implemented | `EmpiricalMeasure.lean`: nonempty finite samples, multiplicities, integral/CDF bridges, and recovery of the unordered tuple from its empirical measure. |
+| Symmetric-statistic factorization | Implemented | `IsPermutationInvariant.exists_factorThrough_empiricalProbabilityMeasure` gives the plain set-theoretic factorization; measurable factorization remains explicitly a separate Doob-Dynkin question. |
+| Conditional iid / de Finetti | Implemented with approved dependency | `ConditionalIID.lean` exposes a structural product-mixture representation and equivalence; `Bernoulli.lean` gives the Boolean parameter specialization. |
+| Invariant field equals tail modulo law | Implemented | `InvariantTail.lean`: finite-coordinate conditional expectations are moved beyond every cutoff and closed in `L¹`, yielding `exchangeableMeasurableSpace_eq_tail_modulo`. |
+| Hewitt-Savage | Implemented | `hewittSavage_zero_one` combines the modulo-tail theorem with Mathlib's Kolmogorov zero-one law. |
+
+## Third-milestone regression gate
+
+`Martingale/SemanticRegression.lean` checks predictability indexing, transform recursion,
+`WithTop` stopping, sharp Doob hypotheses, structural binary representation, and the finite-bracket
+criterion. `Exchangeability/SemanticRegression.lean` checks exchangeable-but-dependent and
+equal-marginal-but-nonexchangeable models, nonempty empirical measures, empirical factorization,
+modulo-tail equality, Hewitt-Savage, and the Bernoulli de Finetti facade.

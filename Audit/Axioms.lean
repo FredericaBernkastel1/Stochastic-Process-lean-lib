@@ -98,7 +98,7 @@ import StochLean
 #print axioms ProbabilityTheory.alwaysInfiniteStoppingTime_isStoppingTime
 #print axioms ProbabilityTheory.measure_alwaysInfiniteStoppingTime_eq_top
 
-/-! Discrete martingale calculus and exchangeability work in progress. -/
+/-! Discrete martingale calculus and exchangeability. -/
 
 #print axioms MeasureTheory.Martingale.discreteStochasticIntegral
 #print axioms MeasureTheory.BinarySplittingData.representation
@@ -108,6 +108,17 @@ import StochLean
 #print axioms MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_ae_finite
 #print axioms MeasureTheory.maximal_ineq_Lp
 #print axioms MeasureTheory.Martingale.eLpNorm_norm_runMax_le
+#print axioms MeasureTheory.Martingale.ae_tendsto_of_predictableQuadraticVariation_bdd
 #print axioms ProbabilityTheory.IsExchangeable.finitePermutation
 #print axioms ProbabilityTheory.IsExchangeable.exchangeableSymmetricMean_ae_eq_condExp
+#print axioms ProbabilityTheory.IsExchangeable.tendsto_ae_exchangeableSymmetricMean
+#print axioms ProbabilityTheory.IsExchangeable.tendsto_ae_prefixSymmetrization
+#print axioms ProbabilityTheory.IsPermutationInvariant.exists_factorThrough_empiricalProbabilityMeasure
+#print axioms ProbabilityTheory.exchangeableMeasurableSpace_eq_tail_modulo
+#print axioms ProbabilityTheory.hewittSavage_zero_one
 #print axioms ProbabilityTheory.IsConditionallyIIDGiven.identDistrib
+#print axioms ProbabilityTheory.IsExchangeable.hasDeFinettiRepresentation
+#print axioms ProbabilityTheory.isExchangeable_iff_hasDeFinettiRepresentation
+#print axioms ProbabilityTheory.IsExchangeable.hasBernoulliDeFinettiRepresentation
+#print axioms ProbabilityTheory.commonBoolSequence_not_independent
+#print axioms ProbabilityTheory.equalMarginalNonexchangeable_not_exchangeable

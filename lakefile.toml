@@ -12,6 +12,11 @@ name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
 rev = "v4.33.0"
 
+[[require]]
+name = "exchangeability"
+git = "https://github.com/cameronfreer/exchangeability.git"
+rev = "e0532e59ceff23edab44dda9ab0655debbc9cc22"
+
 [[lean_lib]]
 name = "StochLean"
-weakLeanArgs = ["--memory=20000", "--threads=1"]
+weakLeanArgs = ["--memory=24000", "--threads=3"]
