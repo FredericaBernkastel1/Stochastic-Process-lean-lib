@@ -6,6 +6,7 @@ Authors: StochLean contributors
 module
 
 public import Mathlib.Probability.Independence.Conditional
+public import Mathlib.Probability.IdentDistrib
 public import Mathlib.Probability.Kernel.CondDistrib
 public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 
@@ -36,15 +37,38 @@ structure IsConditionallyIIDGiven (X : ℕ → Ω → E) (Θ : Ω → S) (μ : M
     iCondIndepFun (MeasurableSpace.comap Θ inferInstance)
       measurable_conditioner.comap_le X μ
   condDistrib_eq_zero : ∀ n,
-    ∀ᵐ ω ∂μ, condDistrib (X n) Θ μ (Θ ω) = condDistrib (X 0) Θ μ (Θ ω)
+    condDistrib (X n) Θ μ =ᵐ[μ.map Θ] condDistrib (X 0) Θ μ
 
 namespace IsConditionallyIIDGiven
 
 theorem condDistrib_eq {X : ℕ → Ω → E} {Θ : Ω → S}
     (h : IsConditionallyIIDGiven X Θ μ) (i j : ℕ) :
-    ∀ᵐ ω ∂μ, condDistrib (X i) Θ μ (Θ ω) = condDistrib (X j) Θ μ (Θ ω) := by
-  filter_upwards [h.condDistrib_eq_zero i, h.condDistrib_eq_zero j] with ω hi hj
-  exact hi.trans hj.symm
+    condDistrib (X i) Θ μ =ᵐ[μ.map Θ] condDistrib (X j) Θ μ :=
+  (h.condDistrib_eq_zero i).trans (h.condDistrib_eq_zero j).symm
+
+/-- Evaluated form of conditional identical distribution on the original sample space. -/
+theorem condDistrib_comp_ae_eq {X : ℕ → Ω → E} {Θ : Ω → S}
+    (h : IsConditionallyIIDGiven X Θ μ) (i j : ℕ) :
+    ∀ᵐ ω ∂μ, condDistrib (X i) Θ μ (Θ ω) = condDistrib (X j) Θ μ (Θ ω) :=
+  ae_of_ae_map h.measurable_conditioner.aemeasurable (h.condDistrib_eq i j)
+
+/-- Conditional equality of the coordinate laws implies ordinary equality in distribution.
+This bridge integrates the regular conditional kernels against the law of the conditioner, so
+the a.e. kernel semantics are preserved. -/
+theorem identDistrib {X : ℕ → Ω → E} {Θ : Ω → S}
+    (h : IsConditionallyIIDGiven X Θ μ) (i j : ℕ) :
+    IdentDistrib (X i) (X j) μ μ := by
+  have hk : condDistrib (X i) Θ μ =ᵐ[μ.map Θ] condDistrib (X j) Θ μ := by
+    exact h.condDistrib_eq i j
+  refine ⟨(h.measurable_coordinate i).aemeasurable,
+    (h.measurable_coordinate j).aemeasurable, ?_⟩
+  calc
+    μ.map (X i) = condDistrib (X i) Θ μ ∘ₘ (μ.map Θ) :=
+      (condDistrib_comp_map h.measurable_conditioner.aemeasurable
+        (h.measurable_coordinate i).aemeasurable).symm
+    _ = condDistrib (X j) Θ μ ∘ₘ (μ.map Θ) := Measure.comp_congr hk
+    _ = μ.map (X j) := condDistrib_comp_map h.measurable_conditioner.aemeasurable
+      (h.measurable_coordinate j).aemeasurable
 
 end IsConditionallyIIDGiven
 
@@ -58,7 +82,7 @@ structure IsDirectingMeasure (X : ℕ → Ω → E) (Θ : Ω → ProbabilityMeas
     iCondIndepFun (MeasurableSpace.comap Θ inferInstance)
       measurable_director.comap_le X μ
   condDistrib_eq : ∀ n,
-    ∀ᵐ ω ∂μ, condDistrib (X n) Θ μ (Θ ω) = (Θ ω : Measure E)
+    condDistrib (X n) Θ μ =ᵐ[μ.map Θ] fun θ => (θ : Measure E)
 
 /-- The single public structural de Finetti representation API. Future consumers should use this
 predicate rather than introducing a second representation notion. -/
@@ -74,7 +98,6 @@ theorem IsDirectingMeasure.isConditionallyIIDGiven
   condIndependent := h.condIndependent
   condDistrib_eq_zero := by
     intro n
-    filter_upwards [h.condDistrib_eq n, h.condDistrib_eq 0] with ω hn h0
-    exact hn.trans h0.symm
+    exact (h.condDistrib_eq n).trans (h.condDistrib_eq 0).symm
 
 end ProbabilityTheory

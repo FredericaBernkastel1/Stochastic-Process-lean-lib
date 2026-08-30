@@ -36,6 +36,7 @@ public import StochLean.Probability.MaximalInequality.Kolmogorov
 public import StochLean.Probability.MaximalInequality.StrongLawRate
 public import StochLean.Probability.Martingale.Adapters
 public import StochLean.Probability.Martingale.DiscreteIntegral
+public import StochLean.Probability.Martingale.Inequalities.DoobLp
 public import StochLean.Probability.Martingale.OptionalSampling.UniformIntegrable
 public import StochLean.Probability.Martingale.QuadraticVariation
 public import StochLean.Probability.Martingale.Representation.Binary

@@ -97,3 +97,17 @@ import StochLean
 #print axioms ProbabilityTheory.incompleteBottomFiltration_not_usual
 #print axioms ProbabilityTheory.alwaysInfiniteStoppingTime_isStoppingTime
 #print axioms ProbabilityTheory.measure_alwaysInfiniteStoppingTime_eq_top
+
+/-! Discrete martingale calculus and exchangeability work in progress. -/
+
+#print axioms MeasureTheory.Martingale.discreteStochasticIntegral
+#print axioms MeasureTheory.BinarySplittingData.representation
+#print axioms MeasureTheory.Martingale.square_sub_predictableQuadraticVariation
+#print axioms MeasureTheory.Martingale.predictableQuadraticVariation_stoppedProcess_ae_eq
+#print axioms MeasureTheory.Martingale.uniformIntegrable_stoppedValue
+#print axioms MeasureTheory.Martingale.stoppedValue_ae_eq_condExp_of_ae_finite
+#print axioms MeasureTheory.maximal_ineq_Lp
+#print axioms MeasureTheory.Martingale.eLpNorm_norm_runMax_le
+#print axioms ProbabilityTheory.IsExchangeable.finitePermutation
+#print axioms ProbabilityTheory.IsExchangeable.exchangeableSymmetricMean_ae_eq_condExp
+#print axioms ProbabilityTheory.IsConditionallyIIDGiven.identDistrib
