@@ -27,6 +27,117 @@ noncomputable section
 
 variable {ι : Type*} {l : Filter ι} {p : ι → PMF ℕ} {q : PMF ℕ}
 
+/-- The real mass assigned by a natural-valued PMF to an arbitrary set. -/
+def setMassReal (p : PMF ℕ) (s : Set ℕ) : ℝ :=
+  ∑' n, s.indicator p.massReal n
+
+/-- The real mass in the tail starting at `k`. -/
+def tailMassReal (p : PMF ℕ) (k : ℕ) : ℝ :=
+  ∑' n, p.massReal (n + k)
+
+lemma summable_setMassReal (p : PMF ℕ) (s : Set ℕ) :
+    Summable (s.indicator p.massReal) :=
+  p.summable_massReal.indicator s
+
+lemma tailMassReal_eq_one_sub_sum_range (p : PMF ℕ) (k : ℕ) :
+    p.tailMassReal k = 1 - ∑ n ∈ Finset.range k, p.massReal n := by
+  have h := p.summable_massReal.sum_add_tsum_nat_add k
+  rw [p.tsum_massReal] at h
+  rw [eq_sub_iff_add_eq]
+  simpa only [tailMassReal, add_comm] using h
+
+lemma tailMassReal_nonneg (p : PMF ℕ) (k : ℕ) : 0 ≤ p.tailMassReal k :=
+  tsum_nonneg fun n ↦ p.massReal_nonneg (n + k)
+
+lemma tendsto_tailMassReal_atTop (p : PMF ℕ) :
+    Tendsto p.tailMassReal atTop (𝓝 0) := by
+  have h :=
+    (tendsto_const_nhds : Tendsto (fun _ : ℕ ↦ (1 : ℝ)) atTop (𝓝 1)).sub
+      p.summable_massReal.tendsto_sum_tsum_nat
+  rw [p.tsum_massReal] at h
+  simpa only [sub_self] using
+    h.congr' (Eventually.of_forall fun k ↦ (p.tailMassReal_eq_one_sub_sum_range k).symm)
+
+lemma tendsto_tailMassReal_of_tendsto_mass
+    (h : ∀ n, Tendsto (fun i ↦ (p i).massReal n) l (𝓝 (q.massReal n))) (k : ℕ) :
+    Tendsto (fun i ↦ (p i).tailMassReal k) l (𝓝 (q.tailMassReal k)) := by
+  have hsum : Tendsto
+      (fun i ↦ ∑ n ∈ Finset.range k, (p i).massReal n) l
+      (𝓝 (∑ n ∈ Finset.range k, q.massReal n)) := by
+    exact tendsto_finsetSum _ fun n _ ↦ h n
+  simpa only [tailMassReal_eq_one_sub_sum_range] using tendsto_const_nhds.sub hsum
+
+lemma setMassReal_eq_sum_add_tail (p : PMF ℕ) (s : Set ℕ) (k : ℕ) :
+    p.setMassReal s =
+      ∑ n ∈ Finset.range k, s.indicator p.massReal n +
+        ∑' n, s.indicator p.massReal (n + k) := by
+  exact (p.summable_setMassReal s).sum_add_tsum_nat_add k |>.symm
+
+lemma setMassReal_tail_le (p : PMF ℕ) (s : Set ℕ) (k : ℕ) :
+    (∑' n, s.indicator p.massReal (n + k)) ≤ p.tailMassReal k := by
+  apply ((summable_nat_add_iff k).2 (p.summable_setMassReal s)).tsum_le_tsum
+  · intro n
+    by_cases hn : n + k ∈ s
+    · simp [Set.indicator_of_mem hn]
+    · simp [Set.indicator_of_notMem hn, p.massReal_nonneg]
+  · exact (summable_nat_add_iff k).2 p.summable_massReal
+
+lemma setMassReal_tail_nonneg (p : PMF ℕ) (s : Set ℕ) (k : ℕ) :
+    0 ≤ ∑' n, s.indicator p.massReal (n + k) :=
+  tsum_nonneg fun _ ↦ Set.indicator_nonneg (fun _ _ ↦ p.massReal_nonneg _) _
+
+/-- Coefficientwise convergence of natural-number-valued probability laws implies setwise
+convergence. This is the discrete Scheffé principle: total probability prevents mass from escaping
+to infinity. -/
+theorem tendsto_setMassReal_of_tendsto_mass
+    (h : ∀ n, Tendsto (fun i ↦ (p i).massReal n) l (𝓝 (q.massReal n)))
+    (s : Set ℕ) : Tendsto (fun i ↦ (p i).setMassReal s) l (𝓝 (q.setMassReal s)) := by
+  rw [Metric.tendsto_nhds]
+  intro ε hε
+  have hqtail : ∀ᶠ k in atTop, q.tailMassReal k < ε / 8 :=
+    q.tendsto_tailMassReal_atTop.eventually (Iio_mem_nhds (by positivity))
+  obtain ⟨k, hk⟩ := hqtail.exists
+  have hfinite : Tendsto
+      (fun i ↦ ∑ n ∈ Finset.range k, s.indicator (p i).massReal n) l
+      (𝓝 (∑ n ∈ Finset.range k, s.indicator q.massReal n)) := by
+    apply tendsto_finsetSum
+    intro n _
+    by_cases hn : n ∈ s
+    · simpa [Set.indicator_of_mem hn] using h n
+    · simpa [Set.indicator_of_notMem hn] using
+        (tendsto_const_nhds : Tendsto (fun _ : ι ↦ (0 : ℝ)) l (𝓝 0))
+  have hptail := tendsto_tailMassReal_of_tendsto_mass h k
+  filter_upwards
+      [(Metric.tendsto_nhds.1 hfinite) (ε / 2) (by positivity),
+        (Metric.tendsto_nhds.1 hptail) (ε / 8) (by positivity)] with i hfin htail
+  rw [(p i).setMassReal_eq_sum_add_tail s k, q.setMassReal_eq_sum_add_tail s k]
+  apply lt_of_le_of_lt (dist_add_add_le _ _ _ _)
+  have hpnonneg := (p i).setMassReal_tail_nonneg s k
+  have hqnonneg := q.setMassReal_tail_nonneg s k
+  have hple : (p i).tailMassReal k < ε / 4 := by
+    have hdiff : (p i).tailMassReal k - q.tailMassReal k ≤
+        dist ((p i).tailMassReal k) (q.tailMassReal k) := by
+      rw [Real.dist_eq]
+      exact le_abs_self _
+    linarith
+  have hsetp := (p i).setMassReal_tail_le s k
+  have hsetq := q.setMassReal_tail_le s k
+  rw [Real.dist_eq, ← Real.norm_eq_abs]
+  calc
+    dist (∑ n ∈ Finset.range k, s.indicator (p i).massReal n)
+          (∑ n ∈ Finset.range k, s.indicator q.massReal n) +
+        ‖(∑' n, s.indicator (p i).massReal (n + k)) -
+          (∑' n, s.indicator q.massReal (n + k))‖
+        ≤ dist (∑ n ∈ Finset.range k, s.indicator (p i).massReal n)
+            (∑ n ∈ Finset.range k, s.indicator q.massReal n) +
+          ((∑' n, s.indicator (p i).massReal (n + k)) +
+            (∑' n, s.indicator q.massReal (n + k))) := by
+              gcongr
+              simpa [Real.norm_eq_abs, abs_of_nonneg hpnonneg, abs_of_nonneg hqnonneg] using
+                norm_sub_le (∑' n, s.indicator (p i).massReal (n + k))
+                  (∑' n, s.indicator q.massReal (n + k))
+    _ < ε := by linarith
+
 /-- Coefficientwise convergence of natural-number-valued laws implies convergence of their PGFs
 at every point of `[0, 1]`. -/
 theorem tendsto_pgf_of_tendsto_mass

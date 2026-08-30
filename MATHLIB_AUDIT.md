@@ -1,34 +1,59 @@
 # Pinned Mathlib audit
 
-Baseline: Lean `v4.33.0`, Mathlib input revision `v4.33.0`, resolved commit
-`db584cd6d46c92f209a44c0f1c829460d327499d`.
+Baseline: Lean/Mathlib `v4.33.0`, resolved Mathlib commit
+`db584cd6d46c92f209a44c0f1c829460d327499d`. Searches covered the pinned checkout, the complete
+local tree, and the approved-external ledger before each public gap was added.
 
-Searches were run against the pinned checkout before adding public declarations. This file records
-the relevant duplicate decisions.
+## Reuse and gap decisions
 
-| Topic / search terms | Pinned Mathlib result | Decision |
+| Topic / design row | Pinned result | Decision |
 | --- | --- | --- |
-| `pgf`, `probability generating function` | No canonical PGF for `PMF ℕ` | Add `PMF.pgf` and law bridge in StochLean |
-| `poissonMeasure`, `PoissonLimitThm` | Canonical Poisson measure and i.i.d. binomial point-probability limit exist | Re-export the upstream result; add only the non-i.i.d. Bernoulli triangular-array theorem and its PGF bridge |
-| finite independent Bernoulli sum law, `poissonBinomial` | `PMF.poissonBinomial` exists, but no theorem connects a generic finite independent Bernoulli family to that law | Add a PGF/independent-integration bridge in `PoissonApproximation.lean`; use it in the dyadic converse |
-| probability multinomial distribution / Poisson splitting | Only the combinatorial `Nat.multinomial` and finite product-measure primitives exist; no probability multinomial law or Poisson-mixing theorem was found | Build the generic finite categorical-count law before completing Klenke 5.35; do not hide it in the Poisson-process namespace |
-| `PMF.bind`, `PMF.map` | Canonical law-level mixture and mapping operations exist | Define convolution and random sums using these operations |
-| `HasIndepIncrements` | Canonical process predicate exists | Reuse it inside `IsPoissonProcess` |
-| `TendstoInMeasure` | Only the global measure notion is canonical | Add the finite-restriction local predicate in `ForMathlib` |
-| local convergence exhaustion metric, `spanningSets` | No metric or pseudometric inducing sigma-finite local convergence in measure found | Add Klenke's normalized geometric exhaustion pseudometric on raw strongly measurable maps and a genuine metric on `AEEqFun` |
-| local fast convergence, local Cauchy criterion | No sigma-finite local Borel--Cantelli convergence or Cauchy-completeness package found | Add summable-bad-set and fast-Cauchy theorems, then prove the complete-target local Cauchy equivalence |
-| `UnifIntegrable`, `tendsto_Lp_finite_of_tendstoInMeasure` | Canonical finite-measure Vitali theorem exists | Reuse it on every finite restriction |
-| `UnifTight`, `tendstoInMeasure_iff_tendsto_Lp` | Canonical non-finite-measure Vitali theorem exists, but it uses global convergence in measure | Reuse its uniform-absolute-continuity/tightness components and add the missing local-to-global `Lᵖ` bridge required by Klenke |
-| de la Vallée-Poussin envelope criterion | No superlinear-envelope bridge to Mathlib UI predicates found | Add the generic sufficient direction in `ForMathlib`; leave the converse envelope construction explicit |
-| `empiricalCDF`, `GlivenkoCantelli` | No matching empirical-CDF or GC declaration found | Add strict/non-strict finite-sample APIs; derive common-event threshold strong laws from Mathlib `strong_law_ae`; use right values and strict left limits to prove full uniform GC for arbitrary real laws |
-| `GaltonWatson`, `branching`, `extinctionProbability` | No matching law recursion or extinction fixed-point API found | Add StochLean law-level definitions and proofs |
-| `PoissonProcess`, interval-count characterization | Poisson distributions and independent increments exist, but no matching counting-process or P1–P5 characterization package | Add a function-based predicate, exact interval-axiom API, proved forward characterization, converse mean-linearity and P5-limit foundations, and deterministic construction cores |
+| Ch.1 generated spaces and measure uniqueness | Mathlib generated measurable spaces and `Measure.ext_of_generateFrom_of_cover` | Reuse; no compatibility wrapper required. |
+| Klenke 1.65 semiring approximation | Exact theorem `MeasureTheory.exists_measure_symmDiff_lt_of_generateFrom_isSetSemiring` in `MeasureTheory/Measure/MeasuredSets.lean` | Reuse; audit-first row closed as upstream. |
+| Ch.2 independence/generators/regrouping | Canonical `Indep`, `iIndep`, `IndepFun`, `iIndepFun`; anchors include `iIndepSet.indep_generateFrom_of_disjoint` and `iIndepFun.indepFun_finset` | Reuse. |
+| Laws of independent sums | Generated additive theorems `IndepFun.hasLaw_add` and `IndepFun.map_add_eq_map_conv_map₀` | Reuse for laws; add only the thin PGF expectation specialization. |
+| Probability generating functions | No canonical PGF for `PMF ℕ` | Add `PMF.pgf`, the measure/law bridge, analytic layer, and safe-domain semantics. |
+| PGF factorial derivative/moment boundary | General iterated-derivative, locally uniform sum, monotone-convergence, and ENNReal tools exist, but no probability theorem connects them | Add generic arbitrary-order derivative identification and `ℝ≥0∞` boundary theorem in `Analytic.lean`. |
+| Discrete setwise convergence | PMF coefficient and summability APIs exist; no direct arbitrary-set convergence theorem from atomwise convergence | Add `PMF.setMassReal` and the tight-tail/discrete-Scheffé theorem `PMF.tendsto_setMassReal_of_tendsto_mass`. |
+| Discrete PGF convergence | No matching atomwise/PGF equivalence | Add in `Probability/Convergence/Discrete.lean`. |
+| `PoissonLimitThm` | Canonical i.i.d. binomial point-probability limit exists | Re-export upstream; add only the non-i.i.d. Bernoulli triangular-array result. |
+| Finite independent Bernoulli sum law | `PMF.poissonBinomial` exists, but no generic family-to-law bridge | Add `iIndepFun.hasLaw_fintype_sum_bernoulli`. |
+| Random sums | `PMF.bind` and `PMF.map` exist; no law-level random-sum PGF API | Build convolution powers and random sums from canonical monadic operations. |
+| Galton-Watson | No matching construction/PGF/extinction fixed-point API | Add law-level branching modules. |
+| Probability multinomial law | Only `Nat.multinomial` and product-measure primitives; no categorical-count PMF theorem | Add generic `PMF.multinomial` and `iIndepFun.hasLaw_categoricalCounts`. |
+| Poissonized multinomial splitting | Poisson laws and characteristic functions exist; no finite categorical Poisson-mixing theorem | Add `PMF.poissonizedMultinomial_eq_independentPoissonCounts`. |
+| Wald 5.5 / Blackwell-Girshick 5.10 | Independence integration and moment primitives exist; no matching random-count identities found | Add generic stopped-sum theorems in `Probability/Moments/RandomSum.lean`. |
+| Paley-Zygmund exercise | Holder/Cauchy-Schwarz primitives exist; no matching zero-threshold probability inequality | Add multiplicative and quotient forms. |
+| Empirical CDF / Glivenko-Cantelli | No matching empirical-CDF or GC declaration | Add strict/non-strict CDF APIs and full arbitrary-law uniform theorem; reuse `strong_law_ae`. |
+| Kolmogorov maximal inequality 5.28 | Martingale maximal APIs exist, but no exact independent centered square-integrable specialization with the textbook bound | Add the square-submartingale bridge and Kolmogorov specialization. |
+| Strong-law rate 5.29 | Borel-Cantelli exists; no exact Klenke dyadic/logarithmic rate theorem | Add the rate package after the maximal inequality. |
+| Process representation and independent increments | Canonical processes are functions; `HasIndepIncrements` exists | Reuse and introduce no process structure. |
+| Stationary increments | No exact generic predicate found | Add one function-based reusable predicate. |
+| Poisson process / P1-P5 characterization | Poisson measures and independent increments exist, but no counting-process predicate or interval-axiom equivalence | Add corrected common-event path semantics and both directions of Klenke 5.34. |
+| Klenke 5.35 uniform points | No probability multinomial/Poissonization package | Reuse the new generic distribution modules; keep process-specific code thin. |
+| Klenke 5.36 exponential arrivals | Exponential measures exist; no arbitrary finite ordered-partition arrival/count law or needed simplex-volume bridge | Add generic simplex/cumulative-coordinate measure results and the full construction theorem. |
+| Local convergence in measure | Mathlib `TendstoInMeasure` is global | Add `TendstoLocallyInMeasure` by finite restrictions. |
+| Exhaustion metric and local completeness | No inducing pseudo/metric or sigma-finite Cauchy-completeness package | Add raw pseudometric, `AEEqFun` metric, fast convergence, subsequences, and completeness. |
+| Uniform integrability / finite Vitali | Mathlib `UniformIntegrable`, `UnifTight`, `tendsto_Lp_finite_of_tendstoInMeasure`, and `tendstoInMeasure_iff_tendsto_Lp` exist | Reuse on finite restrictions and as canonical compatibility targets. |
+| Klenke sigma-finite envelope UI | No exact literal envelope/tail/density package | Add separately named predicates and equivalences; do not shadow Mathlib UI. |
+| de la Vallee-Poussin | No full superlinear-envelope bridge/converse found | Add sufficient and finite-measure converse theorems. |
+| Klenke 7.3 | Mathlib `Lp` completeness exists; no local-convergence plus powered-envelope characterization | Add one generic bridge in `LpLocalConvergence.lean`. |
+| Klenke 7.47/7.49/7.50 `Lp` dual representation | Holder pairing exists, but no exact general dual representation theorem was found | Explicitly defer to general functional-analysis/ForMathlib, as authorized by the handoff. |
+| Conditional expectation and distributions | Canonical `condExp`, `Kernel`, `condDistrib`, `StandardBorelSpace`, and `condExp_ae_eq_integral_condDistrib` exist | Reuse; add only natural-domain and law-a.e. uniqueness guards. |
+| External results 2.46, 5.30, 5.32 | No approved external dependency was admitted | Explicitly deferred; no hidden trust-boundary dependency. |
 
-## Public-domain checks
+## Semantic and public-domain checks
 
-- `PMF.pgf` takes a `unitInterval`; no divergent outside-domain value is part of the API.
-- `PMF.ext_pgf` uses analyticity and the identity principle, not coefficient extraction from an
-  unproved boundary derivative.
-- `TendstoLocallyInMeasure` requires measurability and finiteness for every restriction set.
-- `DivergentArrivalSequence.count` is constructed from a divergence witness.
-- No theorem relies on a conclusion-shaped hypothesis.
+- `PMF.pgf` accepts only `unitInterval`; the heavy-tail regression proves no outside-domain
+  convergence is assumed.
+- `PMF.factorialMoment` and the derivative boundary theorem use `ℝ≥0∞`, preserving infinite
+  factorial moments.
+- `TendstoLocallyInMeasure` is distinguished from global `TendstoInMeasure`; raw functions use
+  a pseudometric and only a.e. classes receive a metric.
+- The corrected Poisson process has one common full-measure monotone/right-continuous path event.
+- The exponential-arrival proof establishes every finite partition and compiles an explicit
+  four-increment application.
+- `DivergentArrivalSequence.count` requires a divergence witness.
+- Conditional-event APIs require positive mass, and conditional-kernel uniqueness is law-a.e.
+- No project theorem relies on a conclusion-shaped premise, `sorry`, `admit`, or a
+  project-defined axiom.

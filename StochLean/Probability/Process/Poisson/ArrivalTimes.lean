@@ -6,20 +6,22 @@ Authors: StochLean contributors
 module
 
 public import StochLean.Probability.Process.Poisson.Constructions
+public import StochLean.Probability.Process.Poisson.ExponentialArrivalLaw
 public import StochLean.Probability.Process.Poisson.FiniteIncrementLaw
 
 /-!
 # Arrival-time counting processes
 
 This module lifts the deterministic nonexplosive arrival/count inverse to random arrival
-sequences.  All path properties hold pointwise, hence on one common probability-one event.  The
-remaining probabilistic input is stated as the arbitrary finite-partition law from
-`HasFinitePoissonIncrementLaws`, never as pairwise independence alone.
+sequences.  All path properties hold pointwise, hence on one common probability-one event.  Its
+main construction proves Klenke 5.36 from independent exponential interarrivals by calculating
+the joint law on every finite ordered partition, never from pairwise independence alone.
 -/
 
 @[expose] public section
 
-open MeasureTheory
+open MeasureTheory Set Finset
+open scoped ENNReal NNReal
 
 namespace ProbabilityTheory.PoissonProcess
 
@@ -54,6 +56,575 @@ theorem hasMonotonePaths_arrivalCountProcess (A : Ω → DivergentArrivalSequenc
 theorem hasRightContinuousPaths_arrivalCountProcess (A : Ω → DivergentArrivalSequence) :
     HasRightContinuousPaths (arrivalCountProcess A) P :=
   ae_of_all _ fun ω ↦ (A ω).isRightContinuousPath_count
+
+/-- The first `m` interarrival gaps, embedded in the real line. -/
+def initialGaps (a : DivergentArrivalSequence) (m : ℕ) : Fin m → ℝ :=
+  fun i ↦ (a.interarrival i : ℝ)
+
+lemma cumulative_initialGaps (a : DivergentArrivalSequence) (m : ℕ) (i : Fin m) :
+    cumulativeLinearEquiv m (initialGaps a m) i = (a.eventTime i.val : ℝ) := by
+  rw [cumulativeLinearEquiv_apply]
+  simp only [initialGaps, DivergentArrivalSequence.eventTime, arrivalTime, NNReal.coe_sum]
+  apply Finset.sum_bij (fun j _ ↦ j.val)
+  · intro j hj
+    simp only [Finset.mem_range]
+    have hji : j ≤ i := Finset.mem_Iic.mp hj
+    change j.val < i.val + 1
+    omega
+  · intro j₁ hj₁ j₂ hj₂ heq
+    exact Fin.ext heq
+  · intro j hj
+    have hj' : j < i.val + 1 := Finset.mem_range.mp hj
+    refine ⟨⟨j, by omega⟩, ?_, rfl⟩
+    exact Finset.mem_Iic.mpr (by
+      change j ≤ i.val
+      omega)
+  · intro j hj
+    rfl
+
+/-- Desired number of arrivals before grid coordinate `i`. -/
+def partitionCountPrefix {n : ℕ} (k : Fin n → ℕ) (i : Fin (n + 1)) : ℕ :=
+  ∑ j : Fin i.val, k ⟨j.val, by omega⟩
+
+@[simp]
+lemma partitionCountPrefix_zero {n : ℕ} (k : Fin n → ℕ) :
+    partitionCountPrefix k 0 = 0 := by
+  simp [partitionCountPrefix]
+
+lemma partitionCountPrefix_succ {n : ℕ} (k : Fin n → ℕ) (i : Fin n) :
+    partitionCountPrefix k i.succ = partitionCountPrefix k i.castSucc + k i := by
+  have h := Fin.sum_univ_castSucc
+    (f := fun j : Fin (i.val + 1) ↦ k ⟨j.val, by omega⟩)
+  unfold partitionCountPrefix
+  convert h using 1 <;> simp
+
+@[simp]
+lemma partitionCountPrefix_last {n : ℕ} (k : Fin n → ℕ) :
+    partitionCountPrefix k (Fin.last n) = ∑ i, k i := by
+  rw [partitionCountPrefix]
+  apply Finset.sum_congr rfl
+  intro i _
+  congr 1
+
+lemma DivergentArrivalSequence.count_eq_zero_iff (a : DivergentArrivalSequence) (t : NNReal) :
+    a.count t = 0 ↔ t < a.eventTime 0 := by
+  rw [← a.count_le_iff t 0]
+  omega
+
+lemma DivergentArrivalSequence.count_eq_succ_iff
+    (a : DivergentArrivalSequence) (t : NNReal) (q : ℕ) :
+    a.count t = q + 1 ↔ a.eventTime q ≤ t ∧ t < a.eventTime (q + 1) := by
+  constructor
+  · intro h
+    constructor
+    · rw [← a.lt_count_iff t q, h]
+      omega
+    · rw [← a.count_le_iff t (q + 1), h]
+  · rintro ⟨hlower, hupper⟩
+    apply Nat.le_antisymm
+    · exact (a.count_le_iff t (q + 1)).mpr hupper
+    · exact Nat.succ_le_iff.mpr ((a.lt_count_iff t q).mpr hlower)
+
+/-- Recursive statement that the requested arrivals lie in their prescribed time blocks. -/
+def ArrivalTimesInBlocks (a : DivergentArrivalSequence) :
+    ℕ → List (ℕ × ℝ × ℝ) → Prop
+  | _, [] => True
+  | q, b :: bs =>
+      (∀ i : Fin b.1,
+        b.2.1 ≤ (a.eventTime (q + i.val) : ℝ) ∧
+          (a.eventTime (q + i.val) : ℝ) ≤ b.2.1 + b.2.2) ∧
+        ArrivalTimesInBlocks a (q + b.1) bs
+
+lemma eventTimes_mem_listArrivalChamber_iff (a : DivergentArrivalSequence) (q : ℕ)
+    (bs : List (ℕ × ℝ × ℝ)) (hd : ∀ b ∈ bs, 0 ≤ b.2.2) :
+    (fun i : Fin (blockTotal bs) ↦ (a.eventTime (q + i.val) : ℝ)) ∈
+        listArrivalChamber bs ↔ ArrivalTimesInBlocks a q bs := by
+  induction bs generalizing q with
+  | nil => simp [listArrivalChamber, ArrivalTimesInBlocks]
+  | cons b bs ih =>
+      let y : Fin (b.1 + blockTotal bs) → ℝ :=
+        fun i ↦ (a.eventTime (q + i.val) : ℝ)
+      change (splitFinMeasurableEquiv b.1 (blockTotal bs) y).1 ∈
+          shiftedOrderedSimplex b.1 b.2.1 b.2.2 ∧
+        (splitFinMeasurableEquiv b.1 (blockTotal bs) y).2 ∈ listArrivalChamber bs ↔ _
+      have hleft : (splitFinMeasurableEquiv b.1 (blockTotal bs) y).1 =
+          fun i : Fin b.1 ↦ (a.eventTime (q + i.val) : ℝ) := by
+        funext i
+        simp [y]
+      have htail : (splitFinMeasurableEquiv b.1 (blockTotal bs) y).2 =
+          fun i : Fin (blockTotal bs) ↦ (a.eventTime ((q + b.1) + i.val) : ℝ) := by
+        funext i
+        simp [y, Nat.add_assoc]
+      rw [hleft, htail, mem_shiftedOrderedSimplex_iff (hd b (by simp))]
+      rw [ih (q + b.1) (fun c hc ↦ hd c (by simp [hc]))]
+      change (_ ∧ _ ∧ _) ∧ _ ↔ _
+      simp only [ArrivalTimesInBlocks]
+      constructor
+      · rintro ⟨⟨_, hlower, hupper⟩, htail'⟩
+        exact ⟨fun i ↦ ⟨hlower i, hupper i⟩, htail'⟩
+      · rintro ⟨hhead, htail'⟩
+        refine ⟨⟨?_, fun i ↦ (hhead i).1, fun i ↦ (hhead i).2⟩, htail'⟩
+        intro i j hij
+        exact_mod_cast a.strictMono_eventTime.monotone (Nat.add_le_add_left hij q)
+
+lemma arrivalTimesInBlocks_first_gt (a : DivergentArrivalSequence) (q : ℕ)
+    {bs : List (ℕ × ℝ × ℝ)} {L : ℝ}
+    (hblocks : ArrivalTimesInBlocks a q bs)
+    (hstart : ∀ b ∈ bs, L ≤ b.2.1)
+    (hno : ∀ m b, b ∈ bs → (a.eventTime m : ℝ) ≠ b.2.1)
+    (htotal : 0 < blockTotal bs) : L < (a.eventTime q : ℝ) := by
+  induction bs generalizing q with
+  | nil => simp [blockTotal] at htotal
+  | cons b bs ih =>
+      change (∀ i : Fin b.1,
+          b.2.1 ≤ (a.eventTime (q + i.val) : ℝ) ∧
+            (a.eventTime (q + i.val) : ℝ) ≤ b.2.1 + b.2.2) ∧
+        ArrivalTimesInBlocks a (q + b.1) bs at hblocks
+      by_cases hb : b.1 = 0
+      · apply ih (q := q) (by simpa [hb] using hblocks.2)
+        · intro c hc
+          exact hstart c (by simp [hc])
+        · intro m c hc
+          exact hno m c (by simp [hc])
+        · simpa [blockTotal, hb] using htotal
+      · let i : Fin b.1 := ⟨0, Nat.pos_of_ne_zero hb⟩
+        have hlower := (hblocks.1 i).1
+        have hne := hno q b (by simp)
+        have hstrict : b.2.1 < (a.eventTime q : ℝ) := by
+          apply lt_of_le_of_ne hlower
+          simpa [i] using hne.symm
+        exact (hstart b (by simp)).trans_lt hstrict
+
+lemma partitionBlocks_succ {n : ℕ} (k : Fin (n + 1) → ℕ)
+    (t : Fin (n + 2) → NNReal) :
+    partitionBlocks k t =
+      (k 0, (t 0 : ℝ), ((t 1 - t 0 : NNReal) : ℝ)) ::
+        partitionBlocks (fun i : Fin n ↦ k i.succ)
+          (fun i : Fin (n + 1) ↦ t i.succ) := by
+  rw [partitionBlocks, List.ofFn_succ]
+  congr 1
+
+lemma partitionCountPrefix_tail {n : ℕ} (k : Fin (n + 1) → ℕ)
+    (j : Fin (n + 1)) :
+    partitionCountPrefix k j.succ =
+      k 0 + partitionCountPrefix (fun i : Fin n ↦ k i.succ) j := by
+  have h := Fin.sum_univ_succ
+    (f := fun i : Fin (j.val + 1) ↦ k ⟨i.val, by omega⟩)
+  unfold partitionCountPrefix
+  convert h using 1 <;> simp
+
+lemma noBoundary_partitionBlocks (a : DivergentArrivalSequence) {n : ℕ}
+    (k : Fin n → ℕ) (t : Fin (n + 1) → NNReal)
+    (hno : ∀ (m : ℕ) (i : Fin n), (a.eventTime m : ℝ) ≠ (t i.castSucc : ℝ)) :
+    ∀ m b, b ∈ partitionBlocks k t → (a.eventTime m : ℝ) ≠ b.2.1 := by
+  intro m b hb
+  rw [partitionBlocks, List.mem_ofFn'] at hb
+  obtain ⟨i, rfl⟩ := hb
+  exact hno m i
+
+/-- Counts at every endpoint agree with the cumulative requested block counts. -/
+def HasPartitionEndpointCounts (a : DivergentArrivalSequence) (q : ℕ)
+    {n : ℕ} (k : Fin n → ℕ) (t : Fin (n + 1) → NNReal) : Prop :=
+  ∀ i, a.count (t i) = q + partitionCountPrefix k i
+
+lemma arrivalBlocks_overshoot_iff_endpointCounts (a : DivergentArrivalSequence)
+    {n : ℕ} (q : ℕ) (k : Fin n → ℕ) (t : Fin (n + 1) → NNReal)
+    (ht : Monotone t) (hinit : a.count (t 0) = q)
+    (hno : ∀ (m : ℕ) (i : Fin n),
+      (a.eventTime m : ℝ) ≠ (t i.castSucc : ℝ)) :
+    (ArrivalTimesInBlocks a q (partitionBlocks k t) ∧
+        t (Fin.last n) < a.eventTime (q + ∑ i, k i)) ↔
+      HasPartitionEndpointCounts a q k t := by
+  induction n generalizing q with
+  | zero =>
+      constructor
+      · intro h i
+        fin_cases i
+        simpa [HasPartitionEndpointCounts] using hinit
+      · intro h
+        constructor
+        · trivial
+        · have hq : a.count (t 0) ≤ q := hinit.le
+          simpa using (a.count_le_iff (t 0) q).mp hq
+  | succ n ih =>
+      let kTail : Fin n → ℕ := fun i ↦ k i.succ
+      let tTail : Fin (n + 1) → NNReal := fun i ↦ t i.succ
+      have htTail : Monotone tTail := fun i j hij ↦ ht (by
+        change i.val + 1 ≤ j.val + 1
+        omega)
+      have hnoTail : ∀ (m : ℕ) (i : Fin n),
+          (a.eventTime m : ℝ) ≠ (tTail i.castSucc : ℝ) := by
+        intro m i
+        simpa [tTail] using hno m i.succ
+      have hsum : (∑ i, k i) = k 0 + ∑ i, kTail i := by
+        simpa [kTail] using Fin.sum_univ_succ k
+      rw [partitionBlocks_succ]
+      change (((∀ i : Fin (k 0),
+          (t 0 : ℝ) ≤ (a.eventTime (q + i.val) : ℝ) ∧
+            (a.eventTime (q + i.val) : ℝ) ≤
+              (t 0 : ℝ) + ((t 1 - t 0 : NNReal) : ℝ)) ∧
+          ArrivalTimesInBlocks a (q + k 0) (partitionBlocks kTail tTail)) ∧
+          t (Fin.last (n + 1)) < a.eventTime (q + ∑ i, k i)) ↔ _
+      constructor
+      · rintro ⟨⟨hhead, htail⟩, hover⟩
+        have hstep : t 0 ≤ t 1 := ht (Fin.zero_le _)
+        have hnextR : (t 1 : ℝ) < (a.eventTime (q + k 0) : ℝ) := by
+          by_cases hpos : 0 < blockTotal (partitionBlocks kTail tTail)
+          · apply arrivalTimesInBlocks_first_gt a (q + k 0) htail
+            · intro b hb
+              rw [partitionBlocks, List.mem_ofFn'] at hb
+              obtain ⟨i, rfl⟩ := hb
+              have hle : (t 1 : ℝ) ≤ (t i.castSucc.succ : ℝ) := by
+                exact_mod_cast ht (show (1 : Fin (n + 2)) ≤ i.castSucc.succ by
+                  change 1 ≤ i.val + 1
+                  omega)
+              simpa [tTail] using hle
+            · exact noBoundary_partitionBlocks a kTail tTail hnoTail
+            · exact hpos
+          · have hzeroTail : blockTotal (partitionBlocks kTail tTail) = 0 := by omega
+            have hsumTail : (∑ i, kTail i) = 0 := by
+              rw [← blockTotal_partitionBlocks kTail tTail, hzeroTail]
+            have hlast : t 1 ≤ t (Fin.last (n + 1)) := ht (Fin.le_last 1)
+            have hover' : t (Fin.last (n + 1)) < a.eventTime (q + k 0) := by
+              simpa [hsum, hsumTail] using hover
+            exact_mod_cast hlast.trans_lt hover'
+        have hnext : t 1 < a.eventTime (q + k 0) := by exact_mod_cast hnextR
+        have hcountUpper : a.count (t 1) ≤ q + k 0 :=
+          (a.count_le_iff (t 1) (q + k 0)).mpr hnext
+        have hcountBase : q ≤ a.count (t 1) := by
+          rw [← hinit]
+          exact a.monotone_count hstep
+        have hcountLower : q + k 0 ≤ a.count (t 1) := by
+          by_cases hk : k 0 = 0
+          · simpa [hk] using hcountBase
+          · let i : Fin (k 0) := ⟨k 0 - 1, by omega⟩
+            have hiupper := (hhead i).2
+            have hiupper' : a.eventTime (q + k 0 - 1) ≤ t 1 := by
+              have hidx : q + i.val = q + k 0 - 1 := by simp [i]; omega
+              rw [NNReal.coe_sub hstep] at hiupper
+              have : (a.eventTime (q + i.val) : ℝ) ≤ (t 1 : ℝ) := by linarith
+              exact_mod_cast hidx ▸ this
+            have hlt := (a.lt_count_iff (t 1) (q + k 0 - 1)).mpr hiupper'
+            omega
+        have hcountOne : a.count (t 1) = q + k 0 :=
+          Nat.le_antisymm hcountUpper hcountLower
+        have hoverTail : tTail (Fin.last n) <
+            a.eventTime ((q + k 0) + ∑ i, kTail i) := by
+          simpa [tTail, hsum, Nat.add_assoc] using hover
+        have htailCounts := (ih (q + k 0) kTail tTail htTail hcountOne hnoTail).mp
+          ⟨htail, hoverTail⟩
+        intro i
+        refine Fin.cases ?_ (fun j ↦ ?_) i
+        · simpa [HasPartitionEndpointCounts] using hinit
+        · have hj := htailCounts j
+          rw [partitionCountPrefix_tail]
+          simpa [HasPartitionEndpointCounts, kTail, tTail, Nat.add_assoc] using hj
+      · intro hcounts
+        have hcountOne : a.count (t 1) = q + k 0 := by
+          have h := hcounts (1 : Fin (n + 2))
+          rw [show (1 : Fin (n + 2)) = (0 : Fin (n + 1)).succ by rfl,
+            partitionCountPrefix_tail] at h
+          simpa [HasPartitionEndpointCounts] using h
+        have hhead : ∀ i : Fin (k 0),
+            (t 0 : ℝ) ≤ (a.eventTime (q + i.val) : ℝ) ∧
+              (a.eventTime (q + i.val) : ℝ) ≤
+                (t 0 : ℝ) + ((t 1 - t 0 : NNReal) : ℝ) := by
+          intro i
+          have hlower : t 0 < a.eventTime (q + i.val) :=
+            (a.count_le_iff (t 0) (q + i.val)).mp (by omega)
+          have hupper : a.eventTime (q + i.val) ≤ t 1 :=
+            (a.lt_count_iff (t 1) (q + i.val)).mp (by rw [hcountOne]; omega)
+          constructor
+          · exact_mod_cast hlower.le
+          · have hstep : t 0 ≤ t 1 := ht (Fin.zero_le _)
+            rw [NNReal.coe_sub hstep]
+            have hupperR : (a.eventTime (q + i.val) : ℝ) ≤ (t 1 : ℝ) := by
+              exact_mod_cast hupper
+            linarith
+        have htailCounts : HasPartitionEndpointCounts a (q + k 0) kTail tTail := by
+          intro j
+          have hj := hcounts j.succ
+          rw [partitionCountPrefix_tail] at hj
+          simpa [HasPartitionEndpointCounts, kTail, tTail, Nat.add_assoc] using hj
+        obtain ⟨htail, hoverTail⟩ :=
+          (ih (q + k 0) kTail tTail htTail hcountOne hnoTail).mpr htailCounts
+        refine ⟨⟨hhead, htail⟩, ?_⟩
+        simpa [tTail, hsum, Nat.add_assoc] using hoverTail
+
+lemma initialGaps_mem_gapEvent_iff (a : DivergentArrivalSequence)
+    (bs : List (ℕ × ℝ × ℝ)) (T : ℝ)
+    (hd : ∀ b ∈ bs, 0 ≤ b.2.2) :
+    initialGaps a (blockTotal bs + 1) ∈ exponentialArrivalGapEvent bs T ↔
+      ArrivalTimesInBlocks a 0 bs ∧ T < (a.eventTime (blockTotal bs) : ℝ) := by
+  change (exponentialArrivalMeasurableEquiv (blockTotal bs)
+      (initialGaps a (blockTotal bs + 1))).1 ∈ listArrivalChamber bs ∧
+    (exponentialArrivalMeasurableEquiv (blockTotal bs)
+      (initialGaps a (blockTotal bs + 1))).2 ∈ Ioi T ↔ _
+  have hfst : (exponentialArrivalMeasurableEquiv (blockTotal bs)
+      (initialGaps a (blockTotal bs + 1))).1 =
+      fun i : Fin (blockTotal bs) ↦ (a.eventTime i.val : ℝ) := by
+    funext i
+    simp only [exponentialArrivalMeasurableEquiv, MeasurableEquiv.trans_apply,
+      splitLastMeasurableEquiv_fst]
+    change cumulativeLinearEquiv (blockTotal bs + 1)
+      (initialGaps a (blockTotal bs + 1)) i.castSucc = _
+    exact cumulative_initialGaps a (blockTotal bs + 1) i.castSucc
+  have hsnd : (exponentialArrivalMeasurableEquiv (blockTotal bs)
+      (initialGaps a (blockTotal bs + 1))).2 =
+      (a.eventTime (blockTotal bs) : ℝ) := by
+    change cumulativeLinearEquiv (blockTotal bs + 1)
+      (initialGaps a (blockTotal bs + 1)) (Fin.last (blockTotal bs)) = _
+    exact cumulative_initialGaps a (blockTotal bs + 1) (Fin.last (blockTotal bs))
+  rw [hfst, hsnd]
+  simpa using and_congr (eventTimes_mem_listArrivalChamber_iff a 0 bs hd) Iff.rfl
+
+lemma endpointCounts_iff_increments (a : DivergentArrivalSequence) {n : ℕ}
+    (k : Fin n → ℕ) (t : Fin (n + 1) → NNReal) (ht : Monotone t)
+    (hzero : t 0 = 0) :
+    HasPartitionEndpointCounts a 0 k t ↔
+      (∀ i, a.count (t i.succ) - a.count (t i.castSucc) = k i) := by
+  have hcountZero : a.count (t 0) = 0 := by simp [hzero]
+  constructor
+  · intro h i
+    have hsucc := h i.succ
+    have hcast := h i.castSucc
+    rw [partitionCountPrefix_succ] at hsucc
+    omega
+  · intro h i
+    induction i using Fin.induction with
+    | zero => simpa [HasPartitionEndpointCounts] using hcountZero
+    | succ i ih =>
+        have hinc := h i
+        have hmono : a.count (t i.castSucc) ≤ a.count (t i.succ) :=
+          a.monotone_count (ht (by
+            change i.val ≤ i.val + 1
+            omega))
+        rw [partitionCountPrefix_succ]
+        omega
+
+lemma initialGaps_mem_partitionGapEvent_iff_increments
+    (a : DivergentArrivalSequence) {n : ℕ} (k : Fin n → ℕ)
+    (t : Fin (n + 1) → NNReal) (ht : Monotone t) (hzero : t 0 = 0)
+    (hno : ∀ (m : ℕ) (i : Fin n),
+      (a.eventTime m : ℝ) ≠ (t i.castSucc : ℝ)) :
+    initialGaps a (blockTotal (partitionBlocks k t) + 1) ∈
+        exponentialArrivalGapEvent (partitionBlocks k t) (t (Fin.last n) : ℝ) ↔
+      (∀ i, a.count (t i.succ) - a.count (t i.castSucc) = k i) := by
+  rw [initialGaps_mem_gapEvent_iff a (partitionBlocks k t)
+    (t (Fin.last n) : ℝ) (partitionBlocks_duration_nonneg k t)]
+  rw [blockTotal_partitionBlocks]
+  have hEnd := arrivalBlocks_overshoot_iff_endpointCounts a 0 k t ht
+    (by simp [hzero]) hno
+  have hEnd' :
+      (ArrivalTimesInBlocks a 0 (partitionBlocks k t) ∧
+        (t (Fin.last n) : ℝ) < (a.eventTime (∑ i, k i) : ℝ)) ↔
+        HasPartitionEndpointCounts a 0 k t := by
+    simpa using hEnd
+  exact hEnd'.trans (endpointCounts_iff_increments a k t ht hzero)
+
+lemma measure_eventTime_eq_zero [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P) (m : ℕ) (c : ℝ) :
+    P {ω | ((A ω).eventTime m : ℝ) = c} = 0 := by
+  let W : Ω → (Fin (m + 1) → ℝ) :=
+    fun ω i ↦ ((A ω).interarrival i : ℝ)
+  have hIndepFin : iIndepFun (fun i : Fin (m + 1) ↦
+      fun ω ↦ ((A ω).interarrival i : ℝ)) P :=
+    iIndepFun.precomp Fin.val_injective hIndep
+  have hPi : HasLaw W (Measure.pi fun _ : Fin (m + 1) ↦ expMeasure rate) P :=
+    hIndepFin.hasLaw_pi (fun i ↦ hLaw i)
+  let B : Set (Fin (m + 1) → ℝ) :=
+    {w | cumulativeLinearEquiv (m + 1) w (Fin.last m) = c}
+  have hB : MeasurableSet B := by
+    change MeasurableSet (cumulativeLinearEquiv (m + 1) ⁻¹'
+      ((fun y : Fin (m + 1) → ℝ ↦ y (Fin.last m)) ⁻¹' {c}))
+    exact (measurable_pi_apply (Fin.last m) (measurableSet_singleton c)).preimage
+      (measurePreserving_cumulativeLinearEquiv (m + 1)).measurable
+  calc
+    P {ω | ((A ω).eventTime m : ℝ) = c} = P (W ⁻¹' B) := by
+      congr 1
+      ext ω
+      change ((A ω).eventTime m : ℝ) = c ↔
+        cumulativeLinearEquiv (m + 1) (W ω) (Fin.last m) = c
+      change ((A ω).eventTime m : ℝ) = c ↔
+        cumulativeLinearEquiv (m + 1) (initialGaps (A ω) (m + 1)) (Fin.last m) = c
+      rw [cumulative_initialGaps]
+      rfl
+    _ = Measure.map W P B :=
+      (Measure.map_apply_of_aemeasurable hPi.aemeasurable hB).symm
+    _ = (Measure.pi fun _ : Fin (m + 1) ↦ expMeasure rate) B := by rw [hPi.map_eq]
+    _ = 0 := pi_expMeasure_cumulative_eq_zero rate hr (Fin.last m) c
+
+theorem measure_partitionIncrementAtom [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P) {n : ℕ} (k : Fin n → ℕ)
+    (t : Fin (n + 1) → NNReal) (ht : Monotone t) (hzero : t 0 = 0) :
+    P {ω | ∀ i,
+        (A ω).count (t i.succ) - (A ω).count (t i.castSucc) = k i} =
+      ∏ i, poissonMeasure (rate * (t i.succ - t i.castSucc)) {k i} := by
+  let bs := partitionBlocks k t
+  let W : Ω → (Fin (blockTotal bs + 1) → ℝ) :=
+    fun ω ↦ initialGaps (A ω) (blockTotal bs + 1)
+  have hIndepFin : iIndepFun (fun i : Fin (blockTotal bs + 1) ↦
+      fun ω ↦ ((A ω).interarrival i : ℝ)) P :=
+    iIndepFun.precomp Fin.val_injective hIndep
+  have hPi : HasLaw W (Measure.pi fun _ : Fin (blockTotal bs + 1) ↦
+      expMeasure rate) P :=
+    hIndepFin.hasLaw_pi (fun i ↦ hLaw i)
+  have hNoBoundary : ∀ᵐ ω ∂P, ∀ (m : ℕ) (i : Fin n),
+      ((A ω).eventTime m : ℝ) ≠ (t i.castSucc : ℝ) := by
+    apply ae_all_iff.mpr
+    intro m
+    apply ae_all_iff.mpr
+    intro i
+    rw [ae_iff]
+    simpa only [Set.compl_ofPred, not_ne_iff] using
+      measure_eventTime_eq_zero A rate hr hIndep hLaw m (t i.castSucc : ℝ)
+  let G := exponentialArrivalGapEvent bs (t (Fin.last n) : ℝ)
+  have hsets : {ω | ∀ i,
+        (A ω).count (t i.succ) - (A ω).count (t i.castSucc) = k i} =ᵐ[P]
+      W ⁻¹' G := by
+    filter_upwards [hNoBoundary] with ω hno
+    apply propext
+    change (∀ i, (A ω).count (t i.succ) - (A ω).count (t i.castSucc) = k i) ↔
+      W ω ∈ G
+    exact (initialGaps_mem_partitionGapEvent_iff_increments
+      (A ω) k t ht hzero hno).symm
+  have hG : MeasurableSet G := measurableSet_exponentialArrivalGapEvent bs _
+  calc
+    P {ω | ∀ i,
+        (A ω).count (t i.succ) - (A ω).count (t i.castSucc) = k i} =
+        P (W ⁻¹' G) := measure_congr hsets
+    _ = Measure.map W P G :=
+      (Measure.map_apply_of_aemeasurable hPi.aemeasurable hG).symm
+    _ = (Measure.pi fun _ : Fin (blockTotal bs + 1) ↦ expMeasure rate) G := by
+      rw [hPi.map_eq]
+    _ = _ := by
+      exact pi_expMeasure_partitionGapEvent rate hr k t ht hzero
+
+theorem hasLaw_partitionIncrements_zero [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P)
+    (hmeas : ∀ s, AEMeasurable (fun ω ↦ (A ω).count s) P)
+    {n : ℕ} (t : Fin (n + 1) → NNReal) (ht : Monotone t) (hzero : t 0 = 0) :
+    HasLaw (fun ω (i : Fin n) ↦
+        (A ω).count (t i.succ) - (A ω).count (t i.castSucc))
+      (Measure.pi fun i : Fin n ↦
+        poissonMeasure (rate * (t i.succ - t i.castSucc))) P := by
+  let Z : Ω → (Fin n → ℕ) := fun ω i ↦
+    (A ω).count (t i.succ) - (A ω).count (t i.castSucc)
+  have hZ : AEMeasurable Z P := aemeasurable_pi_lambda _ fun i ↦
+    (hmeas (t i.succ)).sub (hmeas (t i.castSucc))
+  refine ⟨hZ, ?_⟩
+  apply Measure.ext_of_singleton
+  intro k
+  rw [Measure.map_apply_of_aemeasurable hZ (MeasurableSet.singleton k)]
+  rw [Measure.pi_singleton]
+  have hset : Z ⁻¹' {k} = {ω | ∀ i, Z ω i = k i} := by
+    ext ω
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_ofPred_eq, funext_iff]
+  rw [hset]
+  exact measure_partitionIncrementAtom A rate hr hIndep hLaw k t ht hzero
+
+lemma hasLaw_finTail {S : Type*} {mS : MeasurableSpace S} {n : ℕ}
+    (X : Ω → (Fin (n + 1) → S)) (μ : Fin (n + 1) → Measure S)
+    [∀ i, IsProbabilityMeasure (μ i)]
+    (hX : HasLaw X (Measure.pi μ) P) :
+    HasLaw (fun ω (i : Fin n) ↦ X ω i.succ)
+      (Measure.pi fun i : Fin n ↦ μ i.succ) P := by
+  have h := (measurePreserving_snd.comp (measurePreserving_piFinSuccAbove μ 0)).hasLaw.comp hX
+  have hfun : (fun x ↦ ((MeasurableEquiv.piFinSuccAbove
+      (fun _ : Fin (n + 1) ↦ S) 0) (X x)).2) =
+      (fun ω (i : Fin n) ↦ X ω i.succ) := by
+    funext ω i
+    simp [MeasurableEquiv.piFinSuccAbove, Fin.insertNthEquiv_zero]
+    rfl
+  change HasLaw (fun x ↦ ((MeasurableEquiv.piFinSuccAbove
+      (fun _ : Fin (n + 1) ↦ S) 0) (X x)).2)
+      (Measure.pi fun j ↦ μ (Fin.succAbove 0 j)) P at h
+  rw [hfun] at h
+  simpa only [Fin.succAbove_zero] using h
+
+theorem hasLaw_partitionIncrements [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P)
+    (hmeas : ∀ s, AEMeasurable (fun ω ↦ (A ω).count s) P)
+    {n : ℕ} (t : Fin (n + 1) → NNReal) (ht : Monotone t) :
+    HasLaw (fun ω (i : Fin n) ↦
+        (A ω).count (t i.succ) - (A ω).count (t i.castSucc))
+      (Measure.pi fun i : Fin n ↦
+        poissonMeasure (rate * (t i.succ - t i.castSucc))) P := by
+  let u : Fin (n + 2) → NNReal := Fin.cons 0 t
+  have hu0 : u 0 = 0 := by simp [u]
+  have humono : Monotone u := Fin.monotone_iff_le_succ.mpr fun i ↦ by
+    refine Fin.cases ?_ (fun j ↦ ?_) i
+    · simp [u]
+    · simpa [u] using ht (show j.castSucc ≤ j.succ by
+        change j.val ≤ j.val + 1
+        omega)
+  let X : Ω → (Fin (n + 1) → ℕ) := fun ω i ↦
+    (A ω).count (u i.succ) - (A ω).count (u i.castSucc)
+  let μ : Fin (n + 1) → Measure ℕ := fun i ↦
+    poissonMeasure (rate * (u i.succ - u i.castSucc))
+  have hFull : HasLaw X (Measure.pi μ) P :=
+    hasLaw_partitionIncrements_zero A rate hr hIndep hLaw hmeas u humono hu0
+  have hTail := hasLaw_finTail X μ hFull
+  simpa [X, μ, u] using hTail
+
+/-- Independent exponential interarrivals produce the arbitrary finite ordered-partition law. -/
+theorem hasFinitePoissonIncrementLaws_arrivalCountProcess
+    [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P)
+    (hmeas : ∀ s, AEMeasurable (arrivalCountProcess A s) P) :
+    HasFinitePoissonIncrementLaws (arrivalCountProcess A) rate P := by
+  intro n t ht
+  simpa only [arrivalCountProcess] using
+    hasLaw_partitionIncrements A rate hr hIndep hLaw hmeas t ht
+
+/-- Four-increment semantic regression for the exponential-arrival construction.  This explicit
+application ensures that the analytic arrival-time proof, not merely the abstract finite-law
+interface, compiles beyond the two-increment case printed in Klenke. -/
+theorem fourIncrementLaw_arrivalCountProcess_of_iid_exp
+    [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P)
+    (hmeas : ∀ s, AEMeasurable (arrivalCountProcess A s) P)
+    (t : Fin 5 → NNReal) (ht : Monotone t) :
+    HasLaw (fun ω (i : Fin 4) ↦
+      arrivalCountProcess A (t i.succ) ω - arrivalCountProcess A (t i.castSucc) ω)
+      (Measure.pi fun i : Fin 4 ↦
+        poissonMeasure (rate * (t i.succ - t i.castSucc))) P :=
+  (hasFinitePoissonIncrementLaws_arrivalCountProcess
+    A rate hr hIndep hLaw hmeas).fourIncrementLaw t ht
+
+/-- Klenke 5.36: a nonexplosive counting process with independent exponential interarrivals is a
+Poisson process.  The proof establishes the joint law for every finite ordered partition. -/
+theorem isPoissonProcess_arrivalCountProcess_of_iid_exp
+    [IsProbabilityMeasure P]
+    (A : Ω → DivergentArrivalSequence) (rate : NNReal) (hr : 0 < rate)
+    (hIndep : iIndepFun (fun i ω ↦ ((A ω).interarrival i : ℝ)) P)
+    (hLaw : ∀ i, HasLaw (fun ω ↦ ((A ω).interarrival i : ℝ))
+      (expMeasure rate) P)
+    (hmeas : ∀ s, AEMeasurable (arrivalCountProcess A s) P) :
+    IsPoissonProcess (arrivalCountProcess A) rate P :=
+  (hasFinitePoissonIncrementLaws_arrivalCountProcess
+    A rate hr hIndep hLaw hmeas).isPoissonProcess hmeas
+      (Filter.Eventually.of_forall fun ω ↦ by simp)
+      (hasMonotonePaths_arrivalCountProcess A)
+      (hasRightContinuousPaths_arrivalCountProcess A)
 
 /-- Arrival-time construction principle.  Once the exponential waiting-time calculation supplies
 the joint law for every finite ordered partition, the deterministic inverse automatically

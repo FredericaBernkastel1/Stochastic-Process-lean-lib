@@ -6,6 +6,7 @@ Authors: StochLean contributors
 module
 
 public import StochLean.Probability.GeneratingFunction.Analytic
+public import Mathlib.Probability.Independence.Integration
 
 /-!
 # Convolution powers and random sums
@@ -124,3 +125,35 @@ theorem pgf_randomSum (p q : PMF ℕ) (z : unitInterval) :
 end
 
 end PMF
+
+namespace ProbabilityTheory
+
+open MeasureTheory
+
+variable {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω}
+
+/-- The random-variable form of PGF multiplicativity.  Its law-level counterpart is
+`PMF.pgf_convolution`; this bridge keeps the realization-specific statement in terms of the
+canonical expectation and `IndepFun`. -/
+theorem IndepFun.integral_pow_add_eq_mul [IsProbabilityMeasure P]
+    {X Y : Ω → ℕ} (hX : AEMeasurable X P) (hY : AEMeasurable Y P) (hXY : IndepFun X Y P)
+    (z : unitInterval) :
+    (∫ ω, (z : ℝ) ^ (X ω + Y ω) ∂P) =
+      (∫ ω, (z : ℝ) ^ X ω ∂P) * ∫ ω, (z : ℝ) ^ Y ω ∂P := by
+  have hm : Measurable fun n : ℕ ↦ (z : ℝ) ^ n := measurable_of_countable _
+  have hi := (hXY.comp hm hm).integral_fun_mul_eq_mul_integral
+    (hm.comp_aemeasurable hX).aestronglyMeasurable
+    (hm.comp_aemeasurable hY).aestronglyMeasurable
+  simpa only [pow_add, Function.comp_apply] using hi
+
+/-- If two independent natural-valued random variables have laws `p` and `q`, the PGF of their
+sum is the product of the two law-level PGFs. -/
+theorem IndepFun.integral_pow_add_eq_pgf_mul [IsProbabilityMeasure P]
+    {X Y : Ω → ℕ} {p q : PMF ℕ}
+    (hX : HasLaw X p.toMeasure P) (hY : HasLaw Y q.toMeasure P) (hXY : IndepFun X Y P)
+    (z : unitInterval) :
+    (∫ ω, (z : ℝ) ^ (X ω + Y ω) ∂P) = p.pgf z * q.pgf z := by
+  rw [hXY.integral_pow_add_eq_mul hX.aemeasurable hY.aemeasurable,
+    ← hX.pgf_eq_integral_pow, ← hY.pgf_eq_integral_pow, PMF.pgf_toMeasure, PMF.pgf_toMeasure]
+
+end ProbabilityTheory

@@ -61,56 +61,52 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-29**. The active milestone is **Klenke Chapters 01-08**.
+Status last updated: **2026-08-30**. The **Klenke Chapters 01-08** milestone is complete; the
+active milestone is **Process Core and Information Flow**.
 
 ### Implemented and verified
 
-- Safe-domain probability generating functions, analytic uniqueness, atomwise/PGF convergence,
-  triangular-array Poisson approximation, and law-level random sums.
+- Safe-domain probability generating functions, analytic uniqueness, arbitrary-order derivative
+  series, extended-value factorial-moment boundary limits, atomwise/setwise/PGF convergence,
+  triangular-array Poisson approximation, and law/random-variable random-sum bridges.
 - Galton-Watson PGF recursion, finite extinction laws, and the least-fixed-point extinction theorem.
+- Generic multinomial laws, Poissonized multinomial splitting, Paley-Zygmund, Wald's identity,
+  Blackwell-Girshick's variance identity, Kolmogorov's maximal inequality, and the Klenke strong-law
+  rate consequence.
 - Empirical CDF APIs and the full Glivenko-Cantelli theorem for arbitrary real laws, including
   discontinuous distributions.
 - Common-a.s. monotone and right-continuous path predicates, stationary increments, the corrected
-  Poisson-process definition, exact P1-P5 interval axioms, and the forward characterization.
-- Converse-Poisson foundations: linear interval mean, Markov multiple-jump bound, conversion of P5
-  from `limsup` to a right-hand limit, dyadic multiple-jump error, and independent identically
-  distributed Bernoulli occupation indicators.
-- Deterministic cores for uniform-point and exponential-arrival Poisson constructions, including
-  arrival/count inversion and right continuity.
+  Poisson-process definition, exact P1-P5 interval axioms, and both directions of Klenke 5.34.
+- Klenke 5.35 at joint-law level through generic multinomial/Poissonization, and Klenke 5.36 for
+  every finite ordered partition through simplex volume, cumulative-coordinate, exponential-gap,
+  arrival/count inversion, boundary-nullity, and finite-increment-law theorems.
 - Sigma-finite local convergence in measure, finite-restriction compatibility, exhaustion
   pseudometric on raw functions, genuine metric on a.e. classes, fast-convergence and
   Borel-Cantelli criteria, subsequence principles, and completeness for complete targets.
-- Initial local Vitali and de la Vallee-Poussin sufficient-direction bridges.
+- Literal sigma-finite envelope/tail uniform integrability, closure and compatibility theorems,
+  both directions of de la Vallee-Poussin on finite spaces, exact sigma-finite Vitali, and the
+  Klenke 7.3 local-convergence characterization of `Lp` convergence.
+- Complete reuse/defer disposition for Chapters 1, 2, 4, 7, and 8, plus regression tests for PGF
+  domain, local-vs-global convergence, null modification, jump CDFs, path semantics, four Poisson
+  increments, and conditional-law version semantics.
 
-All current project declarations build without placeholders. Audited milestone declarations depend
-only on Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
+All project declarations build without placeholders. Audited milestone declarations depend only on
+Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
 
-### Remaining in the Chapters 01-08 milestone
+### Active work: Process Core and Information Flow
 
-- Finish Klenke 5.34 by connecting finite Bernoulli occupation sums to the existing
-  Poisson-binomial limit and identifying every interval count as Poisson.
-- Complete the probability laws for the Klenke 5.35 uniform-point construction and the arbitrary
-  finite-partition proof for the Klenke 5.36 exponential-arrival construction.
-- Resolve the load-bearing multinomial dependency and all remaining Chapter 1-5 audit-first or
-  build-candidate rows, including random-sum moment identities and maximal-inequality/rate items
-  where genuine gaps survive.
-- Complete Klenke's sigma-finite envelope uniform-integrability API, equivalent formulations,
-  algebra/domination closure, the converse de la Vallee-Poussin construction, the exact
-  sigma-finite Vitali theorem, and the local `Lp` characterization.
-- Resolve Chapter 7-8 audit rows and add only conditional-event/conditional-expectation/kernel
-  bridges that survive the duplicate audit.
-- Compile the required semantic regression tests and close the final coverage, dependency,
-  minimal-import, and source-correction audit.
+- Audit and implement the surviving gaps in process modification/indistinguishability,
+  finite-dimensional and path-space laws, stationarity, common-a.s. path predicates, filtrations,
+  joint/progressive measurability, and random-time evaluation.
+- Keep Process Core consumers on the canonical function representation `X : T -> Omega -> E` and
+  Mathlib's existing filtration, adaptedness, stopping-time, and measurability APIs.
 
 ### Planned subsequent milestones
 
-1. **Process Core and Information Flow:** audit and implement only surviving gaps in process
-   modification/indistinguishability, full-law stationarity, common-a.s. cadlag predicates, usual
-   filtration conditions, joint/progressive measurability bridges, and random-time evaluation.
-2. **Discrete Martingale Calculus - Part I:** audit and implement the discrete stochastic integral,
+1. **Discrete Martingale Calculus - Part I:** audit and implement the discrete stochastic integral,
    pathwise quadratic variation and predictable bracket, optional-sampling gaps, inequalities,
    and bracket convergence only where Mathlib lacks canonical versions.
-3. **Exchangeability and de Finetti - Part II:** build f.d.d.-correct exchangeability,
+2. **Exchangeability and de Finetti - Part II:** build f.d.d.-correct exchangeability,
    symmetrization, exchangeability sigma-fields, a thin reverse-martingale adapter, empirical
    probability measures, conditional-iid vocabulary, Hewitt-Savage, and structural/directing
    measure de Finetti theorems using the completed Part I engine.

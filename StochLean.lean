@@ -10,6 +10,9 @@ public import StochLean.ForMathlib.MeasureTheory.Function.LocalConvergenceMetric
 public import StochLean.ForMathlib.MeasureTheory.Function.LpLocalConvergence
 public import StochLean.ForMathlib.MeasureTheory.Function.UniformIntegrableEnvelope
 public import StochLean.ForMathlib.MeasureTheory.Function.UniformIntegrableEnvelopeCompatibility
+public import StochLean.ForMathlib.MeasureTheory.SimplexVolume
+public import StochLean.ForMathlib.MeasureTheory.CumulativeSumVolume
+public import StochLean.ForMathlib.MeasureTheory.WithDensityEquiv
 public import StochLean.ForMathlib.MeasureTheory.Function.CauchyInMeasureLocal
 public import StochLean.ForMathlib.MeasureTheory.Function.DeLaValleePoussin
 public import StochLean.ForMathlib.MeasureTheory.Function.FastConvergenceLocal
