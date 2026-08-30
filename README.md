@@ -64,9 +64,9 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-30**. The **Klenke Chapters 01-08**, **Process Core and Information
-Flow**, and **Discrete Martingale Calculus and Exchangeability** milestones are complete. The
-active milestone is **Measure Convergence and Projective Construction**.
+Status last updated: **2026-08-30**. All four reviewed handoff milestones are complete: **Klenke
+Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale Calculus and
+Exchangeability**, and **Measure Convergence and Projective Construction**.
 
 ### Implemented and verified
 
@@ -115,29 +115,27 @@ active milestone is **Measure Convergence and Projective Construction**.
 - Structural standard-Borel de Finetti representation at exact audited external commit
   `e0532e59ceff23edab44dda9ab0655debbc9cc22`, its Bernoulli specialization, equality modulo an
   exchangeable law of the invariant and tail sigma-fields, and the Hewitt-Savage zero-one law.
+- Canonical weak convergence through Mathlib `ProbabilityMeasure`, Portmanteau/tightness/Prokhorov,
+  convergence in distribution, continuous mapping and Slutsky reuse; a new a.e.-continuous mapping
+  bridge; and a distinct locally finite vague-convergence API with compact-space weak equivalence.
+- Almost-sure weak convergence of empirical probability measures to the common real law, consuming
+  the earlier empirical-measure and strict/non-strict empirical-CDF interfaces.
+- Product-coordinate and cylinder reuse, arbitrary probability products, kernel and Ionescu--Tulcea
+  reuse, and an arbitrary-index standard-Borel Kolmogorov extension facade with finite-dimensional
+  recovery, uniqueness, probability preservation, and empty-index support.
+- The Kolmogorov facade is pinned to the independently audited Apache-2.0 external commit
+  `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; compatible Polish topology upgrades do not occur in
+  the public API.
 
 All project declarations build without placeholders. Audited milestone declarations depend only on
 Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
 
-### Active work: Measure Convergence and Projective Construction
-
-- Audit and expose pinned Mathlib's canonical weak-convergence, distribution-convergence,
-  tightness, Prokhorov, product-measure, kernel, and Ionescu-Tulcea APIs without introducing a
-  parallel `Weak` predicate.
-- Implement only the confirmed convergence bridges and projective-family interfaces absent from
-  Mathlib, then provide the standard-Borel Kolmogorov extension facade over the approved pinned
-  external implementation.
-- Add semantic regressions, exact source/duplicate ledgers, and axiom checks for every public
-  milestone declaration.
-
 ### Planned subsequent milestones
 
-1. **Measure convergence:** canonical weak convergence and convergence-in-distribution bridges,
-   mapping/Slutsky/Portmanteau coverage, tightness and Prokhorov reuse, and the exact disposition
-   of vague convergence and empirical-measure consumers.
-2. **Projective construction:** product and kernel consistency, Ionescu-Tulcea reuse, finite
-   projective families and limits, and an arbitrary-index standard-Borel Kolmogorov extension
-   facade with uniqueness and probability preservation.
+No fifth handoff is active. The completed foundation is ready for reviewed follow-on specifications
+covering Markov processes and semigroups, Brownian and Levy processes, path-space/Skorokhod weak
+convergence, continuous-time martingales, and stochastic integration. Those topics are not inferred
+from the present product-measure construction and will retain the same audit-first milestone gate.
 
 The detailed, theorem-level status is maintained in [SOURCE_MAP.md](SOURCE_MAP.md), while duplicate
 decisions and exact Mathlib reuse are recorded in [MATHLIB_AUDIT.md](MATHLIB_AUDIT.md). README and
@@ -148,6 +146,7 @@ ledger status are updated at every document milestone before the corresponding p
 ```text
 StochLean/
   ForMathlib/MeasureTheory/Function/   generic convergence and UI extensions
+  ForMathlib/MeasureTheory/Measure/    locally finite and vague-convergence extensions
   Probability/Branching/              Galton-Watson foundations
   Probability/Convergence/            discrete and local convergence bridges
   Probability/EmpiricalProcess/       empirical CDF and Glivenko-Cantelli
@@ -155,6 +154,7 @@ StochLean/
   Probability/LimitTheorems/          Poisson approximation
   Probability/Martingale/             discrete calculus, stopping, inequalities, convergence
   Probability/Exchangeability/        symmetry, reverse limits, empirical laws, de Finetti
+  Probability/MeasureConvergence/      weak-convergence bridges and empirical weak limits
   MeasureTheory/Constructions/         projective constructions and extension facades
   Probability/Process/                process laws, paths, filtrations, measurability, stopping,
                                       increments, and Poisson processes
@@ -173,11 +173,13 @@ lake env lean Audit/Axioms.lean
 The repository additionally scans project sources for `sorry`, `admit`, and project-defined
 `axiom` declarations and records source coverage before a milestone is considered complete.
 
-The checked-in Lean resource defaults are `--memory=24000` and `--threads=3`, corresponding to a
-24 GB memory ceiling for each Lean compiler process and three Lean worker threads. These are
-operational defaults, not mathematical or API requirements: developers may lower or raise them in
-`lakefile.toml` to match the available machine. The earlier 20 GB / one-thread settings remain the
-documented conservative fallback defaults for memory-constrained or highly contended hosts.
+The checked-in operational defaults are `--memory=24000` and `--threads=3`: the project budget is
+24 GB of total build memory and three Lean worker threads. These limits are configurable defaults,
+not mathematical or API requirements; developers may lower or raise them in `lakefile.toml`. Lean's
+`--memory` flag is enforced per compiler process, so a host requiring a hard process-group-wide
+24 GB ceiling should also serialize Lake compilation jobs or apply an operating-system memory cap.
+The earlier 20 GB / one-thread settings remain the documented optional conservative configuration
+for memory-constrained or highly contended hosts.
 
 ## Commit and push policy
 

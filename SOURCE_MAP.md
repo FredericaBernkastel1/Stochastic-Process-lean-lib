@@ -182,3 +182,73 @@ item is represented by a conclusion-shaped premise or a weakened surrogate state
 criterion. `Exchangeability/SemanticRegression.lean` checks exchangeable-but-dependent and
 equal-marginal-but-nonexchangeable models, nonempty empirical measures, empirical factorization,
 modulo-tail equality, Hewitt-Savage, and the Bernoulli de Finetti facade.
+
+# Measure Convergence and Projective Construction
+
+This is the complete disposition of the fourth handoff. Weak convergence is Mathlib's ordinary
+topology on `ProbabilityMeasure`; no local synonym such as `Weak` or `WeaklyConverges` is defined.
+Likewise, projective families and limits use only Mathlib's `IsProjectiveMeasureFamily` and
+`IsProjectiveLimit` vocabulary.
+
+## Part I: convergence of probability and locally finite measures
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Weak convergence | Upstream | Ordinary `Tendsto` in `ProbabilityMeasure`, characterized by `ProbabilityMeasure.tendsto_iff_forall_integral_tendsto`. |
+| Portmanteau | Upstream | Reuse open/closed liminf/limsup criteria and `tendsto_measure_of_null_frontier_of_tendsto`; no local duplicate. |
+| Tightness and Prokhorov | Upstream | Reuse `IsTightMeasureSet`, `isCompact_closure_of_isTightMeasureSet`, and `isTightMeasureSet_of_isCompact_closure`. |
+| Convergence in distribution | Upstream | Reuse `TendstoInDistribution`, `TendstoInMeasure.tendstoInDistribution`, continuous mapping, and Slutsky theorems. |
+| A.e.-continuous mapping | Implemented gap | `Probability/MeasureConvergence/Mapping.lean`: Portmanteau bridge `ProbabilityMeasure.tendsto_map_of_tendsto_of_ae_continuous`. |
+| Vague convergence | Implemented distinct gap | `ForMathlib/MeasureTheory/Measure/VagueConvergence.lean`: locally finite `TendstoVaguely`, weak-to-vague, compact-space equivalence, and escaping-Dirac convergence. |
+| Weak/vague boundary | Implemented regression | `escapingDirac_tendstoVaguely_zero`, `escapingDirac_not_isTightMeasureSet`, and `escapingDirac_not_tendsto_probabilityMeasure` formally exhibit loss of mass at infinity. |
+| CDF convergence criterion | Upstream / implemented consumer | Mathlib's rational `Ioo` convergence-determining pi-system is consumed by `tendsto_empiricalProbabilityMeasurePM_ae`. |
+| Empirical weak convergence | Implemented | `Probability/MeasureConvergence/Empirical.lean` bundles the milestone-three empirical measure and proves almost-sure weak convergence to the common law from the strict and non-strict empirical CDF laws. |
+| Levy continuity and characteristic functions | Upstream | Reuse `MeasureTheory/Measure/LevyConvergence.lean`; no parallel characteristic-function convergence theorem. |
+| Functional/path-space weak convergence | Deferred | Assigned to the later Skorokhod/path-space package; the present milestone makes no topology on path predicates. |
+
+## Part II: products, kernels, and projective extension
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Product coordinates and cylinders | Upstream | `measurable_pi_apply`, `measurableCylinders`, `cylinder`, and `generateFrom_measurableCylinders`. |
+| Arbitrary probability products | Upstream | `Measure.infinitePi`, `isProjectiveMeasureFamily_pi`, `isProjectiveLimit_infinitePi`, `infinitePi_map_restrict`, and `infinitePi_cylinder`. |
+| Kernels and Ionescu--Tulcea | Upstream | Reuse `Kernel.traj`, `Kernel.trajMeasure`, their Markov/probability instances, finite-trajectory recovery, and conditional-distribution theorem. |
+| Projective vocabulary | Upstream | Only `IsProjectiveMeasureFamily` and `IsProjectiveLimit`; the regression pins the direction `P J = (P I).map (Finset.restrict₂ hJI)`. |
+| Arbitrary-index standard-Borel extension | Implemented facade over approved external | `MeasureTheory/Constructions/KolmogorovExtension.lean`: `projectiveLimitOfStandardBorel`, finite/probability instances, finite-dimensional recovery, uniqueness, and `∃!` theorem. |
+| Public domain | Implemented | The facade requires only measurable spaces plus `StandardBorelSpace`; temporary Polish topologies from `upgradeStandardBorel` remain proof-local and no topology occurs in public types. |
+| Empty index type | Implemented and tested | Probability preservation and unique existence compile for `ι = Empty`; no `Nonempty ι` assumption is introduced. |
+| Canonical process | Reused representation | The process is exactly `fun i ω ↦ ω i` on the product space; no process structure or path topology is added. |
+| Probability vs finite mass | Implemented regression | `twoMassFiniteFamily` and `twoMassLimit` form a finite projective system of mass two and formally fail `IsProbabilityMeasure`. |
+| Downstream de Finetti | Regression reuse | The already completed `IsExchangeable.hasDeFinettiRepresentation` remains part of the full build and axiom audit after the new projective dependency is added. |
+
+## Mandatory semantic regressions
+
+| # | Acceptance case | Formal resolution |
+| ---: | --- | --- |
+| 1 | `δ_n` tends vaguely to zero but has no probability weak limit | `escapingDirac_tendstoVaguely_zero`; non-tightness and no weak probability limit are separate theorems. |
+| 2 | `δ_(1/(n+1)) ⇒ δ_0`, while mass of `{0}` does not converge | `shrinkingDirac_tendsto_dirac_zero` and `shrinkingDirac_singleton_mass_not_tendsto`. |
+| 3 | Measurable discontinuous mapping can destroy weak convergence | `zeroDetector_not_continuousAt_zero` and `zeroDetector_mapped_shrinkingDirac_not_tendsto`. |
+| 4 | Convergence in probability implies convergence in distribution, not conversely | Canonical implication compiles; `boolFlip_tendstoInDistribution` plus `boolFlip_not_tendstoInMeasure` proves the converse false. |
+| 5 | Weakly convergent sequences are controlled by tightness/Prokhorov | The escaping-Dirac contradiction invokes `isTightMeasureSet_of_isCompact_closure`. |
+| 6 | Weak and vague convergence stay distinct, with an exact compact bridge | `ProbabilityMeasure.tendstoVaguely_of_tendsto` and `tendsto_iff_tendstoVaguely`. |
+| 7 | Empirical CDF results feed an actual empirical weak limit | `tendsto_empiricalProbabilityMeasurePM_ae`; `empiricalProbabilityMeasure_Iic` and `_Iio` are the reused interfaces. |
+| 8 | Coordinate maps are measurable and cylinders generate the product sigma-field | Compile-time examples in `MeasureTheory/Constructions/SemanticRegression.lean`. |
+| 9 | Projectivity direction is not reversed | Direct typed example of `hP I J hJI`. |
+| 10 | A concrete three-coordinate system recovers all prescribed marginals | `threeCoinFamily_isProjective` and `threeCoin_projectiveLimit_recovers`. |
+| 11 | Empty index type needs no `Nonempty` assumption | `emptyIndex_projectiveLimit_isProbability` and `emptyIndex_existsUnique_projectiveLimit`. |
+| 12 | Singleton and arbitrary finite marginals are recovered | Generic `projectiveLimitOfStandardBorel_map_restrict`, instantiated by the three-coordinate regression. |
+| 13 | Independent arbitrary products use the canonical product measure | Direct regressions for `infinitePi_map_restrict` and `infinitePi_cylinder`. |
+| 14 | Abstract standard-Borel coordinates require no chosen topology | A public-domain compile example has only `MeasurableSpace` and `StandardBorelSpace` assumptions. |
+| 15 | External implementation names do not leak into public declarations | Facade declarations and axiom audit expose only `MeasureTheory` names; source scan finds the external module only in the private import boundary. |
+| 16 | Different compatible Polish upgrades cannot change the result | `IsProjectiveLimit.eq_projectiveLimitOfStandardBorel` reduces any candidate to Mathlib's unique finite projective limit. |
+| 17 | Arbitrary-index extension uses the approved exact external theorem | Facade implementation imports commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; manifest and audit ledger pin it. |
+| 18 | Extension is not inferred from finite products or Ionescu--Tulcea | The dependency boundary is explicit: arbitrary-index facade uses the audited extension theorem; product and sequential-kernel examples remain separate. |
+| 19 | A finite projective family is not automatically probabilistic | `twoMassLimit_not_isProbabilityMeasure`. |
+| 20 | A probability projective family infers a probability limit | Facade probability instance and the three-coordinate/empty-index instance checks. |
+| 21 | External revision, license, holes, and build are audited | Exact Git revision, Apache-2.0 license, empty `sorry`/`admit`/`axiom`/`unsafe` scan, and 1773-job external build recorded in `MATHLIB_AUDIT.md`. |
+| 22 | Existing de Finetti work remains compatible | Full `StochLean` build and `Audit/Axioms.lean` recheck `IsExchangeable.hasDeFinettiRepresentation`. |
+| 23 | No path regularity is manufactured by a coordinate product law | Public output is only a raw product-space measure and coordinate recovery; path topology remains deferred. |
+
+The mandatory cases compile in `Probability/MeasureConvergence/SemanticRegression.lean` and
+`MeasureTheory/Constructions/SemanticRegression.lean`. All new milestone declarations are also
+listed in `Audit/Axioms.lean`.

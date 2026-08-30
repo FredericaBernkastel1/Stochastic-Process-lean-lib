@@ -14,6 +14,9 @@ import StochLean.ForMathlib.MeasureTheory.WithDensityEquiv
 import StochLean.ForMathlib.MeasureTheory.Function.CauchyInMeasureLocal
 import StochLean.ForMathlib.MeasureTheory.Function.DeLaValleePoussin
 import StochLean.ForMathlib.MeasureTheory.Function.FastConvergenceLocal
+import StochLean.ForMathlib.MeasureTheory.Measure.VagueConvergence
+import StochLean.MeasureTheory.Constructions.KolmogorovExtension
+import StochLean.MeasureTheory.Constructions.SemanticRegression
 import StochLean.Probability.Branching.Basic
 import StochLean.Probability.Branching.Extinction
 import StochLean.Probability.Convergence.Discrete
@@ -53,6 +56,9 @@ import StochLean.Probability.Exchangeability.Means
 import StochLean.Probability.Exchangeability.SigmaFields
 import StochLean.Probability.Exchangeability.Symmetrization
 import StochLean.Probability.Exchangeability.SemanticRegression
+import StochLean.Probability.MeasureConvergence.Mapping
+import StochLean.Probability.MeasureConvergence.Empirical
+import StochLean.Probability.MeasureConvergence.SemanticRegression
 import StochLean.Probability.Process.Path.Monotone
 import StochLean.Probability.Process.Path.RightContinuous
 import StochLean.Probability.Process.Path.Continuous

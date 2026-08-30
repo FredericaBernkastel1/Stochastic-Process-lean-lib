@@ -123,3 +123,42 @@ adding declarations.
 The external exchangeability checkout was audited for its exact revision, license, dependency
 closure, and placeholder scan. Project-facing milestone declarations are rechecked independently
 in `Audit/Axioms.lean`.
+
+## Measure convergence and projective construction duplicate audit
+
+| Topic / design row | Pinned Mathlib or approved source result | Decision |
+| --- | --- | --- |
+| Standard Borel vocabulary | Mathlib `StandardBorelSpace`; distinct from `BorelSpace` | Reuse; define no local Borel-space class. |
+| Weak convergence | Topology of `ProbabilityMeasure` with `tendsto_iff_forall_integral_tendsto` | Reuse ordinary `Tendsto`; define no `Weak` predicate. |
+| Portmanteau | Closed/open limsup/liminf criteria and null-frontier set-mass convergence | Reuse completely. |
+| Tightness / Prokhorov | `IsTightMeasureSet`, compact-closure implications in both directions on the canonical hypotheses | Reuse completely. |
+| Convergence in distribution / Slutsky | `TendstoInDistribution`, `TendstoInMeasure.tendstoInDistribution`, `.continuous_comp`, `.prodMk_of_tendstoInMeasure_const`, and related corollaries | Reuse completely. |
+| A.e.-continuous mapping | No theorem with exactly a measurable map and limit-law-null discontinuity set found | Add the Portmanteau bridge `ProbabilityMeasure.tendsto_map_of_tendsto_of_ae_continuous`. |
+| Vague convergence | No canonical convergence-against-`C_c` predicate found | Add `TendstoVaguely` with local finiteness built into its semantics; add weak-to-vague and compact-space equivalence bridges. |
+| Levy continuity | Pinned `Mathlib.MeasureTheory.Measure.LevyConvergence` contains the canonical characteristic-function/tightness package | Reuse; add no theorem. |
+| Empirical weak convergence | Rational-interval pi-system criterion exists, but no theorem consumes StochLean's empirical object | Add only `tendsto_empiricalProbabilityMeasurePM_ae`, reusing the existing empirical CDF and measure APIs. |
+| Cylinders / product sigma-field | `measurableCylinders`, `generateFrom_measurableCylinders`, coordinate measurability | Reuse. |
+| Arbitrary product measure | `Measure.infinitePi`, projectivity, finite restriction, and cylinder formulas | Reuse. |
+| Kernels / Ionescu--Tulcea | `ProbabilityTheory.Kernel.traj`, `trajMeasure`, and their finite-prefix/conditional-law API | Reuse. |
+| Projective family and limit | Mathlib `IsProjectiveMeasureFamily` and `IsProjectiveLimit`, including finite uniqueness and probability preservation without nonempty index | Reuse the vocabulary and consequences. |
+| Arbitrary-index standard-Borel extension | Not present in the pinned Mathlib checkout; `RemyDegenne/kolmogorov_extension4` supplies the exact construction | Add a minimal StochLean facade over the approved exact dependency; temporary Polish upgrades remain implementation-only. |
+| Process/canonical path wrapper | Product coordinates are already functions and no path topology follows from projective construction | Add nothing; use `fun i ω ↦ ω i`. |
+
+### Approved Kolmogorov-extension dependency
+
+- Repository: `https://github.com/RemyDegenne/kolmogorov_extension4.git`.
+- Exact commit: `7d76e184c3d2138a2741baf923b57e9a01b9cf25`, pinned identically in
+  `lakefile.toml` and `lake-manifest.json`.
+- License: Apache License 2.0.
+- Audit checkout: `D:\Math\external-audit\kolmogorov_extension4-7d76e184c3d2138a2741baf923b57e9a01b9cf25`;
+  its audited source is content-equal to the clean Git checkout at the pinned commit (line-ending
+  normalization is the only byte-level difference).
+- Placeholder/trust scan: no Lean occurrence of a declaration beginning with `axiom` or `unsafe`,
+  and no `sorry` or `admit`.
+- Independent dependency build: successful, 1773 jobs.
+- Project-facing axiom audit: `isProjectiveLimit_projectiveLimit` and every facade theorem depend
+  only on `propext`, `Classical.choice`, and `Quot.sound`.
+- Public-leak boundary: `KolmogorovExtension4.KolmogorovExtension` occurs only as the implementation
+  import; public signatures contain only Mathlib/StochLean types and namespaces.
+
+The complete fourth-milestone semantic gate is recorded as 23 numbered cases in `SOURCE_MAP.md`.

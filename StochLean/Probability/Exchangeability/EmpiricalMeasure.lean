@@ -214,4 +214,25 @@ theorem empiricalProbabilityMeasure_Iic (X : ℕ → Ω → ℝ) (n : ℕ) (ω :
   simp only [Set.indicator_apply, Set.mem_Iic, Pi.one_apply]
   split <;> simp
 
+/-- Evaluating the empirical measure of a real sample on `(-∞, t)` recovers its strict empirical
+CDF. -/
+theorem empiricalProbabilityMeasure_Iio (X : ℕ → Ω → ℝ) (n : ℕ) (ω : Ω) (t : ℝ) :
+    (empiricalProbabilityMeasure X n ω (Set.Iio t)).toReal =
+      empiricalCDFSequenceLt X n ω t := by
+  rw [empiricalProbabilityMeasure_apply X n ω measurableSet_Iio]
+  rw [empiricalCDFSequenceLt, empiricalCDFLt]
+  rw [ENNReal.toReal_mul, ENNReal.toReal_inv]
+  rw [ENNReal.toReal_sum (by
+    intro k hk
+    simp only [Set.indicator_apply]
+    split <;> simp)]
+  simp only [ENNReal.toReal_natCast, div_eq_inv_mul]
+  congr 1
+  rw [← Fin.sum_univ_eq_sum_range]
+  simpa only [Set.indicator_apply, Set.mem_Iio, Pi.one_apply, apply_ite,
+    ENNReal.toReal_one, ENNReal.toReal_zero, Finset.sum_ite_irrel,
+    Finset.sum_const_zero, add_zero] using
+    (Finset.natCast_card_filter (R := ℝ)
+      (fun i : Fin (n + 1) ↦ X i ω < t) Finset.univ).symm
+
 end ProbabilityTheory
