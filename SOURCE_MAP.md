@@ -171,7 +171,7 @@ item is represented by a conclusion-shaped premise or a weakened surrogate state
 | Conditional expectation and means | Implemented | `ConditionalExpectation.lean` and `Means.lean`: symmetric conditional expectations, reverse-martingale sample means, a.e./`L¹` limits, prefix symmetrization, and exchangeable LLNs. |
 | Empirical probability measure | Implemented | `EmpiricalMeasure.lean`: nonempty finite samples, multiplicities, integral/CDF bridges, and recovery of the unordered tuple from its empirical measure. |
 | Symmetric-statistic factorization | Implemented | `IsPermutationInvariant.exists_factorThrough_empiricalProbabilityMeasure` gives the plain set-theoretic factorization; measurable factorization remains explicitly a separate Doob-Dynkin question. |
-| Conditional iid / de Finetti | Implemented with approved dependency | `ConditionalIID.lean` exposes a structural product-mixture representation and equivalence; `Bernoulli.lean` gives the Boolean parameter specialization. |
+| Conditional iid / de Finetti | Implemented internally | `StochLean/Internal/Exchangeability` owns the reverse-martingale and directing-measure proof chain; `ConditionalIID.lean` exposes the structural product-mixture equivalence and `Bernoulli.lean` gives the Boolean specialization. |
 | Invariant field equals tail modulo law | Implemented | `InvariantTail.lean`: finite-coordinate conditional expectations are moved beyond every cutoff and closed in `L¹`, yielding `exchangeableMeasurableSpace_eq_tail_modulo`. |
 | Hewitt-Savage | Implemented | `hewittSavage_zero_one` combines the modulo-tail theorem with Mathlib's Kolmogorov zero-one law. |
 
@@ -497,12 +497,11 @@ SII bridge, marginal infinite divisibility, the Gaussian covariance characteriza
 endpoint/covariance layer, and the nonzero scaling hypothesis. It does not stand in for the missing
 common-event Holder, strong-Markov, reflection, arcsine, or Wiener theorems.
 
-# Cross-milestone reproducibility blocker
+# Cross-milestone reproducibility status
 
-The historical root manifest does not list the inherited `checkdecls` dependency of the pinned
-`exchangeability` package. Regenerating the manifest forces a source rebuild of that package,
-whose pinned revision targets pre-v4.33 Mathlib APIs and fails against the active v4.33 pin.
-Previously cached oleans allow unrelated modules to be checked, but are not accepted as a clean
-build proof. The repository lockfile has therefore been restored rather than silently updating or
-vendoring an unaudited patch. Resolving this requires a compatible exact exchangeability revision
-or a reproducible, attribution-preserving minimal port of its used theorem closure.
+The former external `exchangeability` dependency and its inherited `checkdecls` dependency have
+been removed. The exact theorem closure used by StochLean is now an attribution-preserving internal
+implementation under `StochLean/Internal/Exchangeability`, compiled directly against Mathlib
+v4.33.0. Reverse conditional-expectation convergence, contractability, directing-measure
+construction, finite-product factorization, de Finetti, and the Boolean specialization are covered
+by the ordinary build and semantic regression gates; cached external oleans are no longer used.

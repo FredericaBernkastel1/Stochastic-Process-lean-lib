@@ -115,14 +115,15 @@ adding declarations.
 | Finite-bracket convergence | No exact predictable-bracket criterion found | Add predictable localization and derive Klenke 11.14 from ordinary martingale convergence. |
 | Exchangeability | No pinned Mathlib finite-dimensional exchangeability predicate | Add the f.d.d.-correct local predicate; do not use equality of marginals as a surrogate. |
 | Reverse conditional expectation | Upstream conditional expectation and martingale convergence exist | Add the antitone-filtration interface and exact infimum-field convergence. |
-| de Finetti | Approved `cameronfreer/exchangeability` at `e0532e59ceff23edab44dda9ab0655debbc9cc22` | Audited locally, minimally compatibility-patched outside the project tree, pinned exactly, and wrapped by a structural StochLean facade. |
+| de Finetti | No pinned Mathlib theorem with the required standard-Borel product-mixture statement | Maintain the audited proof closure internally under `StochLean/Internal/Exchangeability` and expose only the structural StochLean facade. |
 | Empirical measure and symmetric factorization | No exact finite-tuple empirical-measure recovery/factorization API found | Add nonempty empirical measures, multiplicity recovery, permutation reconstruction, and plain factorization. |
-| Invariant vs tail sigma-field | Raw `T ≤ E` is deterministic; no exact modulo-law equality found upstream or in the approved dependency | Add the `L¹` finite-block relocation proof and explicit `MeasurableSpace.EqModulo`. |
+| Invariant vs tail sigma-field | Raw `T ≤ E` is deterministic; no exact modulo-law equality was found upstream or in the audited source closure | Add the `L¹` finite-block relocation proof and explicit `MeasurableSpace.EqModulo`. |
 | Hewitt-Savage | Mathlib has Kolmogorov zero-one, not Hewitt-Savage | Derive Hewitt-Savage through the modulo-tail theorem; no duplicate Kolmogorov proof. |
 
-The external exchangeability checkout was audited for its exact revision, license, dependency
-closure, and placeholder scan. Project-facing milestone declarations are rechecked independently
-in `Audit/Axioms.lean`.
+The exchangeability/de Finetti proof lineage was audited for its exact source revision, license,
+dependency closure, and placeholder scan before being ported into the project. Original copyright
+and Apache-2.0 attribution are retained in every internal source file. Project-facing milestone
+declarations are rechecked independently in `Audit/Axioms.lean`.
 
 ## Measure convergence and projective construction duplicate audit
 
@@ -262,11 +263,9 @@ mutable branch are not accepted as evidence.
 
 ## Clean-build reproducibility audit
 
-`lake update` revealed that the pinned `exchangeability` package has an inherited `checkdecls`
-dependency absent from the historical root manifest. Adding it and rebuilding from source then
-exposed API incompatibilities between exchangeability commit
-`e0532e59ceff23edab44dda9ab0655debbc9cc22` and Mathlib v4.33, including failures in integration
-helpers, time-reversal crossing, and contractability modules. The original manifest was restored;
-dependency regeneration is therefore a documented blocker rather than an unreviewed lockfile
-change. Independent compilation of the new modules remains useful evidence but is not described as
-a successful clean workspace build.
+The external `exchangeability` package and inherited `checkdecls` dependency have been removed
+from both `lakefile.toml` and `lake-manifest.json`. The used reverse-martingale and de Finetti proof
+closure now lives under `StochLean/Internal/Exchangeability` and compiles against the pinned
+Mathlib v4.33.0 environment. The public reverse-martingale, conditional-IID, de Finetti, Bernoulli,
+and exchangeability regression modules are built from those local sources, so the build no longer
+depends on cached external oleans.

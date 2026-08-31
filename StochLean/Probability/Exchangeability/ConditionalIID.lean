@@ -8,7 +8,7 @@ import Mathlib.Probability.IdentDistrib
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import StochLean.Probability.Exchangeability.Basic
-import Exchangeability.DeFinetti.TheoremViaMartingale
+import StochLean.Internal.Exchangeability.DeFinetti.TheoremViaMartingale
 
 /-!
 # Conditional iid and directing-measure vocabulary
@@ -107,10 +107,10 @@ theorem IsDirectingMeasure.isConditionallyIIDGiven
 
 omit [StandardBorelSpace Ω] [StandardBorelSpace E] [Nonempty E] [IsFiniteMeasure μ] in
 /-- StochLean's finite-dimensional formulation implies the permutation formulation consumed by
-the audited de Finetti proof. -/
-private theorem IsExchangeable.toExternal
+the internal de Finetti proof engine. -/
+private theorem IsExchangeable.toInternal
     {X : ℕ → Ω → E} (hX : IsExchangeable X μ) :
-    Exchangeability.Exchangeable μ X := by
+    StochLean.Internal.Exchangeability.Exchangeable μ X := by
   intro n σ
   let i : Fin n ↪ ℕ := ⟨fun k => k.val, Fin.val_injective⟩
   exact (hX.finitePermutation n i σ).map_eq
@@ -122,7 +122,7 @@ theorem IsExchangeable.hasDeFinettiRepresentation [IsProbabilityMeasure μ]
     {X : ℕ → Ω → E} (hX : IsExchangeable X μ)
     (hXm : ∀ n, Measurable (X n)) : HasDeFinettiRepresentation X μ := by
   obtain ⟨ν, hνprob, hνmeas, hνlaw⟩ :=
-    Exchangeability.DeFinetti.deFinetti X hXm hX.toExternal
+    StochLean.Internal.Exchangeability.DeFinetti.deFinetti X hXm hX.toInternal
   let Θ : Ω → ProbabilityMeasure E := fun ω => ⟨ν ω, hνprob ω⟩
   have hΘmeas : Measurable Θ := by
     apply Measurable.subtype_mk

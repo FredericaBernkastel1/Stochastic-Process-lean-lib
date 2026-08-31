@@ -152,19 +152,18 @@ precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported 
   StochLean facades.
 - Chapman-Kolmogorov equations and Kac's formula for irreducible positive recurrent chains.
 
-The structural de Finetti implementation is pinned to audited commit
-`e0532e59ceff23edab44dda9ab0655debbc9cc22`. The Kolmogorov extension facade is pinned to audited
-Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; neither dependency leaks a
+The structural de Finetti theorem and Lévy downward convergence are maintained inside this
+repository under `StochLean/Internal/Exchangeability`; the public API remains the smaller
+StochLean facade. The implementation is an attribution-preserving internal port of the audited
+Apache-2.0 proof lineage recorded in that directory. The Kolmogorov extension facade remains
+pinned to audited Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25` and does not leak a
 non-canonical public representation into StochLean.
 
-All declarations in the six completed milestones build without placeholders. New foundation
-modules are checked independently while the three new milestones remain open. A clean source
-rebuild currently also exposes an upstream compatibility problem: the pinned
-`exchangeability` revision targets an older Mathlib API and its inherited `checkdecls` dependency
-is absent from the historical root manifest. Cached artifacts are not treated as a reproducible
-build result. `Audit/NewDesignAxioms.lean` remains an isolated trust check for the new foundation
-modules while that historical dependency is repaired; the blocker is tracked in `SOURCE_MAP.md`
-and `MATHLIB_AUDIT.md`.
+All declarations in the six completed milestones build without placeholders. The former external
+`exchangeability` and `checkdecls` dependency has been removed: reverse-martingale convergence,
+contractability, conditional independence, directing measures, finite-product factorization, and
+de Finetti now compile as project-owned modules against the pinned Mathlib v4.33.0 baseline.
+`Audit/NewDesignAxioms.lean` remains a focused trust check for the newer foundation modules.
 
 ### Project plan
 
@@ -183,6 +182,7 @@ ledger status are updated at every document milestone before the corresponding p
 
 ```text
 StochLean/
+  Internal/Exchangeability/              internal reverse-martingale and de Finetti engine
   ForMathlib/MeasureTheory/Function/   generic convergence and UI extensions
   ForMathlib/MeasureTheory/Measure/    locally finite and vague-convergence extensions
   Probability/Branching/              Galton-Watson foundations

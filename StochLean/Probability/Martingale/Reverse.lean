@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: StochLean contributors
 -/
 import Mathlib.Probability.Martingale.Convergence
-import Exchangeability.Probability.Martingale.Convergence
+import StochLean.Internal.Exchangeability.Probability.Martingale.Convergence
 
 /-!
 # Reverse martingale adapter
@@ -54,15 +54,16 @@ theorem reverseMartingale_condExp [NormedAddCommGroup E] [NormedSpace ℝ E] [Co
   exact martingale_condExp g (antitoneFiltration G hG hG_le) μ
 
 /-- Lévy's downward theorem for real conditional expectations.  This is the StochLean-facing
-adapter: the implementation is supplied by the audited exchangeability dependency, while the
-statement uses only Mathlib objects. -/
+adapter over the project-owned reverse-crossing implementation; the statement uses only Mathlib
+objects. -/
 theorem tendsto_ae_condExp_iInf {μ : Measure Ω} [IsProbabilityMeasure μ]
     {G : ℕ → MeasurableSpace Ω} (hG : Antitone G)
     (hG_le : ∀ n, G n ≤ (inferInstance : MeasurableSpace Ω))
     (f : Ω → ℝ) (hf : Integrable f μ) :
     ∀ᵐ ω ∂μ, Tendsto (fun n => μ[f | G n] ω) atTop
       (𝓝 (μ[f | ⨅ n, G n] ω)) :=
-  Exchangeability.Probability.condExp_tendsto_iInf (μ := μ) hG hG_le f hf
+  StochLean.Internal.Exchangeability.Probability.condExp_tendsto_iInf
+    (μ := μ) hG hG_le f hf
 
 /-- The `L¹` form of Lévy's downward theorem.  It follows from the almost-sure theorem and
 uniform integrability of conditional expectations, rather than introducing a second convergence

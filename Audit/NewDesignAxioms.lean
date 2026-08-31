@@ -2,7 +2,7 @@ import StochLean.Probability.LimitTheorems.SemanticRegression
 import StochLean.Probability.InfinitelyDivisible.SemanticRegression
 import StochLean.Probability.Brownian.SemanticRegression
 
-/-! Axiom checks isolated from the historical exchangeability dependency closure. -/
+/-! Focused axiom checks for the newer foundation modules. -/
 
 #print axioms ProbabilityTheory.variance_triangularRowSum_eq_sum
 #print axioms ProbabilityTheory.variance_triangularRowSum_eq_one
