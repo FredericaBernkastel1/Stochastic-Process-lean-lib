@@ -31,6 +31,14 @@ Development follows these reviewed handoff specifications:
 6. [Markov Processes, Kernels, Semigroups, and Convergence](docs/StochLean_MarkovProcesses_Kernels_Semigroups_Design_v0.1.pdf) -
    the consolidated kernel/semigroup specification, source corrections, acceptance suite, and
    dependency ledger for the Markov layer.
+7. `StochLean_FourierProbability_ClassicalLimitTheorems_Design_v0.1.pdf` - characteristic
+   functions, triangular arrays, Lindeberg--Feller, Kolmogorov three-series, and multivariate CLT.
+8. `StochLean_Levy_StationaryIndependentIncrements_Design_v0.1.pdf` - convolution semigroups,
+   stationary independent increments, infinite divisibility, compound Poisson laws,
+   Levy--Khintchine, and stable laws.
+9. `StochLean_BrownianMotion_PathRegularity_Design_v0.2.pdf` - Kolmogorov--Chentsov,
+   continuous Brownian realization, path properties, strong Markov/reflection/arcsine results,
+   and deterministic Wiener integration.
 
 This order is mandatory. A later package consumes earlier canonical APIs and must not introduce
 temporary duplicates merely to compile.
@@ -72,12 +80,17 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-31**. All six reviewed handoff milestones are implemented and
+Status last updated: **2026-08-31**. The first six reviewed handoff milestones are implemented and
 audited: **Klenke Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale
 Calculus and Exchangeability**, **Measure Convergence and Projective Construction**, and the two
-consolidated **Markov Processes** specifications. The two externally sourced Feller results remain
-explicitly deferred because their cited proof texts were not locally available; this is the
-disposition required by the specifications rather than an unchecked local substitute.
+consolidated **Markov Processes** specifications. The new **Fourier/Classical Limit Theorems**,
+**Levy/SII**, and **Brownian/Path Regularity** handoffs are under implementation. Their canonical
+foundation interfaces are present, but their completion gates are not yet met; in particular the
+Lindeberg-to-nullity bridge, continuous-semigroup root convergence, compound-Poisson intensity
+addition/infinite divisibility, and the Gaussian Brownian-bridge foundation are now proved. The
+Lindeberg--Feller and three-series theorems, real Levy--Khintchine existence/uniqueness and stable
+classification, and the Brownian realization/path/strong-Markov/Wiener layers remain open. The
+precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported as completed work.
 
 ### Formalized mathematical definitions
 
@@ -113,6 +126,16 @@ disposition required by the specifications rather than an unchecked local substi
   uniformization.
 - Feller semigroups on Mathlib's `ZeroAtInftyContinuousMap`, their contraction operators, operator
   semigroup laws, vague/weak transition-law continuity, and stochastic continuity at zero.
+- Real triangular arrays with separate row nonemptiness, measurability, row independence,
+  centeredness, variance normalization, nullness, positive-scale Lindeberg, and Lyapunov
+  predicates; ordered random series and exact three-series truncation semantics.
+- Probability-law convolution, convolution powers, basic and continuous convolution-semigroup
+  predicates, stationary independent increments, and increment-law families.
+- Law-first infinite divisibility, zero-safe finite-intensity compound Poisson laws, minimal Levy
+  measures with derived sigma-finiteness, fixed-truncation Levy triplets, and broad/strict/indexed
+  stable-law predicates.
+- Canonical Mathlib pre-Brownian/Brownian predicates, the Brownian-bridge transform, Gaussian
+  increment-law families, and explicit zero-safe time inversion.
 
 ### Formalized named theorems
 
@@ -134,8 +157,14 @@ The structural de Finetti implementation is pinned to audited commit
 Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; neither dependency leaks a
 non-canonical public representation into StochLean.
 
-All project declarations build without placeholders. Audited milestone declarations depend only on
-Lean/Mathlib's standard `propext`, `Classical.choice`, and `Quot.sound` axioms.
+All declarations in the six completed milestones build without placeholders. New foundation
+modules are checked independently while the three new milestones remain open. A clean source
+rebuild currently also exposes an upstream compatibility problem: the pinned
+`exchangeability` revision targets an older Mathlib API and its inherited `checkdecls` dependency
+is absent from the historical root manifest. Cached artifacts are not treated as a reproducible
+build result. `Audit/NewDesignAxioms.lean` remains an isolated trust check for the new foundation
+modules while that historical dependency is repaired; the blocker is tracked in `SOURCE_MAP.md`
+and `MATHLIB_AUDIT.md`.
 
 ### Project plan
 
@@ -161,6 +190,10 @@ StochLean/
   Probability/EmpiricalProcess/       empirical CDF and Glivenko-Cantelli
   Probability/GeneratingFunction/     PGF and law-level random sums
   Probability/LimitTheorems/          Poisson approximation
+  Probability/Series/                 ordered random series and three-series foundations
+  Probability/Convolution/            probability-law convolution semigroups
+  Probability/InfinitelyDivisible/    compound Poisson, Levy measures/triplets, stable laws
+  Probability/Brownian/               canonical Brownian bridges and transformations
   Probability/Martingale/             discrete calculus, stopping, inequalities, convergence
   Probability/Exchangeability/        symmetry, reverse limits, empirical laws, de Finetti
   Probability/MeasureConvergence/      weak-convergence bridges and empirical weak limits
@@ -180,6 +213,7 @@ docs/                                  normative handoff specifications
 lake update
 lake build
 lake env lean Audit/Axioms.lean
+lake env lean Audit/NewDesignAxioms.lean
 ```
 
 The repository additionally scans project sources for `sorry`, `admit`, and project-defined

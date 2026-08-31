@@ -192,3 +192,81 @@ The Markov source scan found no alternative approved implementation of the new p
 theorems at the pinned revision. The two external Feller rows are recorded as deferred rather than
 treated as permission to invent a proof. All other decisions and source corrections are mirrored
 in the final Markov section of `SOURCE_MAP.md`.
+
+## Fourier probability and classical-limit duplicate audit
+
+The active v4.33 pin supplies the canonical measure-first characteristic function, independent-sum
+product identities, Gaussian characteristic functions, Levy continuity through
+`ProbabilityMeasure.tendsto_iff_tendsto_charFun`, and the scalar iid CLT through
+`tendstoInDistribution_inv_sqrt_mul_sum`. These are reused directly. Searches of the pinned
+Mathlib tree and full local StochLean tree found no exact Kolmogorov three-series theorem,
+Lindeberg/Lyapunov triangular-array package, Lindeberg--Feller theorem, Polya criterion, or exact
+multivariate Cramer--Wold CLT bridge.
+
+The surviving local declarations therefore own only raw dependent triangular arrays, separated
+hypothesis predicates, the finite variance identity, maximum-tail nullness and its eventual form,
+positive-scale Lindeberg/Lyapunov conditions, the Lindeberg-to-nullity implication, and
+ordered-series/truncation semantics. None of those declarations is presented as the missing main
+theorem. Klenke's externally delegated
+Lindeberg--Feller converse, Bochner theorem, and Berry--Esseen theorem remain deferred pending
+recovery of the exact cited proofs.
+
+## Levy/SII duplicate audit
+
+| Topic | Active-pin/local result | Decision |
+| --- | --- | --- |
+| Convolution | Mathlib `Measure.conv` is canonical but does not close the operation in `ProbabilityMeasure` | Add the thin probability-law closure and convolution powers; do not define another measure convolution. |
+| Stationary/independent increments | StochLean `HasStationaryIncrements` and Mathlib `HasIndepIncrements` | Reuse and combine only as a predicate; no `LevyProcess` bundle. |
+| Convolution semigroup | No exact law-family predicate with the frozen basic/continuous split | Add the two thin predicates without a hidden identity-at-zero assumption. |
+| Infinite divisibility | No exact active-pin probability-law predicate | Add positive-integer existential convolution roots. |
+| Compound Poisson | Poisson measures and measure bind exist; no finite-intensity compound-Poisson probability law | Add a genuine bind mixture and zero-safe finite-measure entry point; prove common-jump intensity addition by Tonelli and derive infinite divisibility from the resulting semigroup. |
+| Levy measure/triplet | No canonical active-pin definitions | Add the minimal atom/integral predicate, derive sigma-finiteness, and add data-only fixed-truncation triplets. |
+| Levy--Khintchine | No exact active-pin/local theorem | Remains a real proof gap; no exponent theorem or global-log surrogate has been added. |
+| Stable laws | No matching active-pin law predicates/classification | Add non-Dirac broad/strict/indexed predicates, exact affine/convolution-power algebra, broad-stable-to-ID, and the zero-safe logarithmic helper; classification remains open. |
+
+The finite-intensity compound-Poisson API handles `ν = 0` before normalization and proves
+`ofFiniteMeasure (r • μ.toFiniteMeasure) = law r μ`; the proof does not use a zero denominator.
+The Levy-measure predicate does not store sigma-finiteness and does not install a global instance.
+
+## Brownian/path-regularity duplicate and external audit
+
+The active Mathlib pin contains `ProbabilityTheory.IsPreBrownianReal` and
+`ProbabilityTheory.IsBrownianReal` in `Mathlib.Probability.BrownianMotion.Basic`, together with
+evaluation laws, covariance, independent increments, Gaussian characterization components,
+negation, nonzero scaling, shifts, whole-past shift independence, time inversion, and the exact
+centered-Gaussian covariance characterization. StochLean therefore adds no parallel Brownian
+object. Its current Brownian module supplies SII/law-level bridges, an explicit piecewise
+time-inversion theorem at zero, and the source-facing Gaussian Brownian-bridge transform with its
+endpoint, mean, and covariance laws.
+
+The generic active-pin `Mathlib.Probability.Process.Kolmogorov` defines
+`IsKolmogorovProcess`/`IsAEKolmogorovProcess` and their measurable representatives, but not the
+Kolmogorov--Chentsov Holder-modification conclusion required by the handoff.
+
+The approved external repository `https://github.com/RemyDegenne/brownian-motion` was checked out
+at exact commit `314f04a34ff75e18fd383917ae7fe7d77beb1b6f`:
+
+- license: Apache-2.0;
+- relevant transitive source closure: 27 Lean modules, 6459 source lines;
+- proof-hole/trust scan: no `sorry`, `admit`, declaration beginning with `axiom`, or unsafe
+  declaration in that closure;
+- exact revision was confirmed by Git;
+- a direct stable-v4.33 source build does not pass unchanged because
+  `BrownianMotion/Auxiliary/Algebra.lean` redeclares `Set.indicator_apply_apply`, which is already
+  present in the active Mathlib pin.
+
+Consequently BM-X01 is not recorded as a compiled dependency. A future minimal port must remove
+the upstream duplicate, redirect auxiliary semantics to existing StochLean/Mathlib owners, retain
+the exact attribution, and re-run the entire closure and axiom audit. Cached external oleans or a
+mutable branch are not accepted as evidence.
+
+## Clean-build reproducibility audit
+
+`lake update` revealed that the pinned `exchangeability` package has an inherited `checkdecls`
+dependency absent from the historical root manifest. Adding it and rebuilding from source then
+exposed API incompatibilities between exchangeability commit
+`e0532e59ceff23edab44dda9ab0655debbc9cc22` and Mathlib v4.33, including failures in integration
+helpers, time-reversal crossing, and contractability modules. The original manifest was restored;
+dependency regeneration is therefore a documented blocker rather than an unreviewed lockfile
+change. Independent compilation of the new modules remains useful evidence but is not described as
+a successful clean workspace build.

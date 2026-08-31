@@ -1,0 +1,34 @@
+import StochLean.Probability.LimitTheorems.SemanticRegression
+import StochLean.Probability.InfinitelyDivisible.SemanticRegression
+import StochLean.Probability.Brownian.SemanticRegression
+
+/-! Axiom checks isolated from the historical exchangeability dependency closure. -/
+
+#print axioms ProbabilityTheory.variance_triangularRowSum_eq_sum
+#print axioms ProbabilityTheory.variance_triangularRowSum_eq_one
+#print axioms ProbabilityTheory.isNullArray_iff_eventual
+#print axioms ProbabilityTheory.satisfiesLindeberg_iff_unit
+#print axioms ProbabilityTheory.SatisfiesUnitLindeberg.isNullArray
+#print axioms ProbabilityTheory.SatisfiesLindeberg.isNullArray
+#print axioms ProbabilityTheory.threeSeriesTruncation_eq_indicator
+#print axioms MeasureTheory.ProbabilityMeasure.convPow_add
+#print axioms ProbabilityTheory.IsConvolutionSemigroup.isInfinitelyDivisible
+#print axioms ProbabilityTheory.IsConvolutionSemigroup.convPow_root
+#print axioms ProbabilityTheory.IsContinuousConvolutionSemigroup.roots_tendsto_zero
+#print axioms ProbabilityTheory.HasStationaryIndependentIncrements.isConvolutionSemigroup
+#print axioms ProbabilityTheory.HasStationaryIndependentIncrements.incrementLaw_isInfinitelyDivisible
+#print axioms ProbabilityTheory.CompoundPoisson.law_zero
+#print axioms ProbabilityTheory.CompoundPoisson.ofFiniteMeasure_zero
+#print axioms ProbabilityTheory.CompoundPoisson.ofFiniteMeasure_smul_probability
+#print axioms ProbabilityTheory.CompoundPoisson.law_add
+#print axioms ProbabilityTheory.CompoundPoisson.isInfinitelyDivisible
+#print axioms ProbabilityTheory.IsLevyMeasure.sigmaFinite
+#print axioms MeasureTheory.ProbabilityMeasure.convPow_affineMap
+#print axioms MeasureTheory.ProbabilityMeasure.IsStableInBroadSense.isInfinitelyDivisible
+#print axioms ProbabilityTheory.IsPreBrownianReal.timeInversion
+#print axioms ProbabilityTheory.IsPreBrownianReal.hasStationaryIndependentIncrements
+#print axioms ProbabilityTheory.IsPreBrownianReal.brownianIncrementLaw_isInfinitelyDivisible
+#print axioms ProbabilityTheory.IsPreBrownianReal.brownianBridge_isGaussianProcess
+#print axioms ProbabilityTheory.IsPreBrownianReal.integral_brownianBridge
+#print axioms ProbabilityTheory.IsPreBrownianReal.covariance_brownianBridge
+#print axioms ProbabilityTheory.IsGaussianProcess.isPreBrownianReal_of_covariance

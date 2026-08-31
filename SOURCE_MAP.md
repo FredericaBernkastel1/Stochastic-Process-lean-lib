@@ -341,3 +341,168 @@ duplicate irreducibility predicate, or duplicate projective-limit construction i
 All implemented Markov declarations are included in the full build and representative
 load-bearing results are inspected in `Audit/Axioms.lean`. The authorized external rows are the
 only deferred items; neither is replaced by a placeholder declaration.
+
+# Fourier Probability and Classical Limit Theorems
+
+This is the current disposition of
+`StochLean_FourierProbability_ClassicalLimitTheorems_Design_v0.1.pdf`. The milestone is **not
+complete**: the files listed as implemented below provide canonical foundations, not surrogate
+statements of the missing limit theorems.
+
+## Characteristic functions and classical limits
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Characteristic functions and independent sums | Reused | Mathlib's measure-first `charFun`, `IndepFun.charFun_map_add_eq_mul`, and finite-family characteristic-function product API. No StochLean characteristic-function object was added. |
+| Weak convergence and Levy continuity | Reused | Ordinary `Tendsto` on `ProbabilityMeasure` and `ProbabilityMeasure.tendsto_iff_tendsto_charFun` from `Mathlib.MeasureTheory.Measure.LevyConvergence`. |
+| Scalar iid CLT | Reused | `tendstoInDistribution_inv_sqrt_mul_sum` and its centered form from `Mathlib.Probability.CentralLimitTheorem`. |
+| Multivariate Gaussian laws | Reused | Mathlib's positive-semidefinite covariance Gaussian construction, including singular covariance. |
+| Cramer--Wold / multivariate iid CLT bridge | STILL-BLOCKED | No exact active-pin projection criterion or ready multivariate CLT declaration was found. A duplicate scalar/Fourier proof has not been introduced. |
+| Polya criterion | STILL-BLOCKED | No exact active-pin/local theorem with the frozen continuity/evenness/range/convexity assumptions was found. |
+| Moment determinacy and even-derivative converse | STILL-BLOCKED | The duplicate audit found no exact probability-facing declarations; generic owner and natural moment hypotheses still require proof design. |
+| Bochner theorem | DEFERRED | Klenke delegates the proof; the exact cited proof has not been recovered and audited. |
+| Berry--Esseen | DEFERRED | Klenke's external source has not been recovered and audited; no independent replacement is declared. |
+
+## Triangular arrays, Lindeberg, and ordered series
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Raw triangular arrays and nonempty rows | Implemented foundation | `LimitTheorems/TriangularArray.lean`: `TriangularArray` and the separate `HasNonemptyRows` predicate. |
+| Measurability, row independence, centering, normalization | Implemented foundation | Separate predicates; no cross-row independence or hidden centering/normalization. |
+| Row-sum variance | Implemented | `variance_triangularRowSum_eq_sum` and `variance_triangularRowSum_eq_one`. |
+| Null arrays | Implemented | Finite-row maximum-tail definition, entry bound, eventual-uniform formulation, and `isNullArray_iff_eventual`. A sum of tail probabilities is not used as the definition. |
+| Positive-scale Lindeberg/Lyapunov predicates | Implemented foundation | `LimitTheorems/Lindeberg.lean`; ENNReal nonnegative expectations and explicit positive scales avoid division by zero. |
+| Lyapunov implies Lindeberg | STILL-BLOCKED | The moment-tail inequality and ENNReal scaling proof remain to be formalized. |
+| Lindeberg implies null array | Implemented | `SatisfiesUnitLindeberg.isNullArray` proves the unit-scale result by a restricted-measure Markov bound; `SatisfiesLindeberg.isNullArray` applies it to independent normalized rows. |
+| Lindeberg--Feller forward CLT | STILL-BLOCKED | The mandatory characteristic-function/finite-measure proof is not implemented. No converse or false `iff` is exported. |
+| Lindeberg--Feller converse | DEFERRED | Klenke cites source [155], Theorem III.4.3; its proof has not been recovered and audited. |
+| Ordered series semantics | Implemented foundation | `Series/ThreeSeries.lean`: ordinary prefix sums, common-event a.s. random convergence, exact `abs <= K` truncation, and the three source conditions. |
+| Kolmogorov three-series theorem | STILL-BLOCKED | The equivalence and its finite-variance martingale helper remain unproved. This remains a hard blocker for Levy--Khintchine existence. |
+
+## FP-LT blocker and deferred ledger
+
+| ID | Status | Owner, reason, unlock condition, and downstream impact |
+| --- | --- | --- |
+| FP-B01 | RESOLVED | Active-pin characteristic-function, Levy-continuity, scalar-CLT, Gaussian, independence, and weak-topology APIs were mapped to Mathlib. |
+| FP-B02 | RESOLVED | No local overlap was found; final raw triangular-array public names are implemented. |
+| FP-B03 | STILL-BLOCKED | Polya and moment/derivative gaps require generic proofs after exact statement design. |
+| FP-B04 | DEFERRED | Recover and audit [155], Theorem III.4.3 before any Lindeberg--Feller converse. |
+| FP-B05 | DEFERRED | Recover and audit Klenke's cited Bochner proof before adding a theorem. |
+| FP-B06 | DEFERRED | Recover and audit [155], Chapter III, Section 11 before Berry--Esseen. |
+| FP-B07 | STILL-BLOCKED | Kolmogorov three-series is absent from the active pin and local tree; its full proof is required before LSII Levy--Khintchine existence. |
+| FP-B08 | STILL-BLOCKED | No exact active-pin Cramer--Wold/multivariate-CLT bridge was found. |
+| FP-D01 | DEFERRED | Infinite divisibility and Levy--Khintchine are owned by LSII below. |
+| FP-D02 | DEFERRED | Convolution semigroups and SII are owned by LSII below. |
+| FP-D03 | DEFERRED | Donsker and topological path-space weak convergence belong to Functional Weak Convergence. |
+| FP-D04 | DEFERRED | Brownian construction/path regularity belongs to BM-PR below. |
+
+`LimitTheorems/SemanticRegression.lean` currently pins predicate separation, maximum rather than
+sum semantics, the null-array equivalence, positive scales, the Lindeberg-to-nullity bridge, and
+the inclusive truncation boundary.
+It does not count as the missing theorem proofs.
+
+# Levy and Stationary Independent Increments Foundations
+
+This is the current disposition of
+`StochLean_Levy_StationaryIndependentIncrements_Design_v0.1.pdf`. The milestone is **not
+complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain remain open.
+
+## Law and process foundations
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Probability-law convolution and powers | Implemented | `Convolution/Semigroup.lean` closes Mathlib measure convolution in `ProbabilityMeasure` and proves associativity, commutativity, Dirac laws, and additive convolution powers. |
+| Basic/continuous convolution semigroups | Implemented foundation | The basic predicate contains only the semigroup law; the positive-time weak limit at zero is a separate refinement. |
+| Exercises 14.4.1--14.4.4 | Partially implemented | `convPow_root` gives the exact semigroup roots and `roots_tendsto_zero` proves their weak convergence to `δ₀`; general continuity propagation and nonnegative-support closure remain open. |
+| SII predicate | Implemented | `Process/StationaryIndependentIncrements.lean` combines the existing `HasStationaryIncrements` and Mathlib `HasIndepIncrements` without a bundled Levy-process type. |
+| SII to convolution semigroup | Implemented | `HasStationaryIndependentIncrements.isConvolutionSemigroup` uses genuine increment independence and stationary laws. |
+| Semigroup to coordinate SII process | STILL-BLOCKED | The corrected `NNReal`/`Nat` projective construction through the StochLean KET facade remains to be implemented. |
+| Infinite divisibility | Implemented foundation | Law-first positive-integer roots; every full-time convolution-semigroup marginal is infinitely divisible without a continuity assumption. |
+| Compound Poisson | Implemented foundation | Genuine Poisson mixture over convolution powers, explicit zero-rate law, and zero-safe `ofFiniteMeasure`; the latter recovers the rate/jump presentation on `r • μ`. |
+| Compound-Poisson intensity addition and ID | Implemented | `CompoundPoisson.law_add` proves the convolution law by Tonelli and Poisson addition; the induced convolution semigroup proves `CompoundPoisson.isInfinitelyDivisible`, including zero intensity. |
+| Compound-Poisson characteristic function | STILL-BLOCKED | The mandatory exponential characteristic-function formula remains open. |
+| Compound-Poisson approximation of ID laws | STILL-BLOCKED | Klenke 16.5 and its weak-topology bridge remain open. |
+
+## Levy measures, triplets, and stable laws
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Minimal Levy measure | Implemented foundation | Atom zero plus finite `lintegral (min 1 (x^2))`; `IsLevyMeasure.sigmaFinite` is derived from finite level sets and is not installed globally. |
+| Infinite-activity acceptance example | STILL-BLOCKED | The required explicit infinite-total-mass Levy measure regression has not yet been formalized. |
+| Fixed truncation and triplet data | Implemented foundation | `levyTruncation x = x` exactly on `abs x < 1`; `LevyTriplet` contains only Gaussian variance, drift, jump measure, and its Levy-measure proof. |
+| Levy exponent integrability | STILL-BLOCKED | Small-jump complex Taylor domination and large-jump finiteness are not yet proved. |
+| Real Levy--Khintchine existence and uniqueness | STILL-BLOCKED | No theorem is declared. Existence depends on FP-B07; uniqueness and nonvanishing/log corollaries remain downstream. |
+| ID to continuous semigroup and SII | STILL-BLOCKED | Corollary 16.10 awaits the unique triplet/exponent layer and the semigroup-to-process construction. |
+| Stable predicates | Implemented foundation | Non-Dirac broad, strict, and indexed predicates with genuinely positive affine scale; strict-to-broad bridges and zero-safe `signedLogAbs`. |
+| Broad stable implies ID | Implemented | `IsStableInBroadSense.isInfinitelyDivisible` explicitly inverts the positive affine witness and divides the translation among the positive number of convolution roots. |
+| Triplet affine transformation | STILL-BLOCKED | The exact truncation drift correction is not yet implemented; the current `nsmul` data operation is not claimed as Levy--Khintchine transformation theorem. |
+| Stable classification and explicit exponent | STILL-BLOCKED | Klenke 16.22--16.25, including the `alpha != 1` versus `alpha = 1` branches, remain open. |
+| Null-array ID limit theorems 16.12--16.13 | DEFERRED | Klenke's cited external proof has not been recovered and audited. |
+| Domains of attraction 16.26--16.30 | DEFERRED | Entire block belongs to `StableLimitTheory`; no orphan predicate was added. |
+
+## LSII blocker and deferred ledger
+
+| ID | Status | Owner, reason, unlock condition, and downstream impact |
+| --- | --- | --- |
+| LS-B01 | RESOLVED | Canonical Mathlib measure convolution was reused and the probability-law closure/powers were added. |
+| LS-B02 | RESOLVED | Existing stationary- and independent-increment predicates were reused. |
+| LS-B03 | STILL-BLOCKED | Correct semigroup-to-SII projective construction is missing. |
+| LS-B04 | RESOLVED | No exact active/local compound-Poisson law existed; the zero-safe finite-intensity foundation, intensity-addition law, and infinite divisibility are implemented. |
+| LS-B05 | STILL-BLOCKED | Minimal declarations are fixed, but Levy--Khintchine existence/uniqueness remains the central unresolved theorem. |
+| LS-B06 | STILL-BLOCKED | Required complex Taylor and Levy-integrand domination lemmas remain open. |
+| LS-B07 | STILL-BLOCKED | Stable affine-triplet and real-power scaling API remains open. |
+| LS-B08 | STILL-BLOCKED | Gamma/trigonometric identities for the explicit stable exponent remain open. |
+| LS-D01--LS-D05 | DEFERRED | Cadlag Levy realization, PPP/Levy--Ito, Skorokhod weak convergence, Levy stochastic integration, and multidimensional/LCA Levy--Khintchine retain their later owners. |
+| LS-D06 | DEFERRED | External null-array ID theorem proof not available. |
+| LS-D07 | DEFERRED | Stable domains of attraction move together to `StableLimitTheory`. |
+
+# Brownian Motion and Path Regularity Foundations
+
+This is the current disposition of `StochLean_BrownianMotion_PathRegularity_Design_v0.2.pdf`.
+The active pin supplies the canonical law predicates and transformations, but the package is **not
+complete**.
+
+## Canonical reuse and implemented bridges
+
+| Design topic | Disposition | Canonical implementation or decision |
+| --- | --- | --- |
+| Pre-Brownian/Brownian predicates | Reused | Mathlib `IsPreBrownianReal` and `IsBrownianReal`; no StochLean Brownian structure was added. |
+| Gaussian laws, covariance, independent increments | Reused | Active Mathlib Brownian and Gaussian modules, including `eval_zero_ae_eq_zero`, increment laws, covariance, shift independence, negation, scaling, shift, and upstream inversion. |
+| Brownian SII and marginal ID | Implemented bridge | `Brownian/Transformations.lean` proves SII, the Gaussian increment-law convolution semigroup, and infinite divisibility. |
+| Time inversion natural-domain bridge | Implemented | Explicit piecewise value at zero, positive-time formula, equality to upstream, and pre-Brownian preservation. |
+| Kolmogorov--Chentsov conclusion | STILL-BLOCKED | Active Mathlib has only `IsKolmogorovProcess` foundations. The audited external source contains the required theorem, but its exact snapshot does not compile unchanged against stable v4.33 because it redeclares an active Mathlib theorem. A minimal adapted port is still required. |
+| Continuous/Holder Brownian representative | STILL-BLOCKED | Depends on the KC port; no false path-regularity claim is derived from finite-dimensional laws. |
+| Gaussian covariance characterization | Reused | Mathlib's `IsGaussianProcess.isPreBrownianReal_of_covariance` exactly reconstructs the canonical pre-Brownian finite-dimensional law from centered Gaussian marginals and covariance. |
+| Brownian bridge | Implemented foundation | `brownianBridge` has a Gaussian-process proof, a.s. zero initial endpoint, pointwise zero terminal endpoint, centered marginals, and covariance `min s t - s*t` on the unit interval. |
+| Blumenthal, PWZ, strong Markov, reflection, arcsine | STILL-BLOCKED | No corresponding implementation was present in the audited external snapshot; the staged StochLean proofs remain open. |
+| Haar/Schauder Brownian construction | STILL-BLOCKED | The distinction between deterministic-time `L2` convergence and special a.s.-uniform convergence remains enforced but unimplemented. |
+| Deterministic Wiener integral | STILL-BLOCKED | Basis-independent `L2` linear isometry and Section 21.5 applications remain open; no Ito-integral surrogate is declared. |
+
+## Exact external audit and blocker ledger
+
+| ID | Status | Owner, reason, unlock condition, and downstream impact |
+| --- | --- | --- |
+| BM-X01 | STILL-BLOCKED | `RemyDegenne/brownian-motion` at `314f04a34ff75e18fd383917ae7fe7d77beb1b6f`, Apache-2.0, was checked out and scanned: the 27-module relevant closure has no `sorry`, `admit`, or project axiom. Stable-v4.33 source compilation fails at the already-upstream `Set.indicator_apply_apply`; a minimal canonical-owner port must remove the duplicate and revalidate the remaining closure. |
+| BM-B01 | RESOLVED | Active Mathlib v4.33 supplies canonical `IsPreBrownianReal`/`IsBrownianReal` and the basic transformation layer. |
+| BM-B02 | STILL-BLOCKED | Full KC conclusion/minimal external port is unresolved. |
+| BM-B03 | STILL-BLOCKED | Holder covering and exponent-monotonicity API awaits the port. |
+| BM-B04 | STILL-BLOCKED | Brownian stopping-field limit and Blumenthal modulo-law transfer proofs remain open. |
+| BM-B05 | STILL-BLOCKED | First-passage/supremum/last-zero measurable APIs remain open. |
+| BM-B06 | STILL-BLOCKED | Hilbert/Lp/ONB/Haar/deterministic-Wiener overlap remains to be audited and built. |
+| BM-B07 | RESOLVED | Sections 21.1--21.3 and 21.5 source boundary is frozen by the handoff. |
+| BM-D01--BM-D07 | DEFERRED | Doob/general SII regularization, Feller realization, functional weak convergence/Donsker, continuous quadratic variation, LIL/Skorohod, and Ito integration retain the owners specified by the design. |
+
+The Brownian semantic regression currently checks the a.s. zero law, explicit inversion zero case,
+SII bridge, marginal infinite divisibility, the Gaussian covariance characterization, the bridge
+endpoint/covariance layer, and the nonzero scaling hypothesis. It does not stand in for the missing
+common-event Holder, strong-Markov, reflection, arcsine, or Wiener theorems.
+
+# Cross-milestone reproducibility blocker
+
+The historical root manifest does not list the inherited `checkdecls` dependency of the pinned
+`exchangeability` package. Regenerating the manifest forces a source rebuild of that package,
+whose pinned revision targets pre-v4.33 Mathlib APIs and fails against the active v4.33 pin.
+Previously cached oleans allow unrelated modules to be checked, but are not accepted as a clean
+build proof. The repository lockfile has therefore been restored rather than silently updating or
+vendoring an unaudited patch. Resolving this requires a compatible exact exchangeability revision
+or a reproducible, attribution-preserving minimal port of its used theorem closure.
