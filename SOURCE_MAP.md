@@ -344,10 +344,11 @@ only deferred items; neither is replaced by a placeholder declaration.
 
 # Fourier Probability and Classical Limit Theorems
 
-This is the current disposition of
-`StochLean_FourierProbability_ClassicalLimitTheorems_Design_v0.1.pdf`. The milestone is **not
-complete**: the files listed as implemented below provide canonical foundations, not surrogate
-statements of the missing limit theorems.
+This is the final implementation disposition of
+`StochLean_FourierProbability_ClassicalLimitTheorems_Design_v0.1.pdf`. All package-owned mandatory
+`BUILD` rows are implemented. Audit-only external results remain explicitly deferred, and the two
+generic `BUILD-CANDIDATE` moment/Pólya gaps remain recorded rather than being replaced by stronger
+or surrogate statements.
 
 ## Characteristic functions and classical limits
 
@@ -357,10 +358,10 @@ statements of the missing limit theorems.
 | Weak convergence and Levy continuity | Reused | Ordinary `Tendsto` on `ProbabilityMeasure` and `ProbabilityMeasure.tendsto_iff_tendsto_charFun` from `Mathlib.MeasureTheory.Measure.LevyConvergence`. |
 | Scalar iid CLT | Reused | `tendstoInDistribution_inv_sqrt_mul_sum` and its centered form from `Mathlib.Probability.CentralLimitTheorem`. |
 | Multivariate Gaussian laws | Reused | Mathlib's positive-semidefinite covariance Gaussian construction, including singular covariance. |
-| Cramer--Wold / multivariate iid CLT bridge | STILL-BLOCKED | No exact active-pin projection criterion or ready multivariate CLT declaration was found. A duplicate scalar/Fourier proof has not been introduced. |
-| Polya criterion | STILL-BLOCKED | No exact active-pin/local theorem with the frozen continuity/evenness/range/convexity assumptions was found. |
-| Moment determinacy and even-derivative converse | STILL-BLOCKED | The duplicate audit found no exact probability-facing declarations; generic owner and natural moment hypotheses still require proof design. |
-| Bochner theorem | DEFERRED | Klenke delegates the proof; the exact cited proof has not been recovered and audited. |
+| Cramer--Wold / multivariate iid CLT bridge | Implemented | `LimitTheorems/MultivariateCLT.lean` proves the iid vector CLT by scalar projections, Mathlib's scalar iid CLT, characteristic-function weak convergence, and the canonical `multivariateGaussian`; merely positive-semidefinite, including singular, covariance is accepted. |
+| Polya criterion | STILL-BLOCKED candidate | No exact active-pin/local theorem with the frozen continuity/evenness/range/convexity assumptions was found. The candidate is not required by the downstream LSII interface and no differentiability surrogate is exported. |
+| Moment determinacy and even-derivative converse | STILL-BLOCKED candidate | Mathlib supplies moment-to-characteristic-function derivatives, but the converse/determinacy declarations with the exact source hypotheses are absent. They remain generic analysis candidates rather than probability-private approximations. |
+| Bochner theorem | DEFERRED | Klenke delegates the proof and neither cited source was recovered. The independent Apache-2.0 `mrdouglasny/bochner` implementation was audited at `58405ecd328cf8383a1c0b53d37605fe61a0b3f6`, but is not the cited proof and targets a different Mathlib revision, so it is reference-only and is not a dependency or copied API. |
 | Berry--Esseen | DEFERRED | Klenke's external source has not been recovered and audited; no independent replacement is declared. |
 
 ## Triangular arrays, Lindeberg, and ordered series
@@ -372,12 +373,12 @@ statements of the missing limit theorems.
 | Row-sum variance | Implemented | `variance_triangularRowSum_eq_sum` and `variance_triangularRowSum_eq_one`. |
 | Null arrays | Implemented | Finite-row maximum-tail definition, entry bound, eventual-uniform formulation, and `isNullArray_iff_eventual`. A sum of tail probabilities is not used as the definition. |
 | Positive-scale Lindeberg/Lyapunov predicates | Implemented foundation | `LimitTheorems/Lindeberg.lean`; ENNReal nonnegative expectations and explicit positive scales avoid division by zero. |
-| Lyapunov implies Lindeberg | STILL-BLOCKED | The moment-tail inequality and ENNReal scaling proof remain to be formalized. |
+| Lyapunov implies Lindeberg | Implemented | Both exponent and source-style positive-`delta` formulations prove the matching positive-scale Lindeberg condition in `LimitTheorems/Lindeberg.lean`. |
 | Lindeberg implies null array | Implemented | `SatisfiesUnitLindeberg.isNullArray` proves the unit-scale result by a restricted-measure Markov bound; `SatisfiesLindeberg.isNullArray` applies it to independent normalized rows. |
-| Lindeberg--Feller forward CLT | STILL-BLOCKED | The mandatory characteristic-function/finite-measure proof is not implemented. No converse or false `iff` is exported. |
+| Lindeberg--Feller forward CLT | Implemented | `SatisfiesLindeberg.tendsto_map_triangularRowSum_standardGaussian` closes the forward theorem through the attribution-preserving internal characteristic-function proof. No converse or false `iff` is exported. |
 | Lindeberg--Feller converse | DEFERRED | Klenke cites source [155], Theorem III.4.3; its proof has not been recovered and audited. |
 | Ordered series semantics | Implemented foundation | `Series/ThreeSeries.lean`: ordinary prefix sums, common-event a.s. random convergence, exact `abs <= K` truncation, and the three source conditions. |
-| Kolmogorov three-series theorem | STILL-BLOCKED | The equivalence and its finite-variance martingale helper remain unproved. This remains a hard blocker for Levy--Khintchine existence. |
+| Kolmogorov three-series theorem | Implemented | `kolmogorovThreeSeries_iff` proves both directions with inclusive truncation and ordered convergence on one common a.s. event; `orderedRandomSeriesConvergesAE_of_variance_tsum_lt_top` discharges Exercise 6.1.4 inside the project. |
 
 ## FP-LT blocker and deferred ledger
 
@@ -385,21 +386,22 @@ statements of the missing limit theorems.
 | --- | --- | --- |
 | FP-B01 | RESOLVED | Active-pin characteristic-function, Levy-continuity, scalar-CLT, Gaussian, independence, and weak-topology APIs were mapped to Mathlib. |
 | FP-B02 | RESOLVED | No local overlap was found; final raw triangular-array public names are implemented. |
-| FP-B03 | STILL-BLOCKED | Polya and moment/derivative gaps require generic proofs after exact statement design. |
+| FP-B03 | STILL-BLOCKED candidate | Exact Pólya and moment-converse statements are confirmed genuine generic gaps. Their status is explicit and they are not hidden prerequisites of any exported milestone theorem. |
 | FP-B04 | DEFERRED | Recover and audit [155], Theorem III.4.3 before any Lindeberg--Feller converse. |
 | FP-B05 | DEFERRED | Recover and audit Klenke's cited Bochner proof before adding a theorem. |
 | FP-B06 | DEFERRED | Recover and audit [155], Chapter III, Section 11 before Berry--Esseen. |
-| FP-B07 | STILL-BLOCKED | Kolmogorov three-series is absent from the active pin and local tree; its full proof is required before LSII Levy--Khintchine existence. |
-| FP-B08 | STILL-BLOCKED | No exact active-pin Cramer--Wold/multivariate-CLT bridge was found. |
+| FP-B07 | RESOLVED | The full ordered Kolmogorov three-series equivalence and finite-variance helper are proved locally. |
+| FP-B08 | RESOLVED | The multivariate iid CLT bridge is proved for all finite-dimensional PSD covariance matrices. |
 | FP-D01 | DEFERRED | Infinite divisibility and Levy--Khintchine are owned by LSII below. |
 | FP-D02 | DEFERRED | Convolution semigroups and SII are owned by LSII below. |
 | FP-D03 | DEFERRED | Donsker and topological path-space weak convergence belong to Functional Weak Convergence. |
 | FP-D04 | DEFERRED | Brownian construction/path regularity belongs to BM-PR below. |
 
-`LimitTheorems/SemanticRegression.lean` currently pins predicate separation, maximum rather than
-sum semantics, the null-array equivalence, positive scales, the Lindeberg-to-nullity bridge, and
-the inclusive truncation boundary.
-It does not count as the missing theorem proofs.
+`LimitTheorems/SemanticRegression.lean` pins the package semantics: predicate separation, nonempty
+rows, maximum rather than sum nullness, positive scales, Lyapunov and Lindeberg bridges, unit row
+variance, absence of a converse `iff`, canonical weak topology, singular PSD multivariate limits,
+ordered conditional convergence, common-event random-series convergence, ordered expectation
+series, inclusive truncation, and the internal Exercise 6.1.4 dependency.
 
 # Levy and Stationary Independent Increments Foundations
 

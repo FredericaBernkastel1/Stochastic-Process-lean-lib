@@ -52,6 +52,12 @@ These rules apply to every module and are not relaxed to finish a proof:
 - **No duplicates:** before adding a public declaration, search the pinned Mathlib revision, the
   complete local library, and the approved-external ledger, in that order. A usable canonical
   result forbids a parallel implementation.
+- **Mathlib-only dependency boundary:** Mathlib is the only permitted external Lean package in the
+  final project dependency graph. Other Lean projects may be inspected solely as implementation
+  references. Any adopted proof must be audited at an exact revision, brought into the StochLean
+  source tree with its license and attribution, reorganized under the canonical StochLean owner,
+  namespace, names, signatures, and APIs, and compiled without importing or linking the external
+  package. External source code is never API authority.
 - **Functional organization:** files and namespaces are organized by mathematical purpose, never
   by textbook chapter.
 - **Canonical representations:** processes remain functions `X : T -> Omega -> E`. Reuse
@@ -84,11 +90,12 @@ Status last updated: **2026-08-31**. The first six reviewed handoff milestones a
 audited: **Klenke Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale
 Calculus and Exchangeability**, **Measure Convergence and Projective Construction**, and the two
 consolidated **Markov Processes** specifications. The new **Fourier/Classical Limit Theorems**,
-**Levy/SII**, and **Brownian/Path Regularity** handoffs are under implementation. Their canonical
-foundation interfaces are present, but their completion gates are not yet met; in particular the
-Lindeberg-to-nullity bridge, continuous-semigroup root convergence, compound-Poisson intensity
-addition/infinite divisibility, and the Gaussian Brownian-bridge foundation are now proved. The
-Lindeberg--Feller and three-series theorems, real Levy--Khintchine existence/uniqueness and stable
+**Levy/SII**, and **Brownian/Path Regularity** handoffs are under implementation. The
+Fourier/Classical Limit Theorems package now includes the forward Lindeberg--Feller theorem,
+Lyapunov-to-Lindeberg, the complete Kolmogorov three-series theorem with its finite-variance
+helper, and a singular-covariance-safe multivariate iid CLT bridge. Continuous-semigroup root
+convergence, compound-Poisson intensity addition/infinite divisibility, and the Gaussian
+Brownian-bridge foundation are also proved. Real Levy--Khintchine existence/uniqueness and stable
 classification, and the Brownian realization/path/strong-Markov/Wiener layers remain open. The
 precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported as completed work.
 
@@ -151,13 +158,16 @@ precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported 
 - Ionescu-Tulcea and Kolmogorov extension theorems through audited canonical dependencies and
   StochLean facades.
 - Chapman-Kolmogorov equations and Kac's formula for irreducible positive recurrent chains.
+- Lyapunov's implication for triangular arrays.
+- Lindeberg--Feller central limit theorem (forward direction).
+- Kolmogorov's three-series theorem.
 
 The structural de Finetti theorem and Lévy downward convergence are maintained inside this
 repository under `StochLean/Internal/Exchangeability`; the public API remains the smaller
 StochLean facade. The implementation is an attribution-preserving internal port of the audited
-Apache-2.0 proof lineage recorded in that directory. The Kolmogorov extension facade remains
-pinned to audited Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25` and does not leak a
-non-canonical public representation into StochLean.
+Apache-2.0 proof lineage recorded in that directory. The previously audited Kolmogorov-extension
+source at Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25` is being migrated to the
+same internal-source model so that the final package graph contains no non-Mathlib Lean dependency.
 
 All declarations in the six completed milestones build without placeholders. The former external
 `exchangeability` and `checkdecls` dependency has been removed: reverse-martingale convergence,

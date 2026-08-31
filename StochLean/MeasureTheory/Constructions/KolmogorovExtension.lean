@@ -5,15 +5,16 @@ Authors: StochLean contributors
 -/
 module
 
-public import KolmogorovExtension4.KolmogorovExtension
+public import StochLean.Internal.KolmogorovExtension.KolmogorovExtension
 public import Mathlib.MeasureTheory.Constructions.Polish.Basic
 public import Mathlib.Probability.Process.FiniteDimensionalLaws
 
 /-!
 # Kolmogorov extension on standard Borel spaces
 
-This file is the stable StochLean facade over the audited arbitrary-index construction from
-`kolmogorov_extension4`.  Its public statements use only measurable-space-level
+This file is the stable StochLean facade over the project-maintained arbitrary-index construction
+under `StochLean.Internal.KolmogorovExtension`. Its public statements use only
+measurable-space-level
 `StandardBorelSpace` assumptions.  The compatible Polish topologies installed by
 `upgradeStandardBorel` are implementation details.
 
@@ -26,6 +27,8 @@ type.  Probability and uniqueness are obtained from Mathlib's canonical `IsProje
 open Set
 
 namespace MeasureTheory
+
+open StochLean.Internal.KolmogorovExtension.MeasureTheory
 
 variable {ι : Type*} {α : ι → Type*} [∀ i, MeasurableSpace (α i)]
   [∀ i, StandardBorelSpace (α i)]

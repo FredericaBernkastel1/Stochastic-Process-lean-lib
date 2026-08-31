@@ -4,6 +4,15 @@ Baseline: Lean/Mathlib `v4.33.0`, resolved Mathlib commit
 `db584cd6d46c92f209a44c0f1c829460d327499d`. Searches covered the pinned checkout, the complete
 local tree, and the approved-external ledger before each public gap was added.
 
+## Global external-source rule
+
+Mathlib is the only external Lean package permitted in the final dependency graph. An external
+repository may be used only as an implementation reference after exact-revision statement,
+dependency, proof-hole, axiom, build, provenance, and license review. Accepted code is copied into
+the StochLean source tree, adapted to StochLean's mathematical owner and public API, and compiled
+without an import or Lake dependency on the source repository. External names and module layouts
+have no normative force.
+
 ## Reuse and gap decisions
 
 | Topic / design row | Pinned result | Decision |
@@ -204,13 +213,23 @@ Mathlib tree and full local StochLean tree found no exact Kolmogorov three-serie
 Lindeberg/Lyapunov triangular-array package, Lindeberg--Feller theorem, Polya criterion, or exact
 multivariate Cramer--Wold CLT bridge.
 
-The surviving local declarations therefore own only raw dependent triangular arrays, separated
+The surviving local declarations therefore own raw dependent triangular arrays, separated
 hypothesis predicates, the finite variance identity, maximum-tail nullness and its eventual form,
-positive-scale Lindeberg/Lyapunov conditions, the Lindeberg-to-nullity implication, and
-ordered-series/truncation semantics. None of those declarations is presented as the missing main
-theorem. Klenke's externally delegated
-Lindeberg--Feller converse, Bochner theorem, and Berry--Esseen theorem remain deferred pending
-recovery of the exact cited proofs.
+positive-scale Lindeberg/Lyapunov conditions, Lyapunov-to-Lindeberg and Lindeberg-to-nullity,
+the forward Lindeberg--Feller theorem, ordered-series/truncation semantics, the complete
+Kolmogorov three-series equivalence, and a thin PSD multivariate iid CLT bridge. The forward
+Lindeberg--Feller proof is an attribution-preserving internal port of the audited Apache-2.0
+StatLean proof lineage at exact commit `dd2c4bbc72b7c643e62985d77c84755b31aec9f5`; it imports no
+external package. Klenke's externally delegated converse and Berry--Esseen theorem remain deferred
+pending recovery of the exact cited proofs.
+
+An independent finite-dimensional Bochner implementation was also audited at Apache-2.0 commit
+`58405ecd328cf8383a1c0b53d37605fe61a0b3f6`. Its source closure contains no proof holes or project
+axioms, but it is not Klenke's cited proof and targets a different Mathlib revision (plus an
+unrelated package dependency in its project manifest). Under the source protocol it is retained
+only as a reference: StochLean neither imports it nor exposes its names. Pólya and the exact
+moment-determinacy/even-derivative converse remain explicitly identified generic candidates; no
+stronger replacement theorem is claimed.
 
 ## Levy/SII duplicate audit
 

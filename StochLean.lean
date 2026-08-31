@@ -34,6 +34,7 @@ import StochLean.Probability.GeneratingFunction.RandomSum
 import StochLean.Probability.GeneratingFunction.SemanticRegression
 import StochLean.Probability.LimitTheorems.TriangularArray
 import StochLean.Probability.LimitTheorems.Lindeberg
+import StochLean.Probability.LimitTheorems.MultivariateCLT
 import StochLean.Probability.LimitTheorems.PoissonApproximation
 import StochLean.Probability.LimitTheorems.SemanticRegression
 import StochLean.Probability.Series.ThreeSeries
