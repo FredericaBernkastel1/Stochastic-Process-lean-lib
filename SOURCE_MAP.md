@@ -428,12 +428,12 @@ complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain rem
 | Design topic | Disposition | Canonical implementation or decision |
 | --- | --- | --- |
 | Minimal Levy measure | Implemented foundation | Atom zero plus finite `lintegral (min 1 (x^2))`; `IsLevyMeasure.sigmaFinite` is derived from finite level sets and is not installed globally. |
-| Infinite-activity acceptance example | STILL-BLOCKED | The required explicit infinite-total-mass Levy measure regression has not yet been formalized. |
+| Infinite-activity acceptance example | Implemented | `geometricLevyMeasure` is an explicit countable atomic measure with atoms tending to zero; `isLevyMeasure_geometricLevyMeasure` proves the truncated second moment is finite, while `geometricLevyMeasure_univ` proves its total mass is infinite. |
 | Fixed truncation and triplet data | Implemented foundation | `levyTruncation x = x` exactly on `abs x < 1`; `LevyTriplet` contains only Gaussian variance, drift, jump measure, and its Levy-measure proof. |
 | Levy exponent integrability | STILL-BLOCKED | Small-jump complex Taylor domination and large-jump finiteness are not yet proved. |
 | Real Levy--Khintchine existence and uniqueness | STILL-BLOCKED | No theorem is declared. Existence depends on FP-B07; uniqueness and nonvanishing/log corollaries remain downstream. |
 | ID to continuous semigroup and SII | STILL-BLOCKED | Corollary 16.10 awaits the unique triplet/exponent layer and the semigroup-to-process construction. |
-| Stable predicates | Implemented foundation | Non-Dirac broad, strict, and indexed predicates with genuinely positive affine scale; strict-to-broad bridges and zero-safe `signedLogAbs`. |
+| Stable predicates | Implemented foundation | Non-Dirac broad, strict, and indexed predicates with genuinely positive affine scale; indexed-to-unindexed and strict-to-broad bridges; and zero-safe `signedLogAbs`. |
 | Broad stable implies ID | Implemented | `IsStableInBroadSense.isInfinitelyDivisible` explicitly inverts the positive affine witness and divides the translation among the positive number of convolution roots. |
 | Triplet affine transformation | STILL-BLOCKED | The exact truncation drift correction is not yet implemented; the current `nsmul` data operation is not claimed as Levy--Khintchine transformation theorem. |
 | Stable classification and explicit exponent | STILL-BLOCKED | Klenke 16.22--16.25, including the `alpha != 1` versus `alpha = 1` branches, remain open. |
@@ -473,7 +473,7 @@ complete**.
 | Kolmogorov--Chentsov conclusion | STILL-BLOCKED | Active Mathlib has only `IsKolmogorovProcess` foundations. The audited external source contains the required theorem, but its exact snapshot does not compile unchanged against stable v4.33 because it redeclares an active Mathlib theorem. A minimal adapted port is still required. |
 | Continuous/Holder Brownian representative | STILL-BLOCKED | Depends on the KC port; no false path-regularity claim is derived from finite-dimensional laws. |
 | Gaussian covariance characterization | Reused | Mathlib's `IsGaussianProcess.isPreBrownianReal_of_covariance` exactly reconstructs the canonical pre-Brownian finite-dimensional law from centered Gaussian marginals and covariance. |
-| Brownian bridge | Implemented foundation | `brownianBridge` has a Gaussian-process proof, a.s. zero initial endpoint, pointwise zero terminal endpoint, centered marginals, and covariance `min s t - s*t` on the unit interval. |
+| Brownian bridge | Implemented foundation | `brownianBridge` has a Gaussian-process proof, a.s. zero initial endpoint, pointwise zero terminal endpoint, centered marginals, covariance `min s t - s*t`, and marginal law `N(0,t(1-t))` on the unit interval. |
 | Blumenthal, PWZ, strong Markov, reflection, arcsine | STILL-BLOCKED | No corresponding implementation was present in the audited external snapshot; the staged StochLean proofs remain open. |
 | Haar/Schauder Brownian construction | STILL-BLOCKED | The distinction between deterministic-time `L2` convergence and special a.s.-uniform convergence remains enforced but unimplemented. |
 | Deterministic Wiener integral | STILL-BLOCKED | Basis-independent `L2` linear isometry and Section 21.5 applications remain open; no Ito-integral surrogate is declared. |

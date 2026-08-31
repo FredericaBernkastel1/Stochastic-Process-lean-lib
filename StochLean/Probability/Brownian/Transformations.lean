@@ -92,6 +92,26 @@ theorem IsPreBrownianReal.covariance_brownianBridge (hB : IsPreBrownianReal B P)
   simp
   ring
 
+/-- A Brownian-bridge marginal at `t ∈ [0,1]` is centered Gaussian with variance `t(1-t)`. -/
+theorem IsPreBrownianReal.hasLaw_brownianBridge (hB : IsPreBrownianReal B P)
+    (t : ℝ≥0) (ht : t ≤ 1) :
+    HasLaw (brownianBridge B t) (gaussianReal 0 (t * (1 - t))) P := by
+  have hG := hB.brownianBridge_isGaussianProcess.hasGaussianLaw_eval t
+  refine ⟨hG.aemeasurable, ?_⟩
+  rw [hG.map_eq_gaussianReal]
+  congr 2
+  · exact hB.integral_brownianBridge t
+  · have hcov := hB.covariance_brownianBridge t t ht ht
+    rw [covariance_self hG.aemeasurable] at hcov
+    simp only [min_self] at hcov
+    apply NNReal.eq
+    rw [hcov]
+    have ht' : (t : ℝ) ≤ 1 := by exact_mod_cast ht
+    rw [Real.coe_toNNReal _ (by nlinarith [t.coe_nonneg])]
+    rw [NNReal.coe_mul, NNReal.coe_sub ht]
+    simp
+    ring
+
 /-- Brownian time inversion with its natural `t = 0` branch exposed. -/
 noncomputable def brownianTimeInversion (B : ℝ≥0 → Ω → ℝ) : ℝ≥0 → Ω → ℝ :=
   fun t ω ↦ if t = 0 then 0 else t * B (1 / t) ω

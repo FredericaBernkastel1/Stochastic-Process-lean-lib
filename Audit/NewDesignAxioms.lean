@@ -23,12 +23,17 @@ import StochLean.Probability.Brownian.SemanticRegression
 #print axioms ProbabilityTheory.CompoundPoisson.law_add
 #print axioms ProbabilityTheory.CompoundPoisson.isInfinitelyDivisible
 #print axioms ProbabilityTheory.IsLevyMeasure.sigmaFinite
+#print axioms ProbabilityTheory.isLevyMeasure_geometricLevyMeasure
+#print axioms ProbabilityTheory.geometricLevyMeasure_univ
 #print axioms MeasureTheory.ProbabilityMeasure.convPow_affineMap
 #print axioms MeasureTheory.ProbabilityMeasure.IsStableInBroadSense.isInfinitelyDivisible
+#print axioms MeasureTheory.ProbabilityMeasure.IsStableInBroadSenseWithIndex.isStableInBroadSense
+#print axioms MeasureTheory.ProbabilityMeasure.IsStableWithIndex.isStable
 #print axioms ProbabilityTheory.IsPreBrownianReal.timeInversion
 #print axioms ProbabilityTheory.IsPreBrownianReal.hasStationaryIndependentIncrements
 #print axioms ProbabilityTheory.IsPreBrownianReal.brownianIncrementLaw_isInfinitelyDivisible
 #print axioms ProbabilityTheory.IsPreBrownianReal.brownianBridge_isGaussianProcess
 #print axioms ProbabilityTheory.IsPreBrownianReal.integral_brownianBridge
 #print axioms ProbabilityTheory.IsPreBrownianReal.covariance_brownianBridge
+#print axioms ProbabilityTheory.IsPreBrownianReal.hasLaw_brownianBridge
 #print axioms ProbabilityTheory.IsGaussianProcess.isPreBrownianReal_of_covariance

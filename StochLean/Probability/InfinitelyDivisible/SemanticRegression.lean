@@ -50,6 +50,12 @@ example (r : ℝ≥0) (μ : ProbabilityMeasure G) :
 example {ν : Measure ℝ} (hν : IsLevyMeasure ν) : SigmaFinite ν :=
   hν.sigmaFinite
 
+example : IsLevyMeasure geometricLevyMeasure :=
+  isLevyMeasure_geometricLevyMeasure
+
+example : geometricLevyMeasure Set.univ = ∞ :=
+  geometricLevyMeasure_univ
+
 example {μ : ProbabilityMeasure ℝ} (hμ : ProbabilityMeasure.IsStable μ) :
     ProbabilityMeasure.IsNonDirac μ :=
   hμ.1
@@ -57,6 +63,16 @@ example {μ : ProbabilityMeasure ℝ} (hμ : ProbabilityMeasure.IsStable μ) :
 example {μ : ProbabilityMeasure ℝ} (hμ : ProbabilityMeasure.IsStableInBroadSense μ) :
     ProbabilityMeasure.IsInfinitelyDivisible μ :=
   hμ.isInfinitelyDivisible
+
+example {α : ℝ} {μ : ProbabilityMeasure ℝ}
+    (hμ : ProbabilityMeasure.IsStableInBroadSenseWithIndex α μ) :
+    ProbabilityMeasure.IsStableInBroadSense μ :=
+  hμ.isStableInBroadSense
+
+example {α : ℝ} {μ : ProbabilityMeasure ℝ}
+    (hμ : ProbabilityMeasure.IsStableWithIndex α μ) :
+    ProbabilityMeasure.IsStable μ :=
+  hμ.isStable
 
 example : signedLogAbs 0 = 0 := signedLogAbs_zero
 

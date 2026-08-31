@@ -220,7 +220,7 @@ recovery of the exact cited proofs.
 | Convolution semigroup | No exact law-family predicate with the frozen basic/continuous split | Add the two thin predicates without a hidden identity-at-zero assumption. |
 | Infinite divisibility | No exact active-pin probability-law predicate | Add positive-integer existential convolution roots. |
 | Compound Poisson | Poisson measures and measure bind exist; no finite-intensity compound-Poisson probability law | Add a genuine bind mixture and zero-safe finite-measure entry point; prove common-jump intensity addition by Tonelli and derive infinite divisibility from the resulting semigroup. |
-| Levy measure/triplet | No canonical active-pin definitions | Add the minimal atom/integral predicate, derive sigma-finiteness, and add data-only fixed-truncation triplets. |
+| Levy measure/triplet | No canonical active-pin definitions | Add the minimal atom/integral predicate, derive sigma-finiteness, validate infinite activity with an explicit infinite-mass geometric atomic example, and add data-only fixed-truncation triplets. |
 | Levy--Khintchine | No exact active-pin/local theorem | Remains a real proof gap; no exponent theorem or global-log surrogate has been added. |
 | Stable laws | No matching active-pin law predicates/classification | Add non-Dirac broad/strict/indexed predicates, exact affine/convolution-power algebra, broad-stable-to-ID, and the zero-safe logarithmic helper; classification remains open. |
 

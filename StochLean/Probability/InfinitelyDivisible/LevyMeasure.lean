@@ -6,7 +6,9 @@ Authors: StochLean contributors
 module
 
 public import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
+public import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 public import Mathlib.MeasureTheory.Measure.Typeclasses.SFinite
+public import Mathlib.Analysis.SpecificLimits.Basic
 
 /-!
 # Lévy measures on the real line
@@ -42,6 +44,41 @@ theorem levyIntegrand_pos {x : ℝ} (hx : x ≠ 0) : 0 < levyIntegrand x := by
 /-- Minimal real Lévy-measure semantics. -/
 def IsLevyMeasure (ν : Measure ℝ) : Prop :=
   ν {0} = 0 ∧ (∫⁻ x, levyIntegrand x ∂ν) < ∞
+
+/-- A discrete infinite-activity Lévy measure with atoms geometrically approaching zero. -/
+noncomputable def geometricLevyMeasure : Measure ℝ :=
+  Measure.sum fun n : ℕ ↦ Measure.dirac (((2 : ℝ)⁻¹) ^ n)
+
+@[simp]
+theorem geometricLevyMeasure_atom_zero : geometricLevyMeasure {0} = 0 := by
+  rw [geometricLevyMeasure, Measure.sum_apply _ (MeasurableSet.singleton 0)]
+  simp
+
+private theorem levyIntegrand_geometricLevyMeasure_atom_le (n : ℕ) :
+    levyIntegrand (((2 : ℝ)⁻¹) ^ n) ≤ ((4 : ℝ≥0∞)⁻¹) ^ n := by
+  unfold levyIntegrand
+  refine (min_le_right _ _).trans_eq ?_
+  have hx : (((2 : ℝ)⁻¹) ^ n) ^ 2 = ((4 : ℝ)⁻¹) ^ n := by
+    rw [← pow_mul, Nat.mul_comm, pow_mul]
+    norm_num
+  rw [hx, ENNReal.ofReal_pow (by positivity)]
+  congr 1
+  rw [ENNReal.ofReal_inv_of_pos (by positivity)]
+  norm_num
+
+/-- The geometric atomic example satisfies the minimal Lévy-measure predicate. -/
+theorem isLevyMeasure_geometricLevyMeasure : IsLevyMeasure geometricLevyMeasure := by
+  refine ⟨geometricLevyMeasure_atom_zero, ?_⟩
+  rw [geometricLevyMeasure, lintegral_sum_measure]
+  simp_rw [lintegral_dirac' _ measurable_levyIntegrand]
+  exact lt_of_le_of_lt
+    (ENNReal.summable.tsum_le_tsum levyIntegrand_geometricLevyMeasure_atom_le ENNReal.summable)
+    (tsum_geometric_lt_top.mpr (by norm_num))
+
+/-- The geometric atomic Lévy measure has genuinely infinite total mass. -/
+theorem geometricLevyMeasure_univ : geometricLevyMeasure Set.univ = ∞ := by
+  rw [geometricLevyMeasure, Measure.sum_apply _ MeasurableSet.univ]
+  simp
 
 namespace IsLevyMeasure
 

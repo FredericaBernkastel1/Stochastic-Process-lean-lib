@@ -122,6 +122,20 @@ theorem IsStableWithIndex.isStableInBroadSenseWithIndex {α : ℝ} {μ : Probabi
   intro n hn
   exact ⟨0, hμ.2.2.2 n hn⟩
 
+theorem IsStableInBroadSenseWithIndex.isStableInBroadSense
+    {α : ℝ} {μ : ProbabilityMeasure ℝ} (hμ : IsStableInBroadSenseWithIndex α μ) :
+    IsStableInBroadSense μ := by
+  refine ⟨hμ.2.2.1, ?_⟩
+  intro n hn
+  obtain ⟨d, hd⟩ := hμ.2.2.2 n hn
+  refine ⟨(n : ℝ) ^ (1 / α), Real.rpow_pos_of_pos (by positivity) _, d, hd⟩
+
+theorem IsStableWithIndex.isStable {α : ℝ} {μ : ProbabilityMeasure ℝ}
+    (hμ : IsStableWithIndex α μ) : IsStable μ := by
+  refine ⟨hμ.2.2.1, ?_⟩
+  intro n hn
+  exact ⟨(n : ℝ) ^ (1 / α), Real.rpow_pos_of_pos (by positivity) _, hμ.2.2.2 n hn⟩
+
 /-- Every nondegenerate stable law in the broad sense is infinitely divisible. The root is the
 inverse affine image of the stability witness, with the translation divided among the `n`
 summands. -/

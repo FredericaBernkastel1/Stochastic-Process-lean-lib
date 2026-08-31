@@ -43,6 +43,10 @@ example (hB : IsPreBrownianReal B P) (s t : ℝ≥0) (hs : s ≤ 1) (ht : t ≤ 
       ((min s t : ℝ≥0) : ℝ) - (s : ℝ) * (t : ℝ) :=
   hB.covariance_brownianBridge s t hs ht
 
+example (hB : IsPreBrownianReal B P) (t : ℝ≥0) (ht : t ≤ 1) :
+    HasLaw (brownianBridge B t) (gaussianReal 0 (t * (1 - t))) P :=
+  hB.hasLaw_brownianBridge t ht
+
 /-- The active Mathlib characterization reconstructs pre-Brownian finite-dimensional laws. -/
 example (hG : IsGaussianProcess B P) (hmean : ∀ t, P[B t] = 0)
     (hcov : ∀ s t, s ≤ t → cov[B s, B t; P] = s) : IsPreBrownianReal B P :=
