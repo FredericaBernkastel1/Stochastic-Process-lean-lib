@@ -242,12 +242,23 @@ stronger replacement theorem is claimed.
 | Infinite divisibility | No exact active-pin probability-law predicate | Add positive-integer existential convolution roots. |
 | Compound Poisson | Poisson measures and measure bind exist; no finite-intensity compound-Poisson probability law | Add a genuine bind mixture and zero-safe finite-measure entry point; prove common-jump intensity addition by Tonelli and derive infinite divisibility from the resulting semigroup. |
 | Levy measure/triplet | No canonical active-pin definitions | Add the minimal atom/integral predicate, derive sigma-finiteness, validate infinite activity with an explicit infinite-mass geometric atomic example, and add data-only fixed-truncation triplets. |
-| Levy--Khintchine | No exact active-pin/local theorem | Remains a real proof gap; no exponent theorem or global-log surrogate has been added. |
-| Stable laws | No matching active-pin law predicates/classification | Add non-Dirac broad/strict/indexed predicates, exact affine/convolution-power algebra, broad-stable-to-ID, and the zero-safe logarithmic helper; classification remains open. |
+| Levy--Khintchine | No exact active-pin theorem | Implemented entirely inside StochLean: triplet-to-law approximation, weighted canonical-root converse extraction, uniqueness, and the nonnegative specialization. No external Lean package is linked. |
+| Stable laws | No matching active-pin law predicates/classification | Project-owned non-Dirac broad/strict/indexed predicates, affine/triplet scaling, index existence and bound, homogeneous jump density, Gaussian endpoint, corrected centering branches, and source-safe exponent expressions are implemented. |
 
 The finite-intensity compound-Poisson API handles `ν = 0` before normalization and proves
 `ofFiniteMeasure (r • μ.toFiniteMeasure) = law r μ`; the proof does not use a zero denominator.
 The Levy-measure predicate does not store sigma-finiteness and does not install a global instance.
+
+The LS-B08 audit searched the pinned Mathlib Gamma, beta, Mellin, improper-integral, and
+trigonometric-integral modules, the complete local tree, and public Lean source search. No existing
+oscillatory Gamma integral implementation suitable for the active pin was found. Direct inspection
+of Klenke Remark 16.23 exposed a more fundamental source defect: an arbitrary translation keeps
+the same Levy measure but adds `i*d*t` to the exponent. `StableExponent.lean` therefore internalizes
+the two printed Gamma/trigonometric expressions as project-owned, zero-safe APIs, proves continuity
+of the exceptional logarithmic term, supplies the explicit location correction, and proves the
+translation obstruction. It deliberately exports no false theorem claiming that a jump measure
+alone determines the complete exponent. This resolves the audit item as a source correction; no
+external package, namespace, or API is retained.
 
 ## Brownian/path-regularity duplicate and external audit
 

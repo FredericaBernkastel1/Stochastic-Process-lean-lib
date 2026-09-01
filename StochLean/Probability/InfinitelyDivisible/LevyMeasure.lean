@@ -147,6 +147,15 @@ theorem add {κ : Measure ℝ} (hν : IsLevyMeasure ν) (hκ : IsLevyMeasure κ)
   · rw [lintegral_add_measure]
     exact ENNReal.add_lt_top.mpr ⟨hν.lintegral_lt_top, hκ.lintegral_lt_top⟩
 
+/-- Restricting a Lévy measure to any set preserves the minimal Lévy-measure conditions. -/
+theorem restrict (hν : IsLevyMeasure ν) (s : Set ℝ) : IsLevyMeasure (ν.restrict s) := by
+  constructor
+  · rw [Measure.restrict_apply (MeasurableSet.singleton 0)]
+    apply le_antisymm _ bot_le
+    exact (measure_mono Set.inter_subset_left).trans_eq hν.atom_zero
+  · exact lt_of_le_of_lt (lintegral_mono' Measure.restrict_le_self le_rfl)
+      hν.lintegral_lt_top
+
 /-- A finite measure with no atom at zero is a Lévy measure. -/
 theorem of_isFiniteMeasure [IsFiniteMeasure ν] (hzero : ν {0} = 0) : IsLevyMeasure ν := by
   refine ⟨hzero, lt_of_le_of_lt ?_ (measure_lt_top ν Set.univ)⟩
@@ -173,6 +182,32 @@ theorem map_mul (hν : IsLevyMeasure ν) {a : ℝ} (ha : a ≠ 0) :
 Their thresholds are strictly positive and finite. -/
 def spanningLevel (n : ℕ) : Set ℝ :=
   {x | ((n + 1 : ℕ) : ℝ≥0∞)⁻¹ ≤ levyIntegrand x}
+
+theorem measurableSet_spanningLevel (n : ℕ) : MeasurableSet (spanningLevel n) := by
+  exact measurableSet_Ici.preimage measurable_levyIntegrand
+
+theorem monotone_spanningLevel : Monotone spanningLevel := by
+  intro m n hmn x hx
+  exact (ENNReal.inv_le_inv.mpr (by exact_mod_cast Nat.add_le_add_right hmn 1)).trans hx
+
+theorem iUnion_spanningLevel : (⋃ n, spanningLevel n) = ({0} : Set ℝ)ᶜ := by
+  ext x
+  constructor
+  · intro hxU hx
+    rw [Set.mem_iUnion] at hxU
+    obtain ⟨n, hn⟩ := hxU
+    subst x
+    simpa [spanningLevel] using hn
+  · intro hx
+    have hx0 : x ≠ 0 := by simpa using hx
+    have hpos : 0 < levyIntegrand x := levyIntegrand_pos hx0
+    obtain ⟨n, hn⟩ := ENNReal.exists_inv_nat_lt hpos.ne'
+    have hn0 : n ≠ 0 := by
+      intro hn0
+      subst n
+      simp at hn
+    obtain ⟨m, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hn0
+    exact Set.mem_iUnion.mpr ⟨m, hn.le⟩
 
 theorem measure_spanningLevel_lt_top (hν : IsLevyMeasure ν) (n : ℕ) :
     ν (spanningLevel n) < ∞ := by

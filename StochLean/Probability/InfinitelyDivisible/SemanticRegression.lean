@@ -8,7 +8,15 @@ module
 public import StochLean.Probability.InfinitelyDivisible.CompoundPoisson
 public import StochLean.Probability.InfinitelyDivisible.LevyKhintchine
 public import StochLean.Probability.InfinitelyDivisible.LevySemigroup
+public import StochLean.Probability.InfinitelyDivisible.NonnegativeLevyKhintchine
+public import StochLean.Probability.InfinitelyDivisible.NonnegativeExtraction
+public import StochLean.Probability.InfinitelyDivisible.WeakClosure
+public import StochLean.Probability.InfinitelyDivisible.PowerLimits
+public import StochLean.Probability.InfinitelyDivisible.CanonicalRootAsymptotics
 public import StochLean.Probability.InfinitelyDivisible.Stable
+public import StochLean.Probability.InfinitelyDivisible.StableBounds
+public import StochLean.Probability.InfinitelyDivisible.StableExponent
+public import StochLean.Probability.InfinitelyDivisible.BoundedSupport
 public import StochLean.Probability.Process.StationaryIndependentIncrements
 
 /-! Semantic compile-time guards for the LSII law layer. -/
@@ -113,11 +121,74 @@ example {α : ℝ} {μ : ProbabilityMeasure ℝ}
   hμ.isStableInBroadSense
 
 example {α : ℝ} {μ : ProbabilityMeasure ℝ}
+    (hμ : ProbabilityMeasure.IsStableInBroadSenseWithIndex α μ) : α ≤ 2 :=
+  ProbabilityTheory.IsStableInBroadSenseWithIndex.index_le_two hμ
+
+example {α : ℝ} {μ : ProbabilityMeasure ℝ} (hα : 2 < α) :
+    ¬ ProbabilityMeasure.IsStableInBroadSenseWithIndex α μ := by
+  intro hμ
+  exact (not_lt_of_ge
+    (ProbabilityTheory.IsStableInBroadSenseWithIndex.index_le_two hμ)) hα
+
+example {α : ℝ} {μ : ProbabilityMeasure ℝ}
     (hμ : ProbabilityMeasure.IsStableWithIndex α μ) :
     ProbabilityMeasure.IsStable μ :=
   hμ.isStable
 
 example : signedLogAbs 0 = 0 := signedLogAbs_zero
+
+example : stableSignedLogTerm 0 = 0 := stableSignedLogTerm_zero
+
+example (cMinus cPlus : ℝ) : stableExponentClosedForm 1 cMinus cPlus 0 = 0 :=
+  stableExponentClosedForm_zero 1 cMinus cPlus
+
+example (cMinus cPlus : ℝ) : Continuous (stableExponentAtOne cMinus cPlus) :=
+  continuous_stableExponentAtOne cMinus cPlus
+
+example (η : LevyTriplet) (d : ℝ) :
+    (η.affine 1 d zero_lt_one).jumpMeasure = η.jumpMeasure :=
+  η.affine_one_jumpMeasure d
+
+example (η : LevyTriplet) {d : ℝ} (hd : d ≠ 0) :
+    (η.affine 1 d zero_lt_one).exponent ≠ η.exponent :=
+  η.exponent_affine_one_ne hd
+
+example {μ : ProbabilityMeasure ℝ} (hμ : μ.IsStableInBroadSense) :
+    ∃ α : ℝ, α ∈ Set.Ioc 0 2 ∧ μ.IsStableInBroadSenseWithIndex α :=
+  IsStableInBroadSense.exists_index hμ
+
+example {μ : ℕ → ProbabilityMeasure ℝ} {μ₀ : ProbabilityMeasure ℝ}
+    (hμ : ∀ n, (μ n).IsInfinitelyDivisible)
+    (hlim : Tendsto μ atTop (nhds μ₀)) : μ₀.IsInfinitelyDivisible :=
+  isInfinitelyDivisible_of_tendsto hμ hlim
+
+example {μ : ProbabilityMeasure ℝ} (hμ : μ.IsInfinitelyDivisible)
+    {a b : ℝ} (hbound : ∀ᵐ x ∂(μ : Measure ℝ), x ∈ Set.Icc a b) :
+    ∃ c : ℝ, μ = ProbabilityMeasure.pointMass c :=
+  hμ.eq_pointMass_of_boundedSupport hbound
+
+example {ρ : ℕ → ProbabilityMeasure ℝ} {φ : ℝ → ℂ}
+    (h : HasConvolutionPowerLimit ρ φ) (t : ℝ) : φ t ≠ 0 :=
+  h.nonvanishing t
+
+example {μ : ProbabilityMeasure ℝ} (hμ : μ.IsInfinitelyDivisible) (t : ℝ) :
+    Tendsto (fun n => canonicalRootLinearization hμ n t) atTop (𝓝 (hμ.exponent t)) :=
+  ProbabilityMeasure.IsInfinitelyDivisible.tendsto_canonicalRootLinearization hμ t
+
+example {η ξ : NonnegativeLevyPair} {μ : ProbabilityMeasure ℝ}
+    (hη : η.toLevyTriplet.Represents μ) (hξ : ξ.toLevyTriplet.Represents μ) : η = ξ :=
+  NonnegativeLevyPair.eq_of_represents hη hξ
+
+example {μ : ProbabilityMeasure ℝ} :
+    μ.IsInfinitelyDivisible ∧ μ.IsNonnegativeLaw ↔
+      ∃! η : NonnegativeLevyPair, η.toLevyTriplet.Represents μ :=
+  nonnegativeLevyKhintchine_iff
+
+example {μ : ℕ → ProbabilityMeasure ℝ} {μ₀ : ProbabilityMeasure ℝ}
+    (hμ : ∀ n, (μ n).IsInfinitelyDivisible)
+    (hlim : Tendsto μ atTop (nhds μ₀)) (t : ℝ) :
+    charFun (μ₀ : Measure ℝ) t ≠ 0 :=
+  charFun_ne_zero_of_tendsto_infinitelyDivisible hμ hlim t
 
 variable {X : ℝ≥0 → Ω → G} {P : Measure Ω} {ν : ℝ≥0 → ProbabilityMeasure G}
 

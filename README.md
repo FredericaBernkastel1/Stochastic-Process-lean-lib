@@ -87,14 +87,18 @@ relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-09-01**. The first six reviewed handoff milestones are implemented and
+Status last updated: **2026-09-02**. The first six reviewed handoff milestones are implemented and
 audited: **Klenke Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale
 Calculus and Exchangeability**, **Measure Convergence and Projective Construction**, and the two
 consolidated **Markov Processes** specifications. The **Fourier/Classical Limit Theorems** and
-**Brownian Motion/Path Regularity** handoffs are also complete. The **Levy/SII** handoff remains
-under implementation: its law algebra, compound-Poisson, Levy-measure, triplet transformation,
-and continuous-semigroup foundations are present, while the remaining theorem chain is tracked in
-`SOURCE_MAP.md` and is intentionally not reported as completed work.
+**Brownian Motion/Path Regularity** handoffs are also complete. The mathematically valid boundary
+of the **Levy/SII** handoff is now implemented and audited: this includes convolution/SII
+construction, compound-Poisson approximation, real and nonnegative Levy--Khintchine theorems,
+continuous semigroups, weak closure, affine-triplet transformations, full real stable index and
+jump-measure classification, the Gaussian endpoint, and the bounded-support regression. Remark
+16.23 is recorded with its safe `alpha = 1` branch and explicit location correction; the printed
+claim that the Levy measure alone fixes the exponent is rejected because translations preserve
+that measure while adding `i*d*t`.
 
 ### Formalized mathematical definitions
 
@@ -136,8 +140,10 @@ and continuous-semigroup foundations are present, while the remaining theorem ch
 - Probability-law convolution, convolution powers, basic and continuous convolution-semigroup
   predicates, stationary independent increments, and increment-law families.
 - Law-first infinite divisibility, zero-safe finite-intensity compound Poisson laws, minimal Levy
-  measures with derived sigma-finiteness, fixed-truncation Levy triplets, and broad/strict/indexed
-  stable-law predicates.
+  measures with derived sigma-finiteness, fixed-truncation Levy triplets, internal weighted-root
+  triplet extraction, deterministic/positive-jump Levy pairs, continuous Levy semigroups, and
+  broad/strict/indexed stable-law predicates; two-sided power-law stable Levy measures; safe
+  Gamma/trigonometric stable-exponent expressions with an explicit location parameter.
 - Canonical Mathlib pre-Brownian/Brownian predicates; a project-owned continuous canonical
   realization; common-event local Holder regularity below one half; Brownian bridges and
   deterministic Wiener bridges; Gaussian increment laws; zero-safe time inversion; measurable
@@ -167,15 +173,18 @@ and continuous-semigroup foundations are present, while the remaining theorem ch
 - Brownian strong Markov theorem for finite future cylinders.
 - Brownian reflection principle.
 - Levy's arcsine law for the last zero before a deterministic horizon.
+- Levy--Khintchine theorem for real infinitely divisible laws, including existence, uniqueness,
+  and the nonnegative-law specialization.
 
 The structural de Finetti theorem and Lévy downward convergence are maintained inside this
 repository under `StochLean/Internal/Exchangeability`; the public API remains the smaller
 StochLean facade. The implementation is an attribution-preserving internal port of the audited
-Apache-2.0 proof lineage recorded in that directory. The previously audited Kolmogorov-extension
-source at Apache-2.0 commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25` is being migrated to the
-same internal-source model so that the final package graph contains no non-Mathlib Lean dependency.
+Apache-2.0 proof lineage recorded in that directory. The audited Kolmogorov-extension proof
+closure is likewise maintained under `StochLean/Internal/KolmogorovExtension`. Brownian
+regularity support is internal under `StochLean/Internal/Brownian`. The final Lake graph contains
+no Lean dependency other than Mathlib.
 
-All declarations in the six completed milestones build without placeholders. The former external
+All declarations in the completed milestones build without placeholders. The former external
 `exchangeability` and `checkdecls` dependency has been removed: reverse-martingale convergence,
 contractability, conditional independence, directing measures, finite-product factorization, and
 de Finetti now compile as project-owned modules against the pinned Mathlib v4.33.0 baseline.

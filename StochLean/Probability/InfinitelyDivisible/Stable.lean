@@ -113,13 +113,13 @@ def IsStable (μ : ProbabilityMeasure ℝ) : Prop :=
 
 /-- Broad stability with the prescribed index scaling `n^(1/α)`. -/
 def IsStableInBroadSenseWithIndex (α : ℝ) (μ : ProbabilityMeasure ℝ) : Prop :=
-  0 < α ∧ α ≤ 2 ∧ IsNonDirac μ ∧
+  0 < α ∧ IsNonDirac μ ∧
     ∀ n : ℕ, 0 < n → ∃ d : ℝ,
       convPow μ n = affineMap ((n : ℝ) ^ (1 / α)) d μ
 
 /-- Strict indexed stability. -/
 def IsStableWithIndex (α : ℝ) (μ : ProbabilityMeasure ℝ) : Prop :=
-  0 < α ∧ α ≤ 2 ∧ IsNonDirac μ ∧
+  0 < α ∧ IsNonDirac μ ∧
     ∀ n : ℕ, 0 < n →
       convPow μ n = affineMap ((n : ℝ) ^ (1 / α)) 0 μ
 
@@ -132,23 +132,23 @@ theorem IsStable.isStableInBroadSense {μ : ProbabilityMeasure ℝ} (hμ : IsSta
 
 theorem IsStableWithIndex.isStableInBroadSenseWithIndex {α : ℝ} {μ : ProbabilityMeasure ℝ}
     (hμ : IsStableWithIndex α μ) : IsStableInBroadSenseWithIndex α μ := by
-  refine ⟨hμ.1, hμ.2.1, hμ.2.2.1, ?_⟩
+  refine ⟨hμ.1, hμ.2.1, ?_⟩
   intro n hn
-  exact ⟨0, hμ.2.2.2 n hn⟩
+  exact ⟨0, hμ.2.2 n hn⟩
 
 theorem IsStableInBroadSenseWithIndex.isStableInBroadSense
     {α : ℝ} {μ : ProbabilityMeasure ℝ} (hμ : IsStableInBroadSenseWithIndex α μ) :
     IsStableInBroadSense μ := by
-  refine ⟨hμ.2.2.1, ?_⟩
+  refine ⟨hμ.2.1, ?_⟩
   intro n hn
-  obtain ⟨d, hd⟩ := hμ.2.2.2 n hn
+  obtain ⟨d, hd⟩ := hμ.2.2 n hn
   refine ⟨(n : ℝ) ^ (1 / α), Real.rpow_pos_of_pos (by positivity) _, d, hd⟩
 
 theorem IsStableWithIndex.isStable {α : ℝ} {μ : ProbabilityMeasure ℝ}
     (hμ : IsStableWithIndex α μ) : IsStable μ := by
-  refine ⟨hμ.2.2.1, ?_⟩
+  refine ⟨hμ.2.1, ?_⟩
   intro n hn
-  exact ⟨(n : ℝ) ^ (1 / α), Real.rpow_pos_of_pos (by positivity) _, hμ.2.2.2 n hn⟩
+  exact ⟨(n : ℝ) ^ (1 / α), Real.rpow_pos_of_pos (by positivity) _, hμ.2.2 n hn⟩
 
 /-- Every nondegenerate stable law in the broad sense is infinitely divisible. The root is the
 inverse affine image of the stability witness, with the translation divided among the `n`
@@ -173,6 +173,60 @@ theorem IsStable.isInfinitelyDivisible {μ : ProbabilityMeasure ℝ} (hμ : IsSt
     IsInfinitelyDivisible μ :=
   hμ.isStableInBroadSense.isInfinitelyDivisible
 
+/-- Algebraic `α ≠ 1` centering step from Lemma 16.25: whenever the broad-stability
+centerings have the common form `b * (n - n^(1/α))`, translating by `-b` produces a strictly
+stable law.  The premise is deliberately the centering identity obtained from triplet scaling;
+the conclusion contains no extra distributional assumption. -/
+theorem IsStableInBroadSenseWithIndex.shift_isStableWithIndex
+    {α b : ℝ} {μ : ProbabilityMeasure ℝ}
+    (hμ : IsStableInBroadSenseWithIndex α μ)
+    (hcenter : ∀ n : ℕ, 0 < n → ∃ d : ℝ,
+      convPow μ n = affineMap ((n : ℝ) ^ (1 / α)) d μ ∧
+        d = b * ((n : ℝ) - (n : ℝ) ^ (1 / α))) :
+    IsStableWithIndex α (affineMap 1 (-b) μ) := by
+  refine ⟨hμ.1, ?_, ?_⟩
+  · intro x hx
+    apply hμ.2.1 (x + b)
+    have hmap := congrArg (affineMap 1 b) hx
+    simpa [affineMap_comp] using hmap
+  · intro n hn
+    obtain ⟨d, hpow, hd⟩ := hcenter n hn
+    let a : ℝ := (n : ℝ) ^ (1 / α)
+    calc
+      convPow (affineMap 1 (-b) μ) n =
+          affineMap 1 ((n : ℝ) * (-b)) (convPow μ n) :=
+        convPow_affineMap 1 (-b) μ n
+      _ = affineMap 1 ((n : ℝ) * (-b)) (affineMap a d μ) := by
+        rw [hpow]
+      _ = affineMap a (d - (n : ℝ) * b) μ := by
+        rw [affineMap_comp]
+        dsimp [a]
+        congr 2 <;> ring
+      _ = affineMap a (-a * b) μ := by
+        congr 2
+        rw [hd]
+        dsimp [a]
+        ring
+      _ = affineMap a 0 (affineMap 1 (-b) μ) := by
+        rw [affineMap_comp]
+        congr 2 <;> ring
+
+/-- The logarithmic `α = 1` branch becomes strict when its asymmetry coefficient vanishes. -/
+theorem IsStableInBroadSenseWithIndex.one_isStableWithIndex_of_logCenter
+    {μ : ProbabilityMeasure ℝ}
+    (hμ : IsStableInBroadSenseWithIndex 1 μ) (cPlus cMinus : ℝ)
+    (hsymmetric : cPlus = cMinus)
+    (hcenter : ∀ n : ℕ, 0 < n →
+      convPow μ n = affineMap (n : ℝ)
+        ((cPlus - cMinus) * n * Real.log n) μ) :
+    IsStableWithIndex 1 μ := by
+  refine ⟨by norm_num, hμ.2.1, ?_⟩
+  intro n hn
+  rw [hcenter n hn, hsymmetric]
+  simp only [sub_self, zero_mul]
+  congr 2
+  rw [show (1 / (1 : ℝ)) = 1 by norm_num, Real.rpow_one]
+
 end MeasureTheory.ProbabilityMeasure
 
 namespace ProbabilityTheory
@@ -192,23 +246,21 @@ two canonically transformed triplets. -/
 theorem nsmul_eq_affine_of_convPow_eq_affine
     {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
     (n : ℕ) (a d : ℝ) (ha : 0 < a)
-    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
     (hη : η.Represents μ)
     (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
     η.nsmul n = η.affine a d ha := by
   have hn := hη.nsmul n
   have haff := hη.affine a d ha
   rw [hpow] at hn
-  exact hunique.unique hn haff
+  exact hn.unique haff
 
 theorem gaussian_scaling_of_convPow_eq_affine
     {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
     (n : ℕ) (a d : ℝ) (ha : 0 < a)
-    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
     (hη : η.Represents μ)
     (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
     (a ^ 2 - n) * (η.gaussianVariance : ℝ) = 0 := by
-  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hunique hη hpow
+  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hη hpow
   have hvariance := congrArg (fun ξ : LevyTriplet => (ξ.gaussianVariance : ℝ)) htriplet
   simp only [nsmul_gaussianVariance, affine_gaussianVariance, NNReal.coe_mul,
     NNReal.coe_pow, Real.coe_toNNReal _ ha.le, nsmul_eq_mul] at hvariance
@@ -221,24 +273,88 @@ theorem gaussian_scaling_of_convPow_eq_affine
 theorem jumpMeasure_scaling_of_convPow_eq_affine
     {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
     (n : ℕ) (a d : ℝ) (ha : 0 < a)
-    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
     (hη : η.Represents μ)
     (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
     (n : ℝ≥0) • η.jumpMeasure = η.jumpMeasure.map (fun x => a * x) := by
-  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hunique hη hpow
+  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hη hpow
   exact congrArg LevyTriplet.jumpMeasure htriplet
 
 theorem drift_scaling_of_convPow_eq_affine
     {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
     (n : ℕ) (a d : ℝ) (ha : 0 < a)
-    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
     (hη : η.Represents μ)
     (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
     n * η.drift = a * η.drift + d +
       ∫ x, affineDriftIntegrand a x ∂η.jumpMeasure := by
-  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hunique hη hpow
+  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hη hpow
   simpa only [nsmul_drift, affine_drift, nsmul_eq_mul] using
     congrArg LevyTriplet.drift htriplet
+
+/-- In the nondegenerate Gaussian branch, triplet uniqueness forces the affine scale of an
+`n`-fold convolution power to be `sqrt n`.  This is the Gaussian alternative in Klenke's
+Lemma 16.25, stated independently of stable-law classification so it is reusable. -/
+theorem scale_eq_sqrt_of_convPow_eq_affine_of_gaussianVariance_pos
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ)
+    (hgaussian : 0 < (η.gaussianVariance : ℝ)) :
+    a = Real.sqrt n := by
+  have hscale := gaussian_scaling_of_convPow_eq_affine n a d ha hη hpow
+  have ha2 : a ^ 2 = (n : ℝ) := by
+    exact sub_eq_zero.mp ((mul_eq_zero.mp hscale).resolve_right hgaussian.ne')
+  have hsqrt_sq : (Real.sqrt (n : ℝ)) ^ 2 = (n : ℝ) := by
+    simpa using Real.sq_sqrt (Nat.cast_nonneg n)
+  nlinarith [Real.sqrt_nonneg (n : ℝ)]
+
+/-- If the jump measure vanishes, the drift component of affine stability has the exact Gaussian
+centering `b * (n - a)`.  In particular the truncation correction disappears for the mathematical
+reason that the jump integral is zero, not because it was omitted from the affine API. -/
+theorem shift_eq_drift_mul_sub_of_convPow_eq_affine_of_jumpMeasure_eq_zero
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ)
+    (hjump : η.jumpMeasure = 0) :
+    d = η.drift * ((n : ℝ) - a) := by
+  have hdrift := drift_scaling_of_convPow_eq_affine n a d ha hη hpow
+  rw [hjump] at hdrift
+  simp only [MeasureTheory.integral_zero_measure, add_zero] at hdrift
+  linarith
+
+/-- Complete Gaussian/no-jump branch of Lemma 16.25. -/
+theorem gaussianBranch_of_convPow_eq_affine
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ)
+    (hgaussian : 0 < (η.gaussianVariance : ℝ)) (hjump : η.jumpMeasure = 0) :
+    a = Real.sqrt n ∧ d = η.drift * ((n : ℝ) - Real.sqrt n) := by
+  have haeq := scale_eq_sqrt_of_convPow_eq_affine_of_gaussianVariance_pos
+    n a d ha hη hpow hgaussian
+  refine ⟨haeq, ?_⟩
+  simpa [haeq] using
+    shift_eq_drift_mul_sub_of_convPow_eq_affine_of_jumpMeasure_eq_zero
+      n a d ha hη hpow hjump
+
+/-- The Gaussian component of a nondegenerate indexed stable law forces the stable index to be
+exactly two.  This is the index-identification part of the Gaussian branch of Theorem 16.22. -/
+theorem index_eq_two_of_gaussianVariance_pos
+    {α : ℝ} {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (hstable : ProbabilityMeasure.IsStableInBroadSenseWithIndex α μ)
+    (hη : η.Represents μ) (hgaussian : 0 < (η.gaussianVariance : ℝ)) :
+    α = 2 := by
+  obtain ⟨d, hpow⟩ := hstable.2.2 2 (by norm_num)
+  have hscale := scale_eq_sqrt_of_convPow_eq_affine_of_gaussianVariance_pos
+    2 ((2 : ℝ) ^ (1 / α)) d (Real.rpow_pos_of_pos (by norm_num) _) hη hpow hgaussian
+  have hexponents : 1 / α = 1 / (2 : ℝ) := by
+    apply (Real.strictMono_rpow_of_base_gt_one (b := (2 : ℝ)) (by norm_num)).injective
+    change (2 : ℝ) ^ (1 / α) = (2 : ℝ) ^ (1 / (2 : ℝ))
+    rw [← Real.sqrt_eq_rpow]
+    exact hscale
+  have hα : α ≠ 0 := ne_of_gt hstable.1
+  field_simp at hexponents
+  exact hexponents.symm
 
 end LevyTriplet
 

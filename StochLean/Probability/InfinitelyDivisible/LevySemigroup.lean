@@ -105,6 +105,96 @@ theorem exists_continuousConvolutionSemigroup_through
   funext t
   rw [hscaled 1 t, nnrealSMul_one, hη t]
 
+/-- A canonical represented law chosen from the project-internal real Lévy--Khintchine existence
+theorem. -/
+noncomputable def law (η : LevyTriplet) : ProbabilityMeasure ℝ :=
+  Classical.choose η.exists_represents
+
+theorem represents_law (η : LevyTriplet) : η.Represents η.law :=
+  Classical.choose_spec η.exists_represents
+
+/-- Canonical nonnegative-time law family obtained by scaling a triplet. -/
+noncomputable def canonicalScaledLaw (η : LevyTriplet) (t : ℝ≥0) : ProbabilityMeasure ℝ :=
+  (η.nnrealSMul t).law
+
+theorem hasScaledLaws_canonicalScaledLaw (η : LevyTriplet) :
+    η.HasScaledLaws η.canonicalScaledLaw :=
+  fun t ↦ represents_law (η.nnrealSMul t)
+
+theorem isContinuousConvolutionSemigroup_canonicalScaledLaw (η : LevyTriplet) :
+    IsContinuousConvolutionSemigroup η.canonicalScaledLaw :=
+  η.hasScaledLaws_canonicalScaledLaw.isContinuousConvolutionSemigroup
+
+theorem canonicalScaledLaw_one_eq_of_represents
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ} (hη : η.Represents μ) :
+    η.canonicalScaledLaw 1 = μ := by
+  apply ProbabilityMeasure.toMeasure_injective
+  apply Measure.ext_of_charFun
+  funext t
+  rw [η.hasScaledLaws_canonicalScaledLaw 1 t, nnrealSMul_one, hη t]
+
+/-- Unconditional triplet form of Corollary 16.10. -/
+theorem exists_continuousConvolutionSemigroup_through_of_represents
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ} (hη : η.Represents μ) :
+    ∃ ν : ℝ≥0 → ProbabilityMeasure ℝ,
+      IsContinuousConvolutionSemigroup ν ∧ ν 1 = μ :=
+  ⟨η.canonicalScaledLaw, η.isContinuousConvolutionSemigroup_canonicalScaledLaw,
+    η.canonicalScaledLaw_one_eq_of_represents hη⟩
+
+theorem isInfinitelyDivisible_law (η : LevyTriplet) :
+    ProbabilityMeasure.IsInfinitelyDivisible η.law := by
+  rw [← η.canonicalScaledLaw_one_eq_of_represents η.represents_law]
+  exact η.isContinuousConvolutionSemigroup_canonicalScaledLaw.isConvolutionSemigroup
+    |>.isInfinitelyDivisible 1
+
+/-- Every law represented by a Lévy triplet is infinitely divisible. -/
+theorem Represents.isInfinitelyDivisible {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (hη : η.Represents μ) : ProbabilityMeasure.IsInfinitelyDivisible μ := by
+  rw [← η.canonicalScaledLaw_one_eq_of_represents hη]
+  exact η.isContinuousConvolutionSemigroup_canonicalScaledLaw.isConvolutionSemigroup
+    |>.isInfinitelyDivisible 1
+
+end LevyTriplet
+
+namespace LevyTriplet
+
+/-- Canonical scaled law for triplets whose jump measure is finite. -/
+noncomputable def finiteScaledLaw (η : LevyTriplet) [IsFiniteMeasure η.jumpMeasure]
+    (t : ℝ≥0) : ProbabilityMeasure ℝ := by
+  letI : IsFiniteMeasure (η.nnrealSMul t).jumpMeasure := by
+    simp only [nnrealSMul]
+    infer_instance
+  exact (η.nnrealSMul t).finiteJumpLaw
+
+theorem hasScaledLaws_finiteScaledLaw (η : LevyTriplet)
+    [IsFiniteMeasure η.jumpMeasure] :
+    η.HasScaledLaws η.finiteScaledLaw := by
+  intro t
+  letI : IsFiniteMeasure (η.nnrealSMul t).jumpMeasure := by
+    simp only [nnrealSMul]
+    infer_instance
+  exact represents_finiteJumpLaw (η.nnrealSMul t)
+
+theorem isContinuousConvolutionSemigroup_finiteScaledLaw (η : LevyTriplet)
+    [IsFiniteMeasure η.jumpMeasure] :
+    IsContinuousConvolutionSemigroup η.finiteScaledLaw :=
+  η.hasScaledLaws_finiteScaledLaw.isContinuousConvolutionSemigroup
+
+theorem finiteScaledLaw_one (η : LevyTriplet) [IsFiniteMeasure η.jumpMeasure] :
+    η.finiteScaledLaw 1 = η.finiteJumpLaw := by
+  apply ProbabilityMeasure.toMeasure_injective
+  apply Measure.ext_of_charFun
+  funext t
+  rw [η.hasScaledLaws_finiteScaledLaw 1 t, nnrealSMul_one,
+    represents_finiteJumpLaw η t]
+
+theorem isInfinitelyDivisible_finiteJumpLaw (η : LevyTriplet)
+    [IsFiniteMeasure η.jumpMeasure] :
+    ProbabilityMeasure.IsInfinitelyDivisible η.finiteJumpLaw := by
+  rw [← η.finiteScaledLaw_one]
+  exact η.isContinuousConvolutionSemigroup_finiteScaledLaw.isConvolutionSemigroup
+    |>.isInfinitelyDivisible 1
+
 end LevyTriplet
 
 namespace CompoundPoisson

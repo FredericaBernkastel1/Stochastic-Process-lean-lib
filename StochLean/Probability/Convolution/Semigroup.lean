@@ -7,7 +7,9 @@ module
 
 public import Mathlib.MeasureTheory.Group.Convolution
 public import Mathlib.MeasureTheory.Measure.FiniteMeasureProd
+public import Mathlib.MeasureTheory.Measure.Prod
 public import Mathlib.MeasureTheory.Measure.LevyConvergence
+public import Mathlib.MeasureTheory.Measure.Portmanteau
 public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 public import Mathlib.MeasureTheory.Measure.CharacteristicFunction.TaylorExpansion
 public import Mathlib.Topology.Connected.Clopen
@@ -125,6 +127,127 @@ theorem convPow_add (μ : ProbabilityMeasure G) (m n : ℕ) :
   | succ n ih =>
       rw [Nat.add_succ, convPow_succ, convPow_succ, ih, conv_assoc]
 
+section OrderedReal
+
+/-- A real probability law is nonnegative when it gives full mass to `[0, ∞)`. -/
+def IsNonnegativeLaw (μ : ProbabilityMeasure ℝ) : Prop :=
+  (μ : Measure ℝ) (Set.Ici 0) = 1
+
+theorem isNonnegativeLaw_iff_ae (μ : ProbabilityMeasure ℝ) :
+    IsNonnegativeLaw μ ↔ ∀ᵐ x ∂(μ : Measure ℝ), 0 ≤ x := by
+  constructor
+  · intro h
+    apply (ae_mem_iff_measure_eq measurableSet_Ici.nullMeasurableSet).2
+    simpa [IsNonnegativeLaw] using h
+  · intro h
+    have hmass := (ae_mem_iff_measure_eq measurableSet_Ici.nullMeasurableSet).1 h
+    simpa [IsNonnegativeLaw] using hmass
+
+@[simp]
+theorem isNonnegativeLaw_pointMass_iff (x : ℝ) :
+    IsNonnegativeLaw (pointMass x) ↔ 0 ≤ x := by
+  rw [isNonnegativeLaw_iff_ae]
+  simp [ProbabilityMeasure.coe_pointMass]
+
+/-- Convolution preserves nonnegative support. -/
+theorem IsNonnegativeLaw.conv {μ ν : ProbabilityMeasure ℝ}
+    (hμ : IsNonnegativeLaw μ) (hν : IsNonnegativeLaw ν) :
+    IsNonnegativeLaw (conv μ ν) := by
+  rw [isNonnegativeLaw_iff_ae] at hμ hν ⊢
+  rw [ProbabilityMeasure.coe_conv]
+  have hpair : ∀ᵐ z ∂(μ : Measure ℝ).prod (ν : Measure ℝ), 0 ≤ z.1 + z.2 := by
+    rw [Measure.ae_prod_iff_ae_ae
+      (by measurability : MeasurableSet {z : ℝ × ℝ | 0 ≤ z.1 + z.2})]
+    filter_upwards [hμ] with x hx
+    filter_upwards [hν] with y hy
+    exact add_nonneg hx hy
+  exact (ae_map_iff (by fun_prop : AEMeasurable (fun z : ℝ × ℝ => z.1 + z.2)
+    ((μ : Measure ℝ).prod (ν : Measure ℝ))) (by measurability)).2 hpair
+
+theorem IsNonnegativeLaw.convPow {μ : ProbabilityMeasure ℝ}
+    (hμ : IsNonnegativeLaw μ) (n : ℕ) : IsNonnegativeLaw (convPow μ n) := by
+  induction n with
+  | zero => simp [convPow]
+  | succ n ih => exact ih.conv hμ
+
+/-- The probability that two negative real random variables have a negative sum bounds below
+the negative half-line mass of their convolution. -/
+theorem mul_measure_Iio_zero_le_conv_Iio_zero (μ ν : ProbabilityMeasure ℝ) :
+    (μ : Measure ℝ) (Set.Iio 0) * (ν : Measure ℝ) (Set.Iio 0) ≤
+      (conv μ ν : Measure ℝ) (Set.Iio 0) := by
+  rw [coe_conv]
+  have hsub : Set.Iio (0 : ℝ) ×ˢ Set.Iio (0 : ℝ) ⊆
+      (fun z : ℝ × ℝ => z.1 + z.2) ⁻¹' Set.Iio 0 := by
+    intro z hz
+    change z.1 < 0 ∧ z.2 < 0 at hz
+    change z.1 + z.2 < 0
+    exact add_neg hz.1 hz.2
+  calc
+    (μ : Measure ℝ) (Set.Iio 0) * (ν : Measure ℝ) (Set.Iio 0) =
+        ((μ : Measure ℝ).prod (ν : Measure ℝ))
+          (Set.Iio (0 : ℝ) ×ˢ Set.Iio (0 : ℝ)) := (Measure.prod_prod _ _).symm
+    _ ≤ ((μ : Measure ℝ).prod (ν : Measure ℝ))
+          ((fun z : ℝ × ℝ => z.1 + z.2) ⁻¹' Set.Iio 0) := measure_mono hsub
+    _ = Measure.conv (μ : Measure ℝ) (ν : Measure ℝ) (Set.Iio 0) := by
+      rw [Measure.conv, Measure.map_apply (by fun_prop) measurableSet_Iio]
+
+/-- Positive negative-half-line mass is preserved by convolution. -/
+theorem measure_Iio_zero_pos_conv {μ ν : ProbabilityMeasure ℝ}
+    (hμ : 0 < (μ : Measure ℝ) (Set.Iio 0))
+    (hν : 0 < (ν : Measure ℝ) (Set.Iio 0)) :
+    0 < (conv μ ν : Measure ℝ) (Set.Iio 0) := by
+  exact (ENNReal.mul_pos hμ.ne' hν.ne').trans_le
+    (mul_measure_Iio_zero_le_conv_Iio_zero μ ν)
+
+/-- A positive convolution power has positive negative-half-line mass whenever its base does. -/
+theorem measure_Iio_zero_pos_convPow {μ : ProbabilityMeasure ℝ}
+    (hμ : 0 < (μ : Measure ℝ) (Set.Iio 0)) {n : ℕ} (hn : 0 < n) :
+    0 < (ProbabilityMeasure.convPow μ n : Measure ℝ) (Set.Iio 0) := by
+  induction n with
+  | zero => simp at hn
+  | succ n ih =>
+      by_cases hn0 : n = 0
+      · subst n
+        simpa using hμ
+      · rw [convPow_succ]
+        exact measure_Iio_zero_pos_conv (ih (Nat.pos_of_ne_zero hn0)) hμ
+
+/-- If a positive convolution power is supported on the nonnegative half-line, then so is its
+base law. -/
+theorem IsNonnegativeLaw.of_convPow {μ : ProbabilityMeasure ℝ} {n : ℕ}
+    (hn : 0 < n) (hpow : IsNonnegativeLaw (ProbabilityMeasure.convPow μ n)) :
+    IsNonnegativeLaw μ := by
+  rw [isNonnegativeLaw_iff_ae]
+  rw [isNonnegativeLaw_iff_ae] at hpow
+  have hpowzero : (ProbabilityMeasure.convPow μ n : Measure ℝ) (Set.Iio 0) = 0 := by
+    rw [show Set.Iio (0 : ℝ) = {x | x < 0} by ext x; simp]
+    simpa only [not_le] using (ae_iff.mp hpow)
+  by_contra h
+  have hpos : 0 < (μ : Measure ℝ) (Set.Iio 0) := pos_iff_ne_zero.mpr (by
+    intro hz
+    apply h
+    rw [ae_iff]
+    rw [show {x : ℝ | ¬ 0 ≤ x} = Set.Iio 0 by ext x; simp]
+    exact hz)
+  exact (measure_Iio_zero_pos_convPow hpos hn).ne' hpowzero
+
+/-- Nonnegative support is closed under weak convergence of probability laws. -/
+theorem IsNonnegativeLaw.tendsto {μn : ℕ → ProbabilityMeasure ℝ}
+    {μ : ProbabilityMeasure ℝ} (hμn : Tendsto μn atTop (𝓝 μ))
+    (hn : ∀ n, IsNonnegativeLaw (μn n)) : IsNonnegativeLaw μ := by
+  have hport := ProbabilityMeasure.limsup_measure_closed_le_of_tendsto hμn
+    (F := Set.Ici (0 : ℝ)) isClosed_Ici
+  have hseq : (fun n => (μn n : Measure ℝ) (Set.Ici 0)) = (fun _ : ℕ => (1 : ℝ≥0∞)) :=
+    funext hn
+  rw [hseq, limsup_const] at hport
+  apply le_antisymm _ hport
+  calc
+    (μ : Measure ℝ) (Set.Ici 0) ≤ (μ : Measure ℝ) Set.univ :=
+      measure_mono (Set.subset_univ _)
+    _ = 1 := by simp
+
+end OrderedReal
+
 end MeasureTheory.ProbabilityMeasure
 
 namespace ProbabilityTheory
@@ -136,6 +259,19 @@ variable {T G : Type*} [Add T] [AddCommMonoid G] [MeasurableSpace G] [Measurable
 /-- The law-level convolution semigroup property, with no identity or continuity bundled in. -/
 def IsConvolutionSemigroup (ν : T → ProbabilityMeasure G) : Prop :=
   ∀ s t, ν (s + t) = ProbabilityMeasure.conv (ν s) (ν t)
+
+/-- A nonnegative real convolution semigroup is a basic semigroup all of whose laws are supported
+on `[0, ∞)`.  Continuity remains a theorem and is not bundled into this definition. -/
+def IsNonnegativeConvolutionSemigroup (ν : ℝ≥0 → ProbabilityMeasure ℝ) : Prop :=
+  IsConvolutionSemigroup ν ∧ ∀ t, ProbabilityMeasure.IsNonnegativeLaw (ν t)
+
+theorem IsNonnegativeConvolutionSemigroup.isConvolutionSemigroup
+    {ν : ℝ≥0 → ProbabilityMeasure ℝ} (hν : IsNonnegativeConvolutionSemigroup ν) :
+    IsConvolutionSemigroup ν := hν.1
+
+theorem IsNonnegativeConvolutionSemigroup.isNonnegativeLaw
+    {ν : ℝ≥0 → ProbabilityMeasure ℝ} (hν : IsNonnegativeConvolutionSemigroup ν) (t : ℝ≥0) :
+    ProbabilityMeasure.IsNonnegativeLaw (ν t) := hν.2 t
 
 theorem IsConvolutionSemigroup.add {ν : T → ProbabilityMeasure G}
     (hν : IsConvolutionSemigroup ν) (s t : T) :

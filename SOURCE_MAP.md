@@ -406,8 +406,11 @@ series, inclusive truncation, and the internal Exercise 6.1.4 dependency.
 # Levy and Stationary Independent Increments Foundations
 
 This is the current disposition of
-`StochLean_Levy_StationaryIndependentIncrements_Design_v0.1.pdf`. The milestone is **not
-complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain remain open.
+`StochLean_Levy_StationaryIndependentIncrements_Design_v0.1.pdf`. The implementation below is
+entirely project-owned and links only Mathlib.  The general and nonnegative real
+Levy--Khintchine chains, SII construction, weak closure, and real stable classification are
+closed. The package is complete at the mathematically valid document boundary; the printed
+Remark 16.23 shorthand is retained only with the required location normalization correction.
 
 ## Law and process foundations
 
@@ -415,15 +418,15 @@ complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain rem
 | --- | --- | --- |
 | Probability-law convolution and powers | Implemented | `Convolution/Semigroup.lean` closes Mathlib measure convolution in `ProbabilityMeasure` and proves associativity, commutativity, Dirac laws, and additive convolution powers. |
 | Basic/continuous convolution semigroups | Implemented foundation | The basic predicate contains only the semigroup law; the positive-time weak limit at zero is a separate refinement. |
-| Exercises 14.4.1--14.4.4 | Partially implemented | `convPow_root` gives the exact semigroup roots and `roots_tendsto_zero` proves their weak convergence to `δ₀`; general continuity propagation and nonnegative-support closure remain open. |
+| Exercises 14.4.1--14.4.4 | Implemented | Exact semigroup roots, weak convergence to `δ₀`, continuity propagation, and nonnegative-support closure are proved. |
 | SII predicate | Implemented | `Process/StationaryIndependentIncrements.lean` combines the existing `HasStationaryIncrements` and Mathlib `HasIndepIncrements` without a bundled Levy-process type. |
 | SII to convolution semigroup | Implemented | `HasStationaryIndependentIncrements.isConvolutionSemigroup` uses genuine increment independence and stationary laws. |
-| Semigroup to coordinate SII process | STILL-BLOCKED | The corrected `NNReal`/`Nat` projective construction through the StochLean KET facade remains to be implemented. |
+| Semigroup to coordinate SII process | Implemented | Project-owned finite-law consistency, KET projective construction, and genuine finite-family increment independence are in the three `StationaryIndependentIncrements*` construction modules. |
 | Infinite divisibility | Implemented foundation | Law-first positive-integer roots; every full-time convolution-semigroup marginal is infinitely divisible without a continuity assumption. |
 | Compound Poisson | Implemented foundation | Genuine Poisson mixture over convolution powers, explicit zero-rate law, and zero-safe `ofFiniteMeasure`; the latter recovers the rate/jump presentation on `r • μ`. |
 | Compound-Poisson intensity addition and ID | Implemented | `CompoundPoisson.law_add` proves the convolution law by Tonelli and Poisson addition; the induced convolution semigroup proves `CompoundPoisson.isInfinitelyDivisible`, including zero intensity. |
-| Compound-Poisson characteristic function | STILL-BLOCKED | The mandatory exponential characteristic-function formula remains open. |
-| Compound-Poisson approximation of ID laws | STILL-BLOCKED | Klenke 16.5 and its weak-topology bridge remain open. |
+| Compound-Poisson characteristic function | Implemented | The exponential characteristic-function formula and zero-safe finite-measure form are proved internally. |
+| Compound-Poisson approximation of ID laws | Implemented | `Approximation.lean` proves the triplet and canonical-root compound-Poisson approximations and Theorem 16.5 forward direction. |
 
 ## Levy measures, triplets, and stable laws
 
@@ -432,13 +435,17 @@ complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain rem
 | Minimal Levy measure | Implemented foundation | Atom zero plus finite `lintegral (min 1 (x^2))`; `IsLevyMeasure.sigmaFinite` is derived from finite level sets and is not installed globally. |
 | Infinite-activity acceptance example | Implemented | `geometricLevyMeasure` is an explicit countable atomic measure with atoms tending to zero; `isLevyMeasure_geometricLevyMeasure` proves the truncated second moment is finite, while `geometricLevyMeasure_univ` proves its total mass is infinite. |
 | Fixed truncation and triplet data | Implemented foundation | `levyTruncation x = x` exactly on `abs x < 1`; `LevyTriplet` contains only Gaussian variance, drift, jump measure, and its Levy-measure proof. |
-| Levy exponent integrability | STILL-BLOCKED | Small-jump complex Taylor domination and large-jump finiteness are not yet proved. |
-| Real Levy--Khintchine existence and uniqueness | STILL-BLOCKED | No theorem is declared. Existence depends on FP-B07; uniqueness and nonvanishing/log corollaries remain downstream. |
-| ID to continuous semigroup and SII | STILL-BLOCKED | Corollary 16.10 awaits the unique triplet/exponent layer and the semigroup-to-process construction. |
+| Levy exponent integrability | Implemented | Internal complex Taylor bounds, small/large-jump integrability, truncation changes, finite restrictions, and convergence are proved. |
+| Real Levy--Khintchine existence and uniqueness | Implemented | `LevyKhintchine.lean` constructs laws from triplets; weighted-root and sine-truncation extraction prove the converse and uniqueness in `LevyKhintchineConverse.lean`. |
+| Nonnegative Levy--Khintchine | Implemented | `NonnegativeExtraction.lean` proves Prokhorov extraction, reconstructs the deterministic/positive-jump pair, preserves the complete exponent, and proves the source-facing unique-pair equivalence. |
+| ID to continuous semigroup and SII | Implemented | Time-scaled triplets yield continuous convolution semigroups and the projective coordinate SII law. |
 | Stable predicates | Implemented foundation | Non-Dirac broad, strict, and indexed predicates with genuinely positive affine scale; indexed-to-unindexed and strict-to-broad bridges; and zero-safe `signedLogAbs`. |
 | Broad stable implies ID | Implemented | `IsStableInBroadSense.isInfinitelyDivisible` explicitly inverts the positive affine witness and divides the translation among the positive number of convolution roots. |
-| Triplet affine transformation | STILL-BLOCKED | The exact truncation drift correction is not yet implemented; the current `nsmul` data operation is not claimed as Levy--Khintchine transformation theorem. |
-| Stable classification and explicit exponent | STILL-BLOCKED | Klenke 16.22--16.25, including the `alpha != 1` versus `alpha = 1` branches, remain open. |
+| Triplet affine transformation | Implemented | Positive affine maps include the exact truncation drift correction; representation, convolution-power scaling, Gaussian, jump, and drift identities follow from triplet uniqueness. |
+| Weak closure (Corollary 16.9) | Implemented | `WeakClosure.lean` constructs a continuous limiting exponent, realizes every positive-integer root by Levy continuity, and proves `isInfinitelyDivisible_of_tendsto`. |
+| Stable classification (Theorem 16.22) | Implemented | Broad stability yields an index in `(0,2]`; the Levy measure has the exact two-sided power-law density; `alpha = 2` is Gaussian; and `0 < alpha < 2` has a nontrivial jump coefficient. Exact affine centerings give the `alpha != 1` strict shift and the symmetric `alpha = 1` branch. |
+| Explicit stable exponent (Remark 16.23) | Corrected source interface | `StableExponent.lean` internalizes the two Gamma/trigonometric expressions, defines `sign(t) log|t|` safely at zero, proves continuity of the weighted logarithmic term, and adds an explicit location parameter. It also proves that translation preserves the jump measure but changes the exponent by `i*d*t`, so the printed measure-only statement is not exported as a false theorem. |
+| Bounded-support ID law (Exercise 16.1.1) | Implemented | `BoundedSupport.lean` proves that an infinitely divisible real law carried by a bounded interval is a point mass. |
 | Null-array ID limit theorems 16.12--16.13 | DEFERRED | Klenke's cited external proof has not been recovered and audited. |
 | Domains of attraction 16.26--16.30 | DEFERRED | Entire block belongs to `StableLimitTheory`; no orphan predicate was added. |
 
@@ -448,12 +455,12 @@ complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain rem
 | --- | --- | --- |
 | LS-B01 | RESOLVED | Canonical Mathlib measure convolution was reused and the probability-law closure/powers were added. |
 | LS-B02 | RESOLVED | Existing stationary- and independent-increment predicates were reused. |
-| LS-B03 | STILL-BLOCKED | Correct semigroup-to-SII projective construction is missing. |
+| LS-B03 | RESOLVED | Correct `NNReal` projective construction and finite-family increment independence are implemented. |
 | LS-B04 | RESOLVED | No exact active/local compound-Poisson law existed; the zero-safe finite-intensity foundation, intensity-addition law, and infinite divisibility are implemented. |
-| LS-B05 | STILL-BLOCKED | Minimal declarations are fixed, but Levy--Khintchine existence/uniqueness remains the central unresolved theorem. |
-| LS-B06 | STILL-BLOCKED | Required complex Taylor and Levy-integrand domination lemmas remain open. |
-| LS-B07 | STILL-BLOCKED | Stable affine-triplet and real-power scaling API remains open. |
-| LS-B08 | STILL-BLOCKED | Gamma/trigonometric identities for the explicit stable exponent remain open. |
+| LS-B05 | RESOLVED | Real Levy--Khintchine existence, converse extraction, and uniqueness compile internally. |
+| LS-B06 | RESOLVED | Complex Taylor and Levy-integrand domination are implemented. |
+| LS-B07 | RESOLVED | Affine-triplet scaling, index existence in `(0,2]`, homogeneous jump tails/density, Gaussian endpoint, and nontrivial jump branch are implemented. |
+| LS-B08 | RESOLVED AS SOURCE CORRECTION | The pinned/local/public audit found no reusable oscillatory Gamma proof, and source inspection showed the printed measure-only statement omits location. The zero-safe expression and general `i*d*t` correction are internalized; a false location-free theorem is intentionally not declared. |
 | LS-D01--LS-D05 | DEFERRED | Cadlag Levy realization, PPP/Levy--Ito, Skorokhod weak convergence, Levy stochastic integration, and multidimensional/LCA Levy--Khintchine retain their later owners. |
 | LS-D06 | DEFERRED | External null-array ID theorem proof not available. |
 | LS-D07 | DEFERRED | Stable domains of attraction move together to `StableLimitTheory`. |

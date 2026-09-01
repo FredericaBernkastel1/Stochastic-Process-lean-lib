@@ -40,6 +40,54 @@ theorem isInfinitelyDivisible_pointMass_zero :
   intro n _
   exact ⟨pointMass 0, hpow n⟩
 
+/-- Real characteristic functions turn convolution powers into ordinary powers. -/
+theorem charFun_convPow_real (μ : ProbabilityMeasure ℝ) (n : ℕ) (t : ℝ) :
+    charFun (convPow μ n : Measure ℝ) t = charFun (μ : Measure ℝ) t ^ n := by
+  induction n with
+  | zero => simp [convPow, ProbabilityMeasure.coe_pointMass, charFun_dirac]
+  | succ n ih =>
+      rw [convPow_succ, ProbabilityMeasure.coe_conv, charFun_conv, ih, pow_succ]
+
+/-- Convolution powers distribute over convolution on a measurable commutative additive group. -/
+theorem convPow_conv (μ ν : ProbabilityMeasure G) (n : ℕ) :
+    convPow (conv μ ν) n = conv (convPow μ n) (convPow ν n) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [convPow_succ, convPow_succ, convPow_succ, ih]
+      simp only [conv_assoc]
+      congr 1
+      rw [← conv_assoc, conv_comm (convPow ν n) μ, conv_assoc]
+
+/-- Infinite divisibility is closed under convolution. -/
+theorem IsInfinitelyDivisible.conv
+    {μ ν : ProbabilityMeasure G} (hμ : IsInfinitelyDivisible μ)
+    (hν : IsInfinitelyDivisible ν) : IsInfinitelyDivisible (conv μ ν) := by
+  intro n hn
+  obtain ⟨ρ, hρ⟩ := hμ n hn
+  obtain ⟨σ, hσ⟩ := hν n hn
+  exact ⟨ProbabilityMeasure.conv ρ σ, by rw [convPow_conv, hρ, hσ]⟩
+
+theorem convPow_pointMass_real (x : ℝ) (n : ℕ) :
+    convPow (pointMass x) n = pointMass ((n : ℝ) * x) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+      rw [convPow_succ, ih, pointMass_conv_pointMass]
+      congr 1
+      push_cast
+      ring
+
+/-- Every deterministic real law is infinitely divisible, with deterministic `n`th root `x/n`.
+The positive-integer hypothesis is used before division. -/
+theorem isInfinitelyDivisible_pointMass_real (x : ℝ) :
+    IsInfinitelyDivisible (pointMass x) := by
+  intro n hn
+  refine ⟨pointMass (x / n), ?_⟩
+  rw [convPow_pointMass_real]
+  congr 1
+  field_simp
+
 end MeasureTheory.ProbabilityMeasure
 
 namespace ProbabilityTheory

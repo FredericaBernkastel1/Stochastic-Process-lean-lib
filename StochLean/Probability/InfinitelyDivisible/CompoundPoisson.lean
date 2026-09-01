@@ -203,6 +203,19 @@ theorem isInfinitelyDivisible (r : ℝ≥0) (μ : ProbabilityMeasure G) :
     ProbabilityMeasure.IsInfinitelyDivisible (law r μ) :=
   (isConvolutionSemigroup μ).isInfinitelyDivisible r
 
+/-- A compound-Poisson law with nonnegative jumps remains supported on the nonnegative
+half-line, including the zero-rate branch. -/
+theorem isNonnegativeLaw (r : NNReal) (μ : ProbabilityMeasure ℝ)
+    (hμ : μ.IsNonnegativeLaw) : (law r μ).IsNonnegativeLaw := by
+  rw [ProbabilityMeasure.IsNonnegativeLaw]
+  rw [law_apply r μ measurableSet_Ici]
+  have hpow : ∀ n : ℕ,
+      (ProbabilityMeasure.convPow μ n : Measure ℝ) (Set.Ici 0) = 1 := by
+    intro n
+    exact hμ.convPow n
+  simp_rw [hpow]
+  simp
+
 /-- The compound Poisson law parameterized by its finite jump-intensity measure.
 
 The zero measure is handled before normalization, so this definition never uses division by a
@@ -240,6 +253,20 @@ theorem ofFiniteMeasure_smul_probability (r : ℝ≥0) (μ : ProbabilityMeasure 
     rw [(r • μ.toFiniteMeasure).normalize_eq_of_nonzero hν s]
     rw [hmass, FiniteMeasure.smul_apply]
     simp [hr]
+
+/-- The finite-intensity presentation preserves nonnegative support without requiring a nonzero
+intensity. -/
+theorem isNonnegativeLaw_ofFiniteMeasure (ν : FiniteMeasure ℝ)
+    (hν : ∀ᵐ x ∂(ν : Measure ℝ), 0 ≤ x) :
+    (ofFiniteMeasure ν).IsNonnegativeLaw := by
+  by_cases hz : ν = 0
+  · subst ν
+    simp [ProbabilityMeasure.isNonnegativeLaw_pointMass_iff]
+  · rw [ofFiniteMeasure_eq_of_ne_zero hz]
+    apply isNonnegativeLaw
+    rw [ProbabilityMeasure.isNonnegativeLaw_iff_ae]
+    rw [ν.toMeasure_normalize_eq_of_nonzero hz]
+    exact Measure.ae_smul_measure hν _
 
 end CompoundPoisson
 
