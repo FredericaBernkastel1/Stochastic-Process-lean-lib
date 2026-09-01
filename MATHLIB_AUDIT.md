@@ -11,7 +11,8 @@ repository may be used only as an implementation reference after exact-revision 
 dependency, proof-hole, axiom, build, provenance, and license review. Accepted code is copied into
 the StochLean source tree, adapted to StochLean's mathematical owner and public API, and compiled
 without an import or Lake dependency on the source repository. External names and module layouts
-have no normative force.
+have no normative force. This is a permanent project rule for every present and future design
+document.
 
 ## Reuse and gap decisions
 
@@ -275,10 +276,18 @@ at exact commit `314f04a34ff75e18fd383917ae7fe7d77beb1b6f`:
   `BrownianMotion/Auxiliary/Algebra.lean` redeclares `Set.indicator_apply_apply`, which is already
   present in the active Mathlib pin.
 
-Consequently BM-X01 is not recorded as a compiled dependency. A future minimal port must remove
-the upstream duplicate, redirect auxiliary semantics to existing StochLean/Mathlib owners, retain
-the exact attribution, and re-run the entire closure and axiom audit. Cached external oleans or a
-mutable branch are not accepted as evidence.
+The useful proof closure was subsequently internalized under `StochLean/Internal/Brownian` at that
+exact audited revision. Active-pin duplicates such as `Set.indicator_apply_apply` were removed,
+imports and namespaces were redirected to StochLean/Mathlib owners, and the resulting source was
+rebuilt as part of the ordinary project graph. The external repository is neither imported nor
+linked; its exact revision and Apache-2.0 provenance are recorded in the internal directory.
+
+The remaining Brownian document results are project-owned constructions over this foundation and
+the pinned Mathlib Brownian API: the canonical continuous coordinate realization, simultaneous
+subcritical Holder regularity, covariance characterization, bridge and conditional bridge laws,
+Blumenthal zero--one, finite-stopping-time strong Markov cylinders, strict/closed reflection,
+Levy's full arcsine CDF, pointwise Paley--Wiener--Zygmund nowhere differentiability, Schauder
+uniform convergence, and the basis-independent deterministic Wiener linear isometry.
 
 ## Clean-build reproducibility audit
 

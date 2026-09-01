@@ -25,24 +25,26 @@ does not strengthen right continuity to continuity.
 open NNReal TopologicalSpace
 open scoped Topology
 
-private noncomputable def rightGrid (n : ℕ) (t : ℝ≥0) : ℝ≥0 :=
+/-- The upper mesh approximation with spacing `1 / (n + 1)`.  It is kept public because the
+same countable-range approximation is also used for finite stopping times. -/
+noncomputable def rightGrid (n : ℕ) (t : ℝ≥0) : ℝ≥0 :=
   (Nat.ceil (((n + 1 : ℕ) : ℝ≥0) * t) : ℝ≥0) / (n + 1 : ℕ)
 
-private lemma le_rightGrid (n : ℕ) (t : ℝ≥0) : t ≤ rightGrid n t := by
+lemma le_rightGrid (n : ℕ) (t : ℝ≥0) : t ≤ rightGrid n t := by
   rw [rightGrid, le_div_iff₀ (by positivity)]
   simpa [mul_comm] using Nat.le_ceil (((n + 1 : ℕ) : ℝ≥0) * t)
 
-private lemma measurable_rightGrid (n : ℕ) : Measurable (rightGrid n) := by
+lemma measurable_rightGrid (n : ℕ) : Measurable (rightGrid n) := by
   unfold rightGrid
   fun_prop
 
-private lemma countable_range_rightGrid (n : ℕ) :
+lemma countable_range_rightGrid (n : ℕ) :
     (Set.range (rightGrid n)).Countable := by
   refine (Set.countable_range (fun k : ℕ ↦ (k : ℝ≥0) / (n + 1 : ℕ))).mono ?_
   rintro y ⟨t, rfl⟩
   exact ⟨Nat.ceil (((n + 1 : ℕ) : ℝ≥0) * t), rfl⟩
 
-private lemma rightGrid_lt (n : ℕ) (t : ℝ≥0) :
+lemma rightGrid_lt (n : ℕ) (t : ℝ≥0) :
     rightGrid n t < t + 1 / (n + 1 : ℕ) := by
   rw [rightGrid, div_lt_iff₀ (by positivity)]
   have h := Nat.ceil_lt_add_one (R := ℝ≥0)
@@ -52,7 +54,7 @@ private lemma rightGrid_lt (n : ℕ) (t : ℝ≥0) :
   · ring
   · positivity
 
-private lemma tendsto_rightGrid (t : ℝ≥0) :
+lemma tendsto_rightGrid (t : ℝ≥0) :
     Filter.Tendsto (fun n ↦ rightGrid n t) Filter.atTop (𝓝 t) := by
   have hu : Filter.Tendsto (fun n : ℕ ↦ t + 1 / ((n : ℝ≥0) + 1))
       Filter.atTop (𝓝 t) := by
@@ -65,7 +67,7 @@ private lemma tendsto_rightGrid (t : ℝ≥0) :
     (fun n ↦ le_rightGrid n t) (fun n ↦ by
       simpa [Nat.cast_add, Nat.cast_one] using (rightGrid_lt n t).le)
 
-private lemma tendsto_rightGrid_nhdsWithin (t : ℝ≥0) :
+lemma tendsto_rightGrid_nhdsWithin (t : ℝ≥0) :
     Filter.Tendsto (fun n ↦ rightGrid n t) Filter.atTop (nhdsWithin t (Set.Ici t)) := by
   exact tendsto_nhdsWithin_iff.mpr ⟨tendsto_rightGrid t,
     Filter.Eventually.of_forall fun n ↦ Set.mem_Ici.mpr (le_rightGrid n t)⟩

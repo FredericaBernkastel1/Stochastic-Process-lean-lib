@@ -7,6 +7,7 @@ module
 
 public import StochLean.Probability.InfinitelyDivisible.CompoundPoisson
 public import StochLean.Probability.InfinitelyDivisible.LevyKhintchine
+public import StochLean.Probability.InfinitelyDivisible.LevySemigroup
 public import StochLean.Probability.InfinitelyDivisible.Stable
 public import StochLean.Probability.Process.StationaryIndependentIncrements
 
@@ -21,6 +22,10 @@ namespace ProbabilityTheory
 
 variable {G Ω : Type*} [AddCommGroup G] [MeasurableSpace G] [MeasurableAdd₂ G]
   [MeasurableSpace Ω]
+
+example {ν : ℝ≥0 → ProbabilityMeasure ℝ} (hν : IsConvolutionSemigroup ν) :
+    ν 0 = ProbabilityMeasure.pointMass 0 :=
+  hν.zero_eq_pointMass_real
 
 example {ν : ℝ≥0 → ProbabilityMeasure G} (hν : IsConvolutionSemigroup ν) (t : ℝ≥0) :
     ProbabilityMeasure.IsInfinitelyDivisible (ν t) :=
@@ -43,6 +48,11 @@ example (r s : ℝ≥0) (μ : ProbabilityMeasure G) :
       ProbabilityMeasure.conv (CompoundPoisson.law r μ) (CompoundPoisson.law s μ) :=
   CompoundPoisson.law_add r s μ
 
+example (r : ℝ≥0) (μ : ProbabilityMeasure ℝ) (t : ℝ) :
+    charFun (CompoundPoisson.law r μ : Measure ℝ) t =
+      Complex.exp ((r : ℂ) * (charFun (μ : Measure ℝ) t - 1)) :=
+  CompoundPoisson.charFun_law r μ t
+
 example (r : ℝ≥0) (μ : ProbabilityMeasure G) :
     ProbabilityMeasure.IsInfinitelyDivisible (CompoundPoisson.law r μ) :=
   CompoundPoisson.isInfinitelyDivisible r μ
@@ -55,6 +65,39 @@ example : IsLevyMeasure geometricLevyMeasure :=
 
 example : geometricLevyMeasure Set.univ = ∞ :=
   geometricLevyMeasure_univ
+
+example {ν : Measure ℝ} (hν : IsLevyMeasure ν) (t : ℝ) :
+    Integrable (levyExponentIntegrand t) ν :=
+  hν.integrable_levyExponentIntegrand t
+
+example (η : LevyTriplet) (n : ℕ) (t : ℝ) :
+    (η.nsmul n).exponent t = (n : ℂ) * η.exponent t :=
+  η.exponent_nsmul n t
+
+example (η : LevyTriplet) (a d : ℝ) (ha : 0 < a) :
+    (η.affine a d ha).drift = a * η.drift + d +
+      ∫ x, affineDriftIntegrand a x ∂η.jumpMeasure := rfl
+
+example (η : LevyTriplet) (a d t : ℝ) (ha : 0 < a) :
+    (η.affine a d ha).exponent t =
+      η.exponent (a * t) + ((d * t : ℝ) : ℂ) * Complex.I :=
+  η.exponent_affine a d ha t
+
+example (x : ℝ) :
+    (LevyTriplet.pointMass x).Represents (ProbabilityMeasure.pointMass x) :=
+  LevyTriplet.represents_pointMass x
+
+example (m : ℝ) (v : ℝ≥0) :
+    (LevyTriplet.gaussian m v).Represents (LevyTriplet.gaussianLaw m v) :=
+  LevyTriplet.gaussian_represents_gaussianLaw m v
+
+example (r : ℝ≥0) (μ : ProbabilityMeasure ℝ) (hzero : (μ : Measure ℝ) {0} = 0) :
+    (CompoundPoisson.triplet r μ hzero).Represents (CompoundPoisson.law r μ) :=
+  CompoundPoisson.triplet_represents_law r μ hzero
+
+example (r : ℝ≥0) (μ : ProbabilityMeasure ℝ) (hzero : (μ : Measure ℝ) {0} = 0) :
+    IsContinuousConvolutionSemigroup (fun t => CompoundPoisson.law (t * r) μ) :=
+  CompoundPoisson.isContinuousConvolutionSemigroup_mul r μ hzero
 
 example {μ : ProbabilityMeasure ℝ} (hμ : ProbabilityMeasure.IsStable μ) :
     ProbabilityMeasure.IsNonDirac μ :=
@@ -78,6 +121,10 @@ example : signedLogAbs 0 = 0 := signedLogAbs_zero
 
 variable {X : ℝ≥0 → Ω → G} {P : Measure Ω} {ν : ℝ≥0 → ProbabilityMeasure G}
 
+example [IsProbabilityMeasure P] (hX : HasFiniteStationaryIncrementLaws X ν P) :
+    HasStationaryIndependentIncrements X P :=
+  hX.hasStationaryIndependentIncrements
+
 example (hX : HasStationaryIndependentIncrements X P) (hν : HasIncrementLawFamily X ν P) :
     IsConvolutionSemigroup ν :=
   hX.isConvolutionSemigroup hν
@@ -98,5 +145,9 @@ example {ν : ℝ≥0 → ProbabilityMeasure G} (hν : IsContinuousConvolutionSe
   hν.isConvolutionSemigroup.convPow_root t n
 
 end Topological
+
+example {ν : ℝ≥0 → ProbabilityMeasure ℝ} (hν : IsContinuousConvolutionSemigroup ν) :
+    Continuous ν :=
+  hν.continuous_real
 
 end ProbabilityTheory

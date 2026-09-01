@@ -460,9 +460,10 @@ complete**, chiefly because FP-B07 and the real Levy--Khintchine proof chain rem
 
 # Brownian Motion and Path Regularity Foundations
 
-This is the current disposition of `StochLean_BrownianMotion_PathRegularity_Design_v0.2.pdf`.
-The active pin supplies the canonical law predicates and transformations, but the package is **not
-complete**.
+This is the final disposition of `StochLean_BrownianMotion_PathRegularity_Design_v0.2.pdf`.
+The package is **complete** at the document boundary. It reuses Mathlib's canonical Brownian
+predicates and owns the missing construction, regularity, stopping, path-functional, Schauder, and
+deterministic-Wiener layers.
 
 ## Canonical reuse and implemented bridges
 
@@ -472,32 +473,37 @@ complete**.
 | Gaussian laws, covariance, independent increments | Reused | Active Mathlib Brownian and Gaussian modules, including `eval_zero_ae_eq_zero`, increment laws, covariance, shift independence, negation, scaling, shift, and upstream inversion. |
 | Brownian SII and marginal ID | Implemented bridge | `Brownian/Transformations.lean` proves SII, the Gaussian increment-law convolution semigroup, and infinite divisibility. |
 | Time inversion natural-domain bridge | Implemented | Explicit piecewise value at zero, positive-time formula, equality to upstream, and pre-Brownian preservation. |
-| Kolmogorov--Chentsov conclusion | STILL-BLOCKED | Active Mathlib has only `IsKolmogorovProcess` foundations. The audited external source contains the required theorem, but its exact snapshot does not compile unchanged against stable v4.33 because it redeclares an active Mathlib theorem. A minimal adapted port is still required. |
-| Continuous/Holder Brownian representative | STILL-BLOCKED | Depends on the KC port; no false path-regularity claim is derived from finite-dimensional laws. |
-| Gaussian covariance characterization | Reused | Mathlib's `IsGaussianProcess.isPreBrownianReal_of_covariance` exactly reconstructs the canonical pre-Brownian finite-dimensional law from centered Gaussian marginals and covariance. |
-| Brownian bridge | Implemented foundation | `brownianBridge` has a Gaussian-process proof, a.s. zero initial endpoint, pointwise zero terminal endpoint, centered marginals, covariance `min s t - s*t`, and marginal law `N(0,t(1-t))` on the unit interval. |
-| Blumenthal, PWZ, strong Markov, reflection, arcsine | STILL-BLOCKED | No corresponding implementation was present in the audited external snapshot; the staged StochLean proofs remain open. |
-| Haar/Schauder Brownian construction | STILL-BLOCKED | The distinction between deterministic-time `L2` convergence and special a.s.-uniform convergence remains enforced but unimplemented. |
-| Deterministic Wiener integral | STILL-BLOCKED | Basis-independent `L2` linear isometry and Section 21.5 applications remain open; no Ito-integral surrogate is declared. |
+| Kolmogorov--Chentsov conclusion | Implemented | The audited Apache-2.0 proof architecture was internalized under `StochLean/Internal/Brownian`; duplicate active-pin declarations were removed and the public facade is `Process/Regularity/KolmogorovChentsov.lean`. |
+| Continuous/Holder Brownian representative | Implemented | `Brownian/Construction.lean` builds the canonical coordinate law through the existing projective-limit facade and regularizes it; `PathProperties.lean` proves one common-event local Holder statement for every exponent below one half. |
+| Gaussian covariance characterization | Reused and bridged | Mathlib's centered-Gaussian covariance characterization is reused, with the full Brownian iff statement in `Characterization.lean`, including continuous paths. |
+| Brownian bridge | Implemented | The bridge has its Gaussian, endpoint, covariance, marginal, conditional endpoint, and deterministic-Wiener representations, with the corrected variance `t*(1-t)`. |
+| Blumenthal zero--one law | Implemented | `Blumenthal.lean` proves probability triviality for the canonical continuous representative's germ sigma-field. |
+| Strong Markov property | Implemented | `StrongMarkov.lean` proves deterministic-time and finite-stopping-time conditional identities for bounded continuous finite future-cylinder functionals, using genuine upper dyadic stopping-time approximation. |
+| Reflection principle | Implemented | `Reflection.lean` contains the dyadic first-passage construction and strict- and closed-barrier forms, with Gaussian atomlessness handling the boundary. |
+| Levy arcsine law | Implemented | `Arcsine.lean` defines and proves measurability of the last-zero functional and establishes the full CDF, including both deterministic endpoints and transfer from the canonical representative. |
+| Paley--Wiener--Zygmund path theorem | Implemented | `PaleyWienerZygmund*.lean` gives pointwise failure of supercritical Holder control and almost-sure nowhere finite differentiation. |
+| Haar/Schauder Brownian construction | Implemented | `Schauder.lean` proves almost-sure uniform convergence of the special dyadic Schauder approximants, kept distinct from arbitrary-Hilbert-basis `L2` convergence. |
+| Deterministic Wiener integral | Implemented | `DeterministicWienerIntegral.lean` constructs a basis-independent linear isometry on the `L2` quotient and proves indicator, covariance, Gaussian-law, step-function, and arbitrary Hilbert expansion theorems. |
 
 ## Exact external audit and blocker ledger
 
 | ID | Status | Owner, reason, unlock condition, and downstream impact |
 | --- | --- | --- |
-| BM-X01 | STILL-BLOCKED | `RemyDegenne/brownian-motion` at `314f04a34ff75e18fd383917ae7fe7d77beb1b6f`, Apache-2.0, was checked out and scanned: the 27-module relevant closure has no `sorry`, `admit`, or project axiom. Stable-v4.33 source compilation fails at the already-upstream `Set.indicator_apply_apply`; a minimal canonical-owner port must remove the duplicate and revalidate the remaining closure. |
+| BM-X01 | RESOLVED | The useful Apache-2.0 proof closure from `RemyDegenne/brownian-motion` at `314f04a34ff75e18fd383917ae7fe7d77beb1b6f` was audited, internalized, renamed under `StochLean.Internal.Brownian`, stripped of active-pin duplicates, and rebuilt without importing or linking the external package. Provenance is recorded in `StochLean/Internal/Brownian/README.md`. |
 | BM-B01 | RESOLVED | Active Mathlib v4.33 supplies canonical `IsPreBrownianReal`/`IsBrownianReal` and the basic transformation layer. |
-| BM-B02 | STILL-BLOCKED | Full KC conclusion/minimal external port is unresolved. |
-| BM-B03 | STILL-BLOCKED | Holder covering and exponent-monotonicity API awaits the port. |
-| BM-B04 | STILL-BLOCKED | Brownian stopping-field limit and Blumenthal modulo-law transfer proofs remain open. |
-| BM-B05 | STILL-BLOCKED | First-passage/supremum/last-zero measurable APIs remain open. |
-| BM-B06 | STILL-BLOCKED | Hilbert/Lp/ONB/Haar/deterministic-Wiener overlap remains to be audited and built. |
+| BM-B02 | RESOLVED | The full KC conclusion is internal and exported through the public regularity facade. |
+| BM-B03 | RESOLVED | The covering/chaining API and simultaneous subcritical Holder monotonicity result compile against the active pin. |
+| BM-B04 | RESOLVED | Dyadic stopping-time approximation, finite-cylinder strong Markov, and canonical-germ Blumenthal zero--one results are implemented. |
+| BM-B05 | RESOLVED | Measurable running supremum and last-zero APIs support the strict/closed reflection principles and full arcsine CDF. |
+| BM-B06 | RESOLVED | The `L2` quotient, linear isometry, ONB expansion, Schauder-specific uniform convergence, bridge kernel, and conditional bridge layers are separated and implemented. |
 | BM-B07 | RESOLVED | Sections 21.1--21.3 and 21.5 source boundary is frozen by the handoff. |
 | BM-D01--BM-D07 | DEFERRED | Doob/general SII regularization, Feller realization, functional weak convergence/Donsker, continuous quadratic variation, LIL/Skorohod, and Ito integration retain the owners specified by the design. |
 
-The Brownian semantic regression currently checks the a.s. zero law, explicit inversion zero case,
-SII bridge, marginal infinite divisibility, the Gaussian covariance characterization, the bridge
-endpoint/covariance layer, and the nonzero scaling hypothesis. It does not stand in for the missing
-common-event Holder, strong-Markov, reflection, arcsine, or Wiener theorems.
+The Brownian semantic regression checks the canonical continuous realization, common-event Holder
+regularity, pointwise PWZ and nowhere differentiability, covariance characterization, bridge and
+conditional bridge laws, Schauder uniform convergence, measurable path functionals, reflection,
+full arcsine CDF, finite-stopping-time strong Markov identity, Blumenthal zero--one law, and the
+deterministic Wiener linear isometry/covariance API.
 
 # Cross-milestone reproducibility status
 

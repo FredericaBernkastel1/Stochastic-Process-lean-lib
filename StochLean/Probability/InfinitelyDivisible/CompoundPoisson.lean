@@ -66,6 +66,73 @@ theorem law_apply (r : ℝ≥0) (μ : ProbabilityMeasure G) {s : Set G}
       ∫⁻ n, (ProbabilityMeasure.convPow μ n : Measure G) s ∂poissonMeasure r := by
   rw [coe_law, Measure.bind_apply hs (measurable_convPow μ).aemeasurable]
 
+section CharacteristicFunction
+
+/-- Characteristic functions turn convolution powers into ordinary powers. -/
+theorem charFun_convPow (μ : ProbabilityMeasure ℝ) (n : ℕ) (t : ℝ) :
+    charFun (ProbabilityMeasure.convPow μ n : Measure ℝ) t =
+      charFun (μ : Measure ℝ) t ^ n := by
+  induction n with
+  | zero => simp [ProbabilityMeasure.convPow_zero, ProbabilityMeasure.pointMass]
+  | succ n ih =>
+      rw [ProbabilityMeasure.convPow_succ, ProbabilityMeasure.coe_conv, charFun_conv, ih,
+        pow_succ]
+
+/-- The characteristic function of the rate/jump-law presentation of a compound Poisson law. -/
+theorem charFun_law (r : ℝ≥0) (μ : ProbabilityMeasure ℝ) (t : ℝ) :
+    charFun (law r μ : Measure ℝ) t =
+      Complex.exp ((r : ℂ) * (charFun (μ : Measure ℝ) t - 1)) := by
+  rw [charFun_apply, coe_law, poissonMeasure]
+  rw [Measure.bind_sum]
+  · rw [integral_sum_measure]
+    · have hcoeff (n : ℕ) :
+          (ENNReal.ofReal (Real.exp (-(r : ℝ)) * (r : ℝ) ^ n / n.factorial)).toReal =
+            Real.exp (-(r : ℝ)) * (r : ℝ) ^ n / n.factorial :=
+        ENNReal.toReal_ofReal (by positivity)
+      simp_rw [Measure.bind_smul, Measure.dirac_bind (measurable_convPow μ),
+        MeasureTheory.integral_smul_measure, hcoeff, ← charFun_apply, charFun_convPow]
+      change (∑' n : ℕ,
+          ((Real.exp (-(r : ℝ)) * (r : ℝ) ^ n / n.factorial : ℝ) : ℂ) *
+            charFun (μ : Measure ℝ) t ^ n) = _
+      calc
+        ∑' n : ℕ,
+            ((Real.exp (-(r : ℝ)) * (r : ℝ) ^ n / n.factorial : ℝ) : ℂ) *
+              charFun (μ : Measure ℝ) t ^ n =
+            (Real.exp (-r) : ℂ) *
+              ∑' n : ℕ, (((r : ℂ) * charFun (μ : Measure ℝ) t) ^ n /
+                n.factorial) := by
+          rw [← tsum_mul_left]
+          congr 1
+          funext n
+          push_cast
+          rw [mul_pow]
+          ring
+        _ = (Real.exp (-r) : ℂ) *
+            Complex.exp ((r : ℂ) * charFun (μ : Measure ℝ) t) := by
+          rw [(NormedSpace.expSeries_div_hasSum_exp
+            ((r : ℂ) * charFun (μ : Measure ℝ) t)).tsum_eq, ← Complex.exp_eq_exp_ℂ]
+        _ = Complex.exp ((r : ℂ) * (charFun (μ : Measure ℝ) t - 1)) := by
+          rw [Complex.ofReal_exp, ← Complex.exp_add]
+          push_cast
+          congr 1
+          ring
+    · letI : IsFiniteMeasure
+          (Measure.sum fun i =>
+            (fun n => (ProbabilityMeasure.convPow μ n : Measure ℝ)) ∘ₘ
+              (ENNReal.ofReal (Real.exp (-(r : ℝ)) * (r : ℝ) ^ i / i.factorial) •
+                Measure.dirac i)) := by
+        rw [← Measure.bind_sum]
+        · rw [← poissonMeasure, ← coe_law]
+          infer_instance
+        · exact (measurable_convPow μ).aemeasurable
+      exact (integrable_const (1 : ℂ)).mono (by fun_prop) <|
+        ae_of_all _ fun x => by
+          rw [Complex.norm_exp]
+          simp [mul_comm]
+  · exact (measurable_convPow μ).aemeasurable
+
+end CharacteristicFunction
+
 /-- Compound Poisson laws with a common jump law form a convolution semigroup in the intensity. -/
 theorem law_add (r s : ℝ≥0) (μ : ProbabilityMeasure G) :
     law (r + s) μ = ProbabilityMeasure.conv (law r μ) (law s μ) := by

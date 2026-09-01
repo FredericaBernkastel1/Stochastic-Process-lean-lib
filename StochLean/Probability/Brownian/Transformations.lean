@@ -7,7 +7,10 @@ module
 
 public import Mathlib.Probability.BrownianMotion.Basic
 public import Mathlib.Probability.Distributions.Gaussian.HasGaussianLaw.Basic
+public import Mathlib.Probability.Distributions.Gaussian.HasGaussianLaw.Independence
 public import Mathlib.Probability.Distributions.Gaussian.IsGaussianProcess.Basic
+public import StochLean.Internal.Brownian.Gaussian.ConditionalExpectation
+public import StochLean.Probability.Brownian.Construction
 public import StochLean.Probability.Process.StationaryIndependentIncrements
 
 /-!
@@ -112,6 +115,81 @@ theorem IsPreBrownianReal.hasLaw_brownianBridge (hB : IsPreBrownianReal B P)
     simp
     ring
 
+/-- At each `t ∈ [0,1]`, the Brownian-bridge residual `B t - t B 1` is independent of the
+terminal value `B 1`.  Together with `hasLaw_brownianBridge`, this is the rigorous Gaussian
+decomposition behind the conditional variance `t * (1 - t)`. -/
+theorem IsPreBrownianReal.indepFun_brownianBridge_endpoint
+    (hB : IsPreBrownianReal B P) (t : ℝ≥0) (ht : t ≤ 1) :
+    IndepFun (brownianBridge B t) (B 1) P := by
+  let _ := hB.isGaussianProcess.isProbabilityMeasure
+  apply HasGaussianLaw.indepFun_of_covariance_eq_zero
+  · let L : (ℝ × ℝ) →L[ℝ] (ℝ × ℝ) :=
+      ((ContinuousLinearMap.fst ℝ ℝ ℝ -
+        (t : ℝ) • ContinuousLinearMap.snd ℝ ℝ ℝ).prod
+        (ContinuousLinearMap.snd ℝ ℝ ℝ))
+    simpa [L, brownianBridge, Function.comp_def] using
+      (hB.isGaussianProcess.hasGaussianLaw_prodMk (s := t) (t := 1)).map L
+  · have htlp : MemLp (B t) 2 P := hB.isGaussianProcess.hasGaussianLaw_eval t |>.memLp_two
+    have h1lp : MemLp (B 1) 2 P := hB.isGaussianProcess.hasGaussianLaw_eval 1 |>.memLp_two
+    change cov[fun ω ↦ B t ω - (t : ℝ) * B 1 ω, B 1; P] = 0
+    rw [covariance_fun_sub_left htlp (h1lp.const_mul (t : ℝ)) h1lp,
+      covariance_const_mul_left, hB.covariance_eval, hB.covariance_eval,
+      min_eq_left ht]
+    simp
+
+/-- Gaussian regression for a Brownian marginal conditioned on the terminal value.  On the unit
+interval the conditional mean is `t * B 1`; the companion bridge residual is centered Gaussian
+with variance `t * (1 - t)` and independent of `B 1` by the preceding theorems. -/
+theorem IsPreBrownianReal.conditionalExpectation_eval_given_endpoint
+    (hB : IsPreBrownianReal B P) (t : ℝ≥0) (ht0 : 0 < t) (ht : t ≤ 1)
+    (hBt : Measurable (B t)) (hB1 : Measurable (B 1)) :
+    (P[B t | MeasurableSpace.comap (B 1) inferInstance])
+      =ᵐ[P] fun ω ↦ (t : ℝ) * B 1 ω := by
+  letI : IsProbabilityMeasure P := hB.isGaussianProcess.isProbabilityMeasure
+  have hvariance : Var[B 1; P] = (1 : ℝ) ^ 2 := by
+    rw [← covariance_self (hB.aemeasurable 1), hB.covariance_eval]
+    norm_num
+  have hcovariance : cov[B t, B 1; P] =
+      Real.sqrt (t : ℝ) * Real.sqrt (t : ℝ) * 1 := by
+    rw [hB.covariance_eval, min_eq_left ht]
+    rw [mul_one, Real.mul_self_sqrt t.coe_nonneg]
+  let h : GaussianConditioning.Hypotheses P (B t) (B 1)
+      0 0 (Real.sqrt (t : ℝ)) 1 (Real.sqrt (t : ℝ)) :=
+    { σX_pos := Real.sqrt_pos.2 (by exact_mod_cast ht0)
+      σY_pos := by norm_num
+      measurable_X := hBt
+      measurable_Y := hB1
+      joint_gaussian := hB.isGaussianProcess.hasGaussianLaw_prodMk
+      mean_X := hB.integral_eval t
+      mean_Y := hB.integral_eval 1
+      variance_Y := hvariance
+      covariance_XY := hcovariance }
+  simpa [Real.mul_self_sqrt t.coe_nonneg] using h.conditionalExpectation
+
+/-- Exact regular conditional law of `B t` given `B 1` for `t ∈ [0,1]`.  At endpoint value
+`x` the displayed kernel is the Gaussian law `N(t*x, t*(1-t))`; see
+`GaussianConditioning.affineNoiseKernel_gaussian_apply`. -/
+theorem IsPreBrownianReal.condDistrib_eval_given_endpoint
+    [IsProbabilityMeasure P] (hB : IsPreBrownianReal B P) (t : ℝ≥0) (ht : t ≤ 1)
+    (hBt : Measurable (B t)) (hB1 : Measurable (B 1)) :
+    condDistrib (B t) (B 1) P =ᵐ[P.map (B 1)]
+      GaussianConditioning.affineNoiseKernel (t : ℝ)
+        (gaussianReal 0 (t * (1 - t))) := by
+  have hres : Measurable (brownianBridge B t) :=
+    hBt.sub (hB1.const_mul (t : ℝ))
+  have hcond := GaussianConditioning.condDistrib_affine_of_indepFun
+    hres hB1 (hB.indepFun_brownianBridge_endpoint t ht) (t : ℝ)
+  have hlaw : P.map (brownianBridge B t) = gaussianReal 0 (t * (1 - t)) :=
+    (hB.hasLaw_brownianBridge t ht).map_eq
+  rw [hlaw] at hcond
+  have heq : B t =ᵐ[P]
+      (fun ω ↦ (t : ℝ) * B 1 ω + brownianBridge B t ω) := by
+    filter_upwards [] with ω
+    simp only [brownianBridge]
+    ring
+  rw [condDistrib_congr_left heq]
+  exact hcond
+
 /-- Brownian time inversion with its natural `t = 0` branch exposed. -/
 noncomputable def brownianTimeInversion (B : ℝ≥0 → Ω → ℝ) : ℝ≥0 → Ω → ℝ :=
   fun t ω ↦ if t = 0 then 0 else t * B (1 / t) ω
@@ -135,6 +213,62 @@ theorem IsPreBrownianReal.timeInversion (hB : IsPreBrownianReal B P) :
     IsPreBrownianReal (brownianTimeInversion B) P := by
   rw [brownianTimeInversion_eq]
   exact hB.inv
+
+/-- Time inversion preserves Brownian motion, including almost-sure path continuity at the
+source-facing zero branch.  The proof first identifies the inverted process with the continuous
+Kolmogorov--Chentsov representative away from zero and then uses the Gaussian value at zero. -/
+theorem IsBrownianReal.inv (h : IsBrownianReal B P) :
+    IsBrownianReal (fun t ω ↦ t * (B (1 / t) ω)) P where
+  toIsPreBrownianReal := h.toIsPreBrownianReal.inv
+  cont := by
+    obtain ⟨s, cs, ds⟩ := TopologicalSpace.exists_countable_dense ℝ≥0
+    let Y := fun t ω ↦ t * B (1 / t) ω
+    have hY : IsPreBrownianReal Y P := h.toIsPreBrownianReal.inv
+    have h1 : ∀ᵐ ω ∂P, ∀ q : s, Y q ω = hY.mk Y q ω :=
+      haveI : Countable s := cs
+      ae_all_iff.2 fun q ↦ (hY.mk_ae_eq q).symm
+    have h2 : ∀ᵐ ω ∂P, Set.EqOn (Y · ω) (hY.mk Y · ω) (s \ {0}) := by
+      filter_upwards [h1] with ω hω
+      rintro t ⟨ht, -⟩
+      exact hω ⟨t, ht⟩
+    have h3 : ∀ᵐ ω ∂P, ContinuousOn (Y · ω) {t | t ≠ 0} := by
+      filter_upwards [h.cont] with ω hω
+      intro t (ht : t ≠ 0)
+      simp_rw [Y]
+      apply ContinuousAt.continuousWithinAt
+      fun_prop (disch := positivity)
+    have h4 : ∀ᵐ ω ∂P, ∀ t ≠ 0, Y t ω = hY.mk Y t ω := by
+      filter_upwards [h2, h3] with ω h1 h2
+      convert h1.of_subset_closure h2 (hY.continuous_mk ω |>.continuousOn) (by grind) _
+      · rfl
+      convert Set.subset_univ _
+      exact (ds.sdiff_singleton 0).closure_eq
+    have h5 : ∀ᵐ ω ∂P, ∀ t, Y t ω = hY.mk Y t ω := by
+      filter_upwards [h4, hY.isBrownianReal_mk.eval_zero_ae_eq_zero]
+        with ω h1 h2 t
+      obtain rfl | ht := eq_or_ne t 0
+      · simpa [Y] using h2.symm
+      exact h1 t ht
+    filter_upwards [h5] with ω hω
+    simp_rw [Y] at hω
+    simp_rw [hω]
+    exact hY.continuous_mk ω
+
+theorem IsBrownianReal.timeInversion (hB : IsBrownianReal B P) :
+    IsBrownianReal (brownianTimeInversion B) P := by
+  rw [brownianTimeInversion_eq]
+  exact hB.inv
+
+/-- The Brownian strong law at infinity obtained from time inversion. -/
+theorem IsBrownianReal.tendsto_div_id_atTop (h : IsBrownianReal B P) :
+    ∀ᵐ ω ∂P, Filter.Tendsto (fun t ↦ (B t ω) / t) .atTop (𝓝 0) := by
+  filter_upwards [h.inv.tendsto_nhds_zero] with ω hω
+  have hcomp : (fun t ↦ (B t ω) / t) =
+      (fun t ↦ t * (B (1 / t) ω)) ∘ (fun t ↦ t⁻¹) := by
+    ext
+    simp [field]
+  rw [hcomp]
+  exact hω.comp tendsto_inv_atTop_zero
 
 private theorem nndist_coe_add_left (s t : ℝ≥0) :
     nndist ((s + t : ℝ≥0) : ℝ) (s : ℝ) = t := by

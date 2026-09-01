@@ -6,7 +6,7 @@ Authors: StochLean contributors
 module
 
 public import Mathlib.Analysis.SpecialFunctions.Pow.Real
-public import StochLean.Probability.InfinitelyDivisible.Basic
+public import StochLean.Probability.InfinitelyDivisible.LevyKhintchine
 
 /-!
 # Stable probability laws
@@ -82,6 +82,20 @@ theorem convPow_affineMap (a d : ℝ) (μ : ProbabilityMeasure ℝ) (n : ℕ) :
       congr 2
       push_cast
       ring
+
+/-- Characteristic function of the affine image, with the source frequency scaled by `a`. -/
+theorem charFun_affineMap (a d : ℝ) (μ : ProbabilityMeasure ℝ) (t : ℝ) :
+    charFun (affineMap a d μ : Measure ℝ) t =
+      charFun (μ : Measure ℝ) (a * t) *
+        Complex.exp (((d * t : ℝ) : ℂ) * Complex.I) := by
+  rw [coe_affineMap]
+  have hmap : (μ : Measure ℝ).map (fun x => a * x + d) =
+      ((μ : Measure ℝ).map (fun x => a * x)).map (fun x => x + d) := by
+    rw [Measure.map_map (by fun_prop) (by fun_prop)]
+    congr 1
+  rw [hmap, charFun_map_add_const, charFun_map_mul]
+  congr 1
+  rw [Real.inner_apply]
 
 /-- A law is nondegenerate when it is not any Dirac law. -/
 def IsNonDirac (μ : ProbabilityMeasure ℝ) : Prop :=
@@ -162,6 +176,71 @@ theorem IsStable.isInfinitelyDivisible {μ : ProbabilityMeasure ℝ} (hμ : IsSt
 end MeasureTheory.ProbabilityMeasure
 
 namespace ProbabilityTheory
+
+namespace LevyTriplet
+
+/-- Representation is preserved by the canonical positive affine triplet transformation. -/
+theorem Represents.affine {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (h : η.Represents μ) (a d : ℝ) (ha : 0 < a) :
+    (η.affine a d ha).Represents (ProbabilityMeasure.affineMap a d μ) := by
+  intro t
+  rw [ProbabilityMeasure.charFun_affineMap, h (a * t), exponent_affine,
+    Complex.exp_add]
+
+/-- Uniqueness turns equality of a convolution power with an affine image into equality of the
+two canonically transformed triplets. -/
+theorem nsmul_eq_affine_of_convPow_eq_affine
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
+    η.nsmul n = η.affine a d ha := by
+  have hn := hη.nsmul n
+  have haff := hη.affine a d ha
+  rw [hpow] at hn
+  exact hunique.unique hn haff
+
+theorem gaussian_scaling_of_convPow_eq_affine
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
+    (a ^ 2 - n) * (η.gaussianVariance : ℝ) = 0 := by
+  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hunique hη hpow
+  have hvariance := congrArg (fun ξ : LevyTriplet => (ξ.gaussianVariance : ℝ)) htriplet
+  simp only [nsmul_gaussianVariance, affine_gaussianVariance, NNReal.coe_mul,
+    NNReal.coe_pow, Real.coe_toNNReal _ ha.le, nsmul_eq_mul] at hvariance
+  push_cast at hvariance
+  calc
+    (a ^ 2 - n) * (η.gaussianVariance : ℝ) =
+        a ^ 2 * (η.gaussianVariance : ℝ) - n * (η.gaussianVariance : ℝ) := by ring
+    _ = 0 := sub_eq_zero.mpr hvariance.symm
+
+theorem jumpMeasure_scaling_of_convPow_eq_affine
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
+    (n : ℝ≥0) • η.jumpMeasure = η.jumpMeasure.map (fun x => a * x) := by
+  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hunique hη hpow
+  exact congrArg LevyTriplet.jumpMeasure htriplet
+
+theorem drift_scaling_of_convPow_eq_affine
+    {η : LevyTriplet} {μ : ProbabilityMeasure ℝ}
+    (n : ℕ) (a d : ℝ) (ha : 0 < a)
+    (hunique : HasUniqueLevyTriplet (ProbabilityMeasure.affineMap a d μ))
+    (hη : η.Represents μ)
+    (hpow : ProbabilityMeasure.convPow μ n = ProbabilityMeasure.affineMap a d μ) :
+    n * η.drift = a * η.drift + d +
+      ∫ x, affineDriftIntegrand a x ∂η.jumpMeasure := by
+  have htriplet := nsmul_eq_affine_of_convPow_eq_affine n a d ha hunique hη hpow
+  simpa only [nsmul_drift, affine_drift, nsmul_eq_mul] using
+    congrArg LevyTriplet.drift htriplet
+
+end LevyTriplet
 
 /-- The `sign(t) log |t|` combination with its mathematically explicit value at zero. -/
 noncomputable def signedLogAbs (t : ℝ) : ℝ :=

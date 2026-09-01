@@ -41,4 +41,12 @@ import StochLean.Probability.Brownian.SemanticRegression
 #print axioms ProbabilityTheory.IsPreBrownianReal.integral_brownianBridge
 #print axioms ProbabilityTheory.IsPreBrownianReal.covariance_brownianBridge
 #print axioms ProbabilityTheory.IsPreBrownianReal.hasLaw_brownianBridge
+#print axioms ProbabilityTheory.BrownianReal.isBrownianReal_brownianCoordinate
+#print axioms ProbabilityTheory.IsBrownianReal.ae_locallyHolder_lt_half
+#print axioms ProbabilityTheory.IsPreBrownianReal.ae_nowhere_hasFiniteDerivativeAt
+#print axioms ProbabilityTheory.IsBrownianReal.condExp_futureIncrementsAfter
+#print axioms ProbabilityTheory.IsBrownianReal.reflection_principle
+#print axioms ProbabilityTheory.IsBrownianReal.lastZeroBefore_cdf
+#print axioms ProbabilityTheory.IsBrownianReal.blumenthal_zeroOne_canonical
+#print axioms ProbabilityTheory.IsPreBrownianReal.norm_deterministicWienerIntegral
 #print axioms ProbabilityTheory.IsGaussianProcess.isPreBrownianReal_of_covariance

@@ -45,7 +45,8 @@ temporary duplicates merely to compile.
 
 ## Fixed global rules
 
-These rules apply to every module and are not relaxed to finish a proof:
+These rules apply to every module and every present or future design document; they are not
+relaxed to finish a proof:
 
 - **Pinned baseline:** Lean and Mathlib are pinned to `v4.33.0`. An upgrade triggers a new duplicate
   and semantic audit.
@@ -86,18 +87,14 @@ These rules apply to every module and are not relaxed to finish a proof:
 
 ## Current implementation status
 
-Status last updated: **2026-08-31**. The first six reviewed handoff milestones are implemented and
+Status last updated: **2026-09-01**. The first six reviewed handoff milestones are implemented and
 audited: **Klenke Chapters 01-08**, **Process Core and Information Flow**, **Discrete Martingale
 Calculus and Exchangeability**, **Measure Convergence and Projective Construction**, and the two
-consolidated **Markov Processes** specifications. The new **Fourier/Classical Limit Theorems**,
-**Levy/SII**, and **Brownian/Path Regularity** handoffs are under implementation. The
-Fourier/Classical Limit Theorems package now includes the forward Lindeberg--Feller theorem,
-Lyapunov-to-Lindeberg, the complete Kolmogorov three-series theorem with its finite-variance
-helper, and a singular-covariance-safe multivariate iid CLT bridge. Continuous-semigroup root
-convergence, compound-Poisson intensity addition/infinite divisibility, and the Gaussian
-Brownian-bridge foundation are also proved. Real Levy--Khintchine existence/uniqueness and stable
-classification, and the Brownian realization/path/strong-Markov/Wiener layers remain open. The
-precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported as completed work.
+consolidated **Markov Processes** specifications. The **Fourier/Classical Limit Theorems** and
+**Brownian Motion/Path Regularity** handoffs are also complete. The **Levy/SII** handoff remains
+under implementation: its law algebra, compound-Poisson, Levy-measure, triplet transformation,
+and continuous-semigroup foundations are present, while the remaining theorem chain is tracked in
+`SOURCE_MAP.md` and is intentionally not reported as completed work.
 
 ### Formalized mathematical definitions
 
@@ -141,8 +138,11 @@ precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported 
 - Law-first infinite divisibility, zero-safe finite-intensity compound Poisson laws, minimal Levy
   measures with derived sigma-finiteness, fixed-truncation Levy triplets, and broad/strict/indexed
   stable-law predicates.
-- Canonical Mathlib pre-Brownian/Brownian predicates, the Brownian-bridge transform, Gaussian
-  increment-law families, and explicit zero-safe time inversion.
+- Canonical Mathlib pre-Brownian/Brownian predicates; a project-owned continuous canonical
+  realization; common-event local Holder regularity below one half; Brownian bridges and
+  deterministic Wiener bridges; Gaussian increment laws; zero-safe time inversion; measurable
+  running suprema and last-zero functionals; dyadic Schauder approximations; and the linear
+  isometric deterministic Wiener integral on the `L2` quotient.
 
 ### Formalized named theorems
 
@@ -161,6 +161,12 @@ precise status is recorded in `SOURCE_MAP.md` and is intentionally not reported 
 - Lyapunov's implication for triangular arrays.
 - Lindeberg--Feller central limit theorem (forward direction).
 - Kolmogorov's three-series theorem.
+- Kolmogorov--Chentsov theorem.
+- Blumenthal's zero--one law for the Brownian germ sigma-field.
+- Paley--Wiener--Zygmund nowhere differentiability theorem.
+- Brownian strong Markov theorem for finite future cylinders.
+- Brownian reflection principle.
+- Levy's arcsine law for the last zero before a deterministic horizon.
 
 The structural de Finetti theorem and Lévy downward convergence are maintained inside this
 repository under `StochLean/Internal/Exchangeability`; the public API remains the smaller
