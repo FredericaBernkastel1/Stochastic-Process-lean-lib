@@ -214,7 +214,7 @@ Likewise, projective families and limits use only Mathlib's `IsProjectiveMeasure
 | Arbitrary probability products | Upstream | `Measure.infinitePi`, `isProjectiveMeasureFamily_pi`, `isProjectiveLimit_infinitePi`, `infinitePi_map_restrict`, and `infinitePi_cylinder`. |
 | Kernels and Ionescu--Tulcea | Upstream | Reuse `Kernel.traj`, `Kernel.trajMeasure`, their Markov/probability instances, finite-trajectory recovery, and conditional-distribution theorem. |
 | Projective vocabulary | Upstream | Only `IsProjectiveMeasureFamily` and `IsProjectiveLimit`; the regression pins the direction `P J = (P I).map (Finset.restrict₂ hJI)`. |
-| Arbitrary-index standard-Borel extension | Implemented facade over approved external | `MeasureTheory/Constructions/KolmogorovExtension.lean`: `projectiveLimitOfStandardBorel`, finite/probability instances, finite-dimensional recovery, uniqueness, and `∃!` theorem. |
+| Arbitrary-index standard-Borel extension | Implemented internally from an audited reference | `StochLean/Internal/KolmogorovExtension` contains the project-owned proof, and `MeasureTheory/Constructions/KolmogorovExtension.lean` exposes `projectiveLimitOfStandardBorel`, finite/probability instances, finite-dimensional recovery, uniqueness, and the `∃!` theorem. No external package is imported or linked. |
 | Public domain | Implemented | The facade requires only measurable spaces plus `StandardBorelSpace`; temporary Polish topologies from `upgradeStandardBorel` remain proof-local and no topology occurs in public types. |
 | Empty index type | Implemented and tested | Probability preservation and unique existence compile for `ι = Empty`; no `Nonempty ι` assumption is introduced. |
 | Canonical process | Reused representation | The process is exactly `fun i ω ↦ ω i` on the product space; no process structure or path topology is added. |
@@ -239,13 +239,13 @@ Likewise, projective families and limits use only Mathlib's `IsProjectiveMeasure
 | 12 | Singleton and arbitrary finite marginals are recovered | Generic `projectiveLimitOfStandardBorel_map_restrict`, instantiated by the three-coordinate regression. |
 | 13 | Independent arbitrary products use the canonical product measure | Direct regressions for `infinitePi_map_restrict` and `infinitePi_cylinder`. |
 | 14 | Abstract standard-Borel coordinates require no chosen topology | A public-domain compile example has only `MeasurableSpace` and `StandardBorelSpace` assumptions. |
-| 15 | External implementation names do not leak into public declarations | Facade declarations and axiom audit expose only `MeasureTheory` names; source scan finds the external module only in the private import boundary. |
+| 15 | Reference implementation names do not leak into public declarations | Facade declarations and axiom audit expose only StochLean/`MeasureTheory` names; the adapted proof is owned by `StochLean.Internal.KolmogorovExtension`, with no external import boundary. |
 | 16 | Different compatible Polish upgrades cannot change the result | `IsProjectiveLimit.eq_projectiveLimitOfStandardBorel` reduces any candidate to Mathlib's unique finite projective limit. |
-| 17 | Arbitrary-index extension uses the approved exact external theorem | Facade implementation imports commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25`; manifest and audit ledger pin it. |
-| 18 | Extension is not inferred from finite products or Ionescu--Tulcea | The dependency boundary is explicit: arbitrary-index facade uses the audited extension theorem; product and sequential-kernel examples remain separate. |
+| 17 | Arbitrary-index extension internalizes the audited reference proof | The implementation adapted from audited commit `7d76e184c3d2138a2741baf923b57e9a01b9cf25` is compiled under project namespaces; the exact reference revision and provenance remain in the audit ledger. |
+| 18 | Extension is not inferred from finite products or Ionescu--Tulcea | The proof boundary is explicit: the arbitrary-index facade uses the project-owned internal extension theorem; product and sequential-kernel examples remain separate. |
 | 19 | A finite projective family is not automatically probabilistic | `twoMassLimit_not_isProbabilityMeasure`. |
 | 20 | A probability projective family infers a probability limit | Facade probability instance and the three-coordinate/empty-index instance checks. |
-| 21 | External revision, license, holes, and build are audited | Exact Git revision, Apache-2.0 license, empty `sorry`/`admit`/`axiom`/`unsafe` scan, and 1773-job external build recorded in `MATHLIB_AUDIT.md`. |
+| 21 | Reference revision, license, holes, and build are audited | Exact Git revision, Apache-2.0 license, empty `sorry`/`admit`/`axiom`/`unsafe` scan, and 1773-job reference build are recorded in `MATHLIB_AUDIT.md`; the adapted StochLean sources also pass the ordinary project build. |
 | 22 | Existing de Finetti work remains compatible | Full `StochLean` build and `Audit/Axioms.lean` recheck `IsExchangeable.hasDeFinettiRepresentation`. |
 | 23 | No path regularity is manufactured by a coordinate product law | Public output is only a raw product-space measure and coordinate recovery; path topology remains deferred. |
 

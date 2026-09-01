@@ -152,25 +152,27 @@ declarations are rechecked independently in `Audit/Axioms.lean`.
 | Arbitrary product measure | `Measure.infinitePi`, projectivity, finite restriction, and cylinder formulas | Reuse. |
 | Kernels / Ionescu--Tulcea | `ProbabilityTheory.Kernel.traj`, `trajMeasure`, and their finite-prefix/conditional-law API | Reuse. |
 | Projective family and limit | Mathlib `IsProjectiveMeasureFamily` and `IsProjectiveLimit`, including finite uniqueness and probability preservation without nonempty index | Reuse the vocabulary and consequences. |
-| Arbitrary-index standard-Borel extension | Not present in the pinned Mathlib checkout; `RemyDegenne/kolmogorov_extension4` supplies the exact construction | Add a minimal StochLean facade over the approved exact dependency; temporary Polish upgrades remain implementation-only. |
+| Arbitrary-index standard-Borel extension | Not present in the pinned Mathlib checkout; `RemyDegenne/kolmogorov_extension4` supplied the audited reference construction | Internalize the proof under `StochLean.Internal.KolmogorovExtension` and expose a minimal StochLean facade; temporary Polish upgrades remain implementation-only, and no external package remains in the dependency graph. |
 | Process/canonical path wrapper | Product coordinates are already functions and no path topology follows from projective construction | Add nothing; use `fun i ω ↦ ω i`. |
 
-### Approved Kolmogorov-extension dependency
+### Audited Kolmogorov-extension implementation reference
 
 - Repository: `https://github.com/RemyDegenne/kolmogorov_extension4.git`.
-- Exact commit: `7d76e184c3d2138a2741baf923b57e9a01b9cf25`, pinned identically in
-  `lakefile.toml` and `lake-manifest.json`.
+- Exact audited commit: `7d76e184c3d2138a2741baf923b57e9a01b9cf25`. This revision records
+  provenance only; it is not present in `lakefile.toml` or `lake-manifest.json`.
 - License: Apache License 2.0.
 - Audit checkout: `D:\Math\external-audit\kolmogorov_extension4-7d76e184c3d2138a2741baf923b57e9a01b9cf25`;
   its audited source is content-equal to the clean Git checkout at the pinned commit (line-ending
   normalization is the only byte-level difference).
 - Placeholder/trust scan: no Lean occurrence of a declaration beginning with `axiom` or `unsafe`,
   and no `sorry` or `admit`.
-- Independent dependency build: successful, 1773 jobs.
+- Independent reference build: successful, 1773 jobs.
 - Project-facing axiom audit: `isProjectiveLimit_projectiveLimit` and every facade theorem depend
   only on `propext`, `Classical.choice`, and `Quot.sound`.
-- Public-leak boundary: `KolmogorovExtension4.KolmogorovExtension` occurs only as the implementation
-  import; public signatures contain only Mathlib/StochLean types and namespaces.
+- Internalization boundary: the adapted modules are compiled from
+  `StochLean/Internal/KolmogorovExtension`; imports and namespaces were redirected to project
+  owners. Public signatures contain only Mathlib/StochLean types and namespaces, and the external
+  project is neither imported nor linked.
 
 The complete fourth-milestone semantic gate is recorded as 23 numbered cases in `SOURCE_MAP.md`.
 
